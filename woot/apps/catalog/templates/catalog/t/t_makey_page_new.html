@@ -1,0 +1,314 @@
+{% verbatim %}
+
+<!-- Makey Like Templates -->
+<script type="text/template" id="like_template">
+<button rel="like_button" type="button" class="btn btn-sm like_makey {{like_btn_cls}}" id="makey_like_{{like_id}}">
+    <span class="glyphicon glyphicon-heart" id="like_{{like_id}}"></span> {{like_status}}
+</button>
+<small class="likes_string"><a href="" class="preventDefault" style="color: white;">{{likes_string}}</a></small>
+</script>
+
+<script type="text/template" id="liker_template">
+{{#each likes}}
+<div class ="row">
+    <div class="col-xs-3">
+        <div class = "thumbnail tooltips" data-toggle="tooltip" data-placement="bottom">
+            <a href="/maker/{{liker.username}}"><img height="auto" style="max-width:75px; max-height:75px;" src="{{liker.profile_url}}" altname="{{liker.first_name}}" /></a>
+        </div>
+    </div>
+    <div class ="col-xs-9">
+        <h3><a href="/maker/{{liker.username}}">{{liker.first_name}} {{liker.last_name}}</a></h3>
+    </div>
+</div>
+{{/each}}
+</script>
+
+
+<!-- Gallery Templates -->
+<script type="text/template" id="gallery_comments_template">
+{{#each comments}}
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{user.username}}">
+            <img class="img-circle" height="auto" style="max-width:40px; max-height:40px;" src="{{user.profile_url}}" altname="{{user.first_name}}" />
+        </a>
+    </div>
+    <div class="col-md-10 col-sm-10">
+        <h5><a href="/maker/{{user.username}}">{{user.first_name}} {{user.last_name}}</a></h5>
+        <p>{{body}}</p>
+    </div>
+</div>
+{{/each}}
+<!-- <p><a href="" class="preventDefault new_comment_{{type}}"  id="new_comment_{{type}}_{{id}}">+ Add a comment</a></p> -->
+<p class="text-warning">Comments disabled for maintenance</p>
+</script>
+
+<script type="text/template" id="gallery_like_template">
+<center>
+    {{#if cur_user_likes}}
+        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+            <i class="like_{{type}} fa fa-thumbs-up fa-lg text-success" id="like_{{id}}_{{like_id}}"></i>
+        </a>
+    {{else}}
+        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+            <i class="like_{{type}} fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i>
+        </a>
+    {{/if}}
+
+    &nbsp;&nbsp;
+
+    {{likes_string}}
+</center>
+</script>
+
+<script type="text/template" id="gallery_description_template">
+<h4>Description</h4>
+
+<div id="gallery_description_text">
+    {{description}}
+</div>
+
+<hr/>
+</script>
+
+<script type="text/template" id="gallery_note_template">
+<h4>Related Note</h4>
+
+<div id="note_text">
+    {{note_body}}
+</div>
+
+<hr/>
+</script>
+
+<script type="text/template" id="new_img_comment_template">
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{username}}"><img class="img-circle" height="auto" style="max-width:30px; max-height:30px;" src="{{profile_url}}" altname="{{first_name}}" /></a>
+    </div>
+
+    <div class="col-md-10 col-sm-10">
+        <textarea class="form-control" id="new_comment_body" imgId="{{imgId}}" name="new_comment_body" placeholder="Write comment here .."></textarea>
+        <a href="" class="preventDefault submit_comment_img">Submit</a>&nbsp;&nbsp;<a href="" class="preventDefault cancel_comment_img" id="cancel_comment_{{id}}">Cancel</a>
+        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_vid_comment_template">
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{username}}"><img class="img-circle" height="auto" style="max-width:30px; max-height:30px;" src="{{profile_url}}" altname="{{first_name}}" /></a>
+    </div>
+
+    <div class="col-md-10 col-sm-10">
+        <textarea class="form-control" id="new_comment_body" vidId="{{vidId}}" name="new_comment_body" placeholder="Write comment here .."></textarea>
+        <a href="" class="preventDefault submit_comment_vid">Submit</a>&nbsp;&nbsp;<a href="" class="preventDefault cancel_comment_vid" id="cancel_comment_{{id}}">Cancel</a>
+        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+    </div>
+</div>
+</script>
+
+
+<!-- Insights Templates -->
+<script type="text/template" id="note_template">
+<div class ="col-xs-12">
+    <p class=""><b>{{title}}</b></p>
+    <p>{{body}}</p>
+
+    <p class="pull-right">
+    By <a href="/maker/{{user.username}}">{{user.first_name}}</a>
+    </p>
+
+    <p class="pull-left">
+        {{likes_count}}
+        {{#if cur_user_likes }}
+            <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{id}}_{{like_id}}"></i></a>
+        {{else}}
+        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i></a>
+        {{/if}}
+        &nbsp;&nbsp;
+        <span class="insight-comments-count" data-id="{{id}}">{{comments.length}}</span>
+        <a href="javascript:void()" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="insights-comments-btn fa fa-comments-o fa-lg text-primary-inverse" data-id="{{id}}"></i></a>
+
+        &nbsp;&nbsp;
+        {{#if image }}
+            <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{image.id}}"></i>
+        {{/if}}
+    </p>
+    <br/>
+    <hr>
+</div>
+</script>
+
+<script type="text/template" id="note-django-template">
+    <div id="note_{{id}}" class="row note_item">
+        <div class ="col-xs-12">
+            <p class=""><b>{{title}}</b></p>
+            <p>{{body}}</p>
+
+            <p class="pull-right">
+            By <a href="/maker/{{user.username}}">{{user.first_name}}</a>
+            </p>
+
+            <p class="pull-left">
+                {{likes_count}}
+                {{#if cur_user_likes }}
+                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{id}}_{{like_id}}"></i></a>
+                {{else}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i></a>
+                {{/if}}
+                &nbsp;&nbsp;
+                <span class="insight-comments-count" data-id="{{id}}">{{comments.length}}</span>
+                <a href="javascript:void()" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="insights-comments-btn fa fa-comments-o fa-lg text-primary-inverse" data-id="{{id}}"></i></a>
+
+                &nbsp;&nbsp;
+                {{#if image }}
+                    <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{image.id}}"></i>
+                {{/if}}
+
+                &nbsp;&nbsp;
+                {{#if is_pending_approval }}
+                    <i class="fa fa-clock-o text-warning"></i><span class="text-warning">&nbsp;pending approval</span>
+                {{/if}}
+            </p>
+            <br/>
+            <hr>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-add-template">
+<div class="row" id="insight-add-btn-container">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <button type="button" class="btn btn-block btn-success add-insight-btn" id="add-insight-btn">Add an insight</button>
+    </div>
+</div>
+<div class="row" id="insight-add-input-container" style="display: none">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h4 id="add-insight-title"><b>Add an insight</b></h4>
+                <input type="text" class="form-control" id="makey-notes-v2-add-input-title" placeholder="Provide a title for this insight"/>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            <img src="http://placehold.it/150x100&text=Add+Image" href="javascript:void();" id="makey-notes-v2-add-image-select" class="img-responsive"/>
+            </div>
+            <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                <textarea id="makey-notes-v2-add-input-body" class="form-control" placeholder="What is your insight?" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <button type="button" class="btn btn-primary pull-right" id="insight-save-btn" style="margin-left: 10px;">Add</button>
+                <button type="button" class="btn btn-default pull-right" id="insight-add-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-image-select-template">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Select image</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="row">
+                    {{#each images}}
+                        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4" style="margin-top: 10px;">
+                            <img src="{{large_url}}" class="img-responsive img-select" data-image-id="{{id}}"/>
+                        </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+<!-- TEMPLATES FOR COMMENTS -->
+<script type="text/template" id="comment_template">
+<div data-id="{{id}}" class ="row comment_item">
+    <div class="col-xs-2">
+        <center>
+        <a href="/maker/{{user.username}}"><img class="img-circle" height="auto" style="max-width:50px; max-height:50px;" src="{{user.profile_url}}" altname="{{user.name}}" /></a>
+        </center>
+    </div>
+    <div class ="col-xs-10">
+        <span><a href="/maker/{{user.username}}">{{user.first_name}}</a>:&nbsp;</span>
+        <span>{{{body}}}</span>
+        <div style="margin-top: 10px;">
+            <span class="pull-left">
+                {{likes_count}}
+
+                {{#if cur_user_likes}}
+                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+                        <i class="like_comment fa fa-thumbs-up fa-lg text-success" data-id="{{id}}" data-like-id="{{like_id}}"></i>
+                    </a>
+                {{else}}
+                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+                        <i class="like_comment fa fa-thumbs-o-up fa-lg text-primary-inverse" data-id="{{id}}" data-like-id="{{like_id}}"></i>
+                    </a>
+                {{/if}}
+            </span>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+<hr>
+</script>
+
+<script type="text/template" id="insight_comment_template">
+<div data-id="{{id}}" class ="row comment_item">
+    <div class="col-xs-2">
+        <center>
+        <a href="/maker/{{user.username}}"><img class="img-circle" height="auto" style="max-width:50px; max-height:50px;" src="{{user.profile_url}}" altname="{{user.name}}" /></a>
+        </center>
+    </div>
+    <div class ="col-xs-10">
+        <span><a href="/maker/{{user.username}}">{{user.first_name}}</a>:&nbsp;</span>
+        <span>{{{body}}}</span>
+    </div>
+</div>
+<hr>
+</script>
+
+<script type="text/template" id="insight_comment_empty_template">
+<center>Be the first one to comment.</center>
+<hr>
+</script>
+
+<script type="text/template" id="insight_comment_waiting_template">
+<center><i class="fa fa-circle-o-notch fa-spin"></i></center>
+<hr>
+</script>
+
+<script type="text/template" id="comments_empty_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-info">Be the first to comment!</p>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="comments_login_template">
+<div class="row">
+    <div class="col-xs-12">
+        <center>
+            <p class="text-danger">Please login to add a comment on this makey.</p>
+        </center>
+    </div>
+</div>
+</script>
+
+{% endverbatim %}

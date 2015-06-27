@@ -1,0 +1,234 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create Replace{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+
+.twitter-typeahead {
+    width: 100%
+}
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 200px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+
+</style>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-8 col-md-8 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Replace Maker</h2>
+        </div>
+
+        <form action="#" method="post" class="form-horizontal form-bordered">
+            <div class="form-group">
+                <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+                    <div>
+                        <label for="user_source_input">Previous User<span class="text-danger">&nbsp;*</span></label>
+                    </div>
+                    <div>
+                        <input type="text" id="user_source_input" name="user_source_input" class="form-control" required>
+                    </div>
+                </div>
+                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                    <center>
+                        <i class="fa fa-arrow-right"></i>
+                    </center>
+                </div>
+                <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+                    <div>
+                        <label for="user_target_input">Target User<span class="text-danger">&nbsp;*</span></label>
+                    </div>
+                    <div>
+                        <input type="text" id="user_target_input" name="user_target_input" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group form-actions">
+                <div class="col-xs-9">
+                    <span class="text-danger" id="error-msg"></span>
+                </div>
+                <div class="col-xs-3">
+                    <button type="button" id="replace-btn" class="btn btn-sm btn-primary pull-right" data-loading-text="Replacing...">Replace</button>
+                </div>
+            </div>
+        </form>
+        <form action="#" method="post" style="display: none;" id="replace-form">
+            <input type="text" id="user_target" name="user_target">
+            <input type="text" id="user_source" name="user_source">
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% verbatim %}
+<script type="text/template" id="tt-user-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+<script type="text/template" id="tt-user-suggestion-template">
+    <p>{{name}}</p>
+</script>
+{% endverbatim %}
+
+<script type="text/javascript">
+    var usersEngine = new Bloodhound({
+        datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+        queryTokenizer: Bloodhound.tokenizers.whitespace,
+        remote: {
+            url: '../../api/v1/user/search/?q=%QUERY',
+            filter: function(list) {
+                return $.map(list.users, function(user) {
+                    return {
+                        name: user.first_name + " " + user.last_name + " (id: " + user.id + ")",
+                        id: user.id };
+                });
+            }
+        },
+        limit: 10
+    });
+    usersEngine.initialize();
+
+    $('#user_source_input').typeahead({
+        hint: true,
+        highlight: true,
+        minLength: 1
+    },
+    {
+        name: 'users',
+        displayKey: 'name',
+        source: usersEngine.ttAdapter(),
+        templates: {
+            empty: Handlebars.compile($('#tt-user-suggestion-empty-template').html()),
+            suggestion: Handlebars.compile($('#tt-user-suggestion-template').html())
+        }
+    });
+
+
+    $('#user_target_input').typeahead({
+        hint: true,
+        highlight: true,
+        minLength: 1
+    },
+    {
+        name: 'users',
+        displayKey: 'name',
+        source: usersEngine.ttAdapter(),
+        templates: {
+            empty: Handlebars.compile($('#tt-user-suggestion-empty-template').html()),
+            suggestion: Handlebars.compile($('#tt-user-suggestion-template').html())
+        }
+    });
+
+    var source_id, target_id;
+
+    var that = this;
+    $('#user_source_input').on("typeahead:selected", function(event, selected, dataset){
+        source_id = selected.id;
+    });
+
+    $('#user_target_input').on("typeahead:selected", function(event, selected, dataset){
+        target_id = selected.id;
+    });
+
+    $("#replace-btn").on("click", function() {
+        if(!source_id || !target_id) {
+            $("#error-msg").html("Both fields are required");
+            return;
+        }
+
+        if(source_id === target_id) {
+            $("#error-msg").html("Both fields cannot be same.");
+            return;
+        }
+
+        $("#replace-btn").button('loading');
+
+        $("#replace-form input[name=user_target]").val(target_id);
+        $("#replace-form input[name=user_source]").val(source_id);
+        $("#replace-form").submit();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,168 @@
+{% verbatim %}
+<script type="text/template" id="user_activity_template">
+	<div class="well">
+		<a href="/maker/{{user.username}}">{{user.first_name}}</a>{{event_string}}<a href="{{event_url}}">{{event_name}}</>
+	</div>
+	<br>
+</script>
+
+<script type="text/template" id="product_template">
+	<h3>{{name}}</h3>
+</script>
+
+<!-- Top Products template  -->
+<script type="text/template" id="top_products_template">
+	<div class="row">
+		<div class="col-xs-3">
+				<a href="/product/{{product.id}}"><img class="img-responsive" src="{{ product.images.0.url }}" alt="Image for {{ product.name }}">
+		</div>
+		<div class="col-xs-9">
+			<h5>{{product.name}}</h5></a>
+		</div>
+	</div>
+</script>
+<!-- 
+<script type="text/template" id="top_products_template">
+	<div class="col-sm-3 col-md-3">
+		<div class="thumbnail">
+			<a href="/product/{{product.id}}"><img src="{{ product.images.0.url }}" alt="Image for {{ product.name }}">
+			<h5>{{product.name}}</h5></a>
+			<p>{{score}}</p>
+		</div>
+	</div>
+</script>
+ -->
+
+
+
+<!-- Tutorial template -->
+<script type="text/template" id="tutorial_template">
+	<strong><a href="{{url}}">{{url}}</a></strong>
+	<div class="row-fluid">
+		<div class="offset1 span2">
+			<strong>submitted by <a href="/maker/{{user.username}}">{{user.username}}</a></strong>
+		</div>
+	</div>
+	<br />
+
+</script>
+
+
+<!-- Top Makey template -->
+<script type="text/template" id="top_makeys_template">
+	
+	<div class="thumbnail span3">
+		<a href="/product/{{product.id}}"><img src="{{ product.images.0.url }}" alt="Image for {{ product.name }}">
+		<h5>{{product.name}}</h5></a>
+		<p>{{score}}</p>
+	</div>
+</script>
+
+<!-- Top Users template -->
+<script type="text/template" id="top_users_template">
+	<div class="col-xs-12">
+		<div class="row">
+			<div class="col-xs-3 col-sm-3">
+				<a href="/maker/{{user.username}}"><img class="img-responsive" src="http://graph.facebook.com/{{ user.username }}/picture?width=100&height=100" alt="Image for {{ user.facebook_name }}">
+			</div>
+			<div class="col-xs-9">
+				<h5>{{user.facebook_name}}</h5></a>
+			</div>
+		</div>
+		
+	</div>
+</script>
+
+<!-- 
+<script type="text/template" id="top_users_template">
+	
+	<div class="col-sm-3 col-md-3">
+		<div class="thumbnail">
+		<a href="/maker/{{user.username}}"><img src="http://graph.facebook.com/{{ user.username }}/picture?width=300&height=300" alt="Image for {{ user.facebook_name }}">
+		<h5>{{facebook_name.name}}</h5></a>
+		<p>{{score}}</p>
+	</div>
+</script>
+ -->
+<!-- Top Store template -->
+<script type="text/template" id="top_stores_template">
+	<div class="row">
+		<div class="col-xs-12">
+			<center><a href="/store/{{store.name}}"><h5>{{store.name}}</h5></a></center>
+		</div>
+	</div>
+</script>
+<!-- 
+<script type="text/template" id="top_stores_template">
+	
+	<div class="col-sm-3 col-md-3">
+		<div class="thumbnail">
+		<a href="/store/{{store.name}}"><h5>{{store.name}}</h5></a>
+		<p>{{score}}</p>
+	</div>
+</script>
+ -->
+
+ <script type="text/template" id="review_template">
+<div class="col-sm-1 col-md-1">
+    <div class="row">
+        <div class="col-xs-12">
+            <center>
+            <div class="btn {{#if cur_user_upvote}} btn-success{{/if}} upvote btn-default btn-sm" id="upvote_{{id}}">
+                <span class="glyphicon glyphicon-chevron-up" id="upvote_{{id}}"></span>
+            </div>
+            </center>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-xs-12">
+            <center>{{votes}}</center>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <center>
+            <div class="btn {{#if cur_user_downvote}} btn-success{{/if}} downvote btn-default btn-sm" id="downvote_{{id}}">
+                <span class="glyphicon glyphicon-chevron-down" id="downvote_{{id}}"></span>
+            </div>
+            </center>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-11 col-md-11">
+    <div class="row">
+        <div class="col-xs-12">
+            <strong>{{title}}</strong>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <strong>Rating - {{{stars}}} ({{rating}}/5)</strong>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <p>{{review}}</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <strong>submitted by <a href="/maker/{{user.username}}">{{user.facebook_name}}</a></strong>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="star_full">
+    <span class="glyphicon glyphicon-star"></span>
+</script>
+
+<script type="text/template" id="star_empty">
+    <span class="glyphicon glyphicon-star-empty"></span>
+</script>
+
+
+
+{% endverbatim %}

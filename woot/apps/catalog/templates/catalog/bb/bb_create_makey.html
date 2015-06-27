@@ -1,0 +1,115 @@
+<script type="text/javascript">
+var app = {};
+{% if is_admin_user %}
+app.admin_user = true;
+{% endif %}
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+        mixpanel.track("MakeyC: Event", {event_type: "makey_create_opened", user_id: user_id});
+    }
+};
+app.initializeUser();
+
+{% if is_admin_user %}
+app.UserOverrideView = Backbone.View.extend({
+    el : $('#user-override-container'),
+
+    events : {
+        'click #user-override-change': 'showUserOverrideForm'
+    },
+
+    initialize : function() {
+        this.usersEngine = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: {
+                url: '../../api/v1/user/search/?q=%QUERY',
+                filter: function(list) {
+                    return $.map(list.users, function(user) {
+                        return { name: user.first_name + " " + user.last_name, id: user.id };
+                    });
+                }
+            },
+            limit: 10
+        });
+        this.usersEngine.initialize();
+
+        this.$('#user-override-input.typeahead').typeahead({
+            hint: true,
+            highlight: true,
+            minLength: 1
+        },
+        {
+            name: 'users',
+            displayKey: 'name',
+            source: this.usersEngine.ttAdapter(),
+        });
+        var that = this;
+        this.$('#user-override-input.typeahead').on("typeahead:selected", function(event, selected, dataset){
+            that.updateUser(selected);
+        });
+
+        this.$('#user-override-input.typeahead').on("focusout", function(){
+            that.hideUserOverrideForm();
+        });
+
+        this.hideUserOverrideForm();
+    },
+
+    updateUser: function(selectedUser) {
+        this.$('#current-user-selection').html(selectedUser.name);
+        this.$('#user-override-form-input').val(selectedUser.id);
+        this.selectedUserId = selectedUser.id;
+        this.hideUserOverrideForm();
+    },
+
+    showUserOverrideForm: function() {
+        this.$('#user-override-input-container').show();
+        this.clearUserOverrideForm();
+        this.$('#user-override-input.typeahead').focus();
+    },
+
+    hideUserOverrideForm: function() {
+        this.$('#user-override-input-container').hide();
+        this.clearUserOverrideForm();
+    },
+
+    clearUserOverrideForm: function() {
+        this.$('#user-override-input.typeahead').typeahead('val', '');
+    }
+
+});
+app.userOverrideView = new app.UserOverrideView();
+{% endif %}
+
+</script>

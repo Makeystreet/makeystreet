@@ -1,0 +1,1154 @@
+<script>
+
+var app = {};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+
+/** Product Likes **/
+app.ProductLike = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/likes/product_p/',
+	idAttribute : 'id',
+
+	defaults : {
+		'added_time' : 'Now',
+	},
+});
+
+app.ProductLikeList = Backbone.Tastypie.Collection.extend({
+	model : app.ProductLike,
+	urlRoot : '/api/v1/likes/product_p/?product={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+
+	url : function() {
+		if(this.curUserLike != undefined) {
+			return this.urlRoot + "&liker=" + cur_user_details.id;
+		}
+		return this.urlRoot + "&limit=2";
+	},
+
+	fetchCurUserLikes : function() {
+		this.curUserLike = true;
+	},
+});
+
+app.ProductLikeView = Backbone.View.extend({
+	el : $('#product_like'),
+    template : Handlebars.compile($('#like_template').html()),
+
+    options : {
+    	'likes_string' : "Be the first one to like this!",
+    },
+
+    events : {
+    	'click .like_product' : 'clickLike',
+    },
+
+    clickLike : function(event) {
+        var product_id = parseInt(event.target.id.substring(5));
+        var newLike = new app.ProductLike({
+            'product' : '/api/v1/product/{{product_id}}/',
+            'liker' : app.cur_fb_user,
+        });
+
+        var that = this;
+        newLike.save(null, {
+        	success : function() {
+        		that.options.total_likes++;
+        		that.options.curUserLikes = true;
+        		that.loadLikesString();
+        		// that.render();
+        	},
+        	error : function() {
+        		that.options.total_likes--;
+        		that.options.curUserLikes = false;
+        		that.loadLikesString();
+        		// that.render();
+        	},
+        });
+    },
+
+    initialize : function() {
+    	this.listenTo(app.likes, 'reset', this.addAll);
+    	this.listenTo(app.likes, 'add', this.addAll);
+    	this.listenTo(app.likes, 'change', this.addAll);
+
+		this.loadCurUserLikeStatus();
+    },
+
+    addAll : function() {
+    	if(this.options.total_likes == undefined) {
+    		this.options.total_likes = app.likes.meta.total_count;
+    	}
+
+    	this.loadLikesString();
+    },
+
+    render : function() {
+    	this.$el.html('');
+    	this.$el.append(this.template({
+    		'product_id' : {{product_id}},
+    		'cur_user_likes' : this.options.curUserLikes,
+    		'likes_string' : this.options.likes_string,
+    	}));
+		this.$el.find('.tooltips').tooltip();
+		$('.fade').remove();
+    },
+
+    loadCurUserLikeStatus : function() {
+    	var curUserLikes = new app.ProductLikeList();
+    	curUserLikes.fetchCurUserLikes();
+
+    	var that = this;
+    	curUserLikes.fetch({
+    		success : function(collection, response) {
+		    	if(response.meta.total_count == 0) {
+		    		that.options.curUserLikes = false;
+		    	} else {
+		    		that.options.curUserLikes = true;
+		    	}
+		    	that.loadLikesString();
+    		},
+    	});
+
+    },
+
+    loadLikesString : function() {
+    	var total_likes = this.options.total_likes;
+    	var likes_string = "";
+
+    	if(app.likes.models[0] == undefined) {
+    		likes_string = "Be the first one to like this!";
+    	} else if(this.options.curUserLikes) {
+    		if(total_likes == 1) {
+    			likes_string = "You like this!";
+    		} else if (total_likes == 2) {
+    			if(app.likes.models[0].id == cur_user_details.id)
+    				likes_string = "You and " + app.likes.models[1].get('liker').facebook_name + " like this!";
+    			else
+    				likes_string = "You and " + app.likes.models[0].get('liker').facebook_name + " like this!";
+    		} else {
+    			if(app.likes.models[0].id == cur_user_details.id)
+    				likes_string = "You, " + app.likes.models[1].get('liker').facebook_name + " and " + (total_likes - 2) + " others like this!";
+    			else
+    				likes_string = "You, " + app.likes.models[0].get('liker').facebook_name + " and " + (total_likes - 2) + " others like this!";
+    		}
+    	} else {
+    		if(total_likes == 0) {
+    			likes_string = "Be the first one to like this!";
+    		} else if (total_likes == 1) {
+    			likes_string = app.likes.models[0].get('liker').facebook_name + " likes this!";
+    		} else {
+    			likes_string = app.likes.models[0].get('liker').facebook_name + " and " + (total_likes - 1) + " others likes this!";
+    		}
+    	}
+
+    	this.options.likes_string = likes_string;
+    	this.render();
+    },
+});
+
+
+/** Product Images **/
+app.Image = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/image_p/',
+	idAttribute : 'id',
+});
+
+app.ImageList = Backbone.Tastypie.Collection.extend({
+	model : app.Image,
+	urlRoot : '/api/v1/image_p/?product={{product_id}}&limit=10',
+
+	initialize : function() {
+		this.fetch();
+	}
+});
+
+app.ImageView = Backbone.View.extend({
+	el : '#imagelist',
+	template : Handlebars.compile($('#image_template').html()),
+
+	options : {
+		images_per_row : 6,
+		cur_image_counter : 0,
+	},
+
+	events : {
+            'click .product_image' : 'clickImage',
+    },
+
+	initialize : function() {
+		this.listenTo(app.images, 'add', this.addAll);
+		this.listenTo(app.images, 'change', this.addAll);
+	},
+
+	addAll : function() {
+		$("#mainimage").find('img').attr('src', '');
+		if (app.images.size()) {
+			for(var i=0; i<app.images.models.length; i++) {
+	            if(app.images.models[i].get('url')) {
+	                $("#mainimage").find('img').attr('src', app.images.models[i].get('url'));
+	                break;
+	            }
+        	}
+        }
+
+		this.$el.html('');
+		this.options.cur_image_counter = 0;
+		app.images.each(this.render, this);
+	},
+
+	render : function(model) {
+		if(this.options.cur_image_counter % this.options.images_per_row == 0) {
+            this.$el.append("<div class='row images-row'></div></br>");
+        }
+
+        this.$el.find(".images-row").last().append(this.template(model.toJSON()));
+        this.options.cur_image_counter++;
+        this.$el.find('.tooltips').tooltip();
+        return this;
+	},
+
+    clickImage : function(event) {
+	    var image_id = parseInt(event.target.id.substring(4));
+	    $("#mainimage").find('img').attr('src', app.images.get(image_id).get('url'));
+	},
+});
+
+
+/** Product Description **/
+app.ProductDescription = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/description_p/',
+});
+
+app.ProductDescriptionList = Backbone.Tastypie.Collection.extend({
+	model : app.ProductDescription,
+	urlRoot : '/api/v1/description_p/?product={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+});
+
+app.ProductDescriptionView = Backbone.View.extend({
+	el : '#descriptionlist',
+
+    template : Handlebars.compile($('#description_template').html()),
+    template_tab : Handlebars.compile($('#description_tab_template').html()),
+
+    initialize : function() {
+    	this.listenTo(app.descriptions, 'add', this.addAll);
+    	this.listenTo(app.descriptions, 'change', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        $('#descriptiontablist').html('');
+
+        app.descriptions.each(this.render, this);
+        $('#descriptiontablist a:first').tab('show');
+    },
+
+    render : function(model) {
+        this.$el.append(this.template(model.toJSON()));
+        $('#descriptiontablist').append(this.template_tab(model.toJSON()));
+
+        this.$el.find('.tooltips').tooltip();
+        return this;
+    },
+});
+
+
+/** ShopUrlClick Interaction **/
+app.ShopUrlClick = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user_interactions/",
+    defaults : {
+        'added_time' : 'Now',
+        'event' : 401,
+        'event_id' : '',
+        'score' : 0,
+    },
+});
+
+/** Product Shop Urls **/
+app.ProductShopUrl = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/shopurl_p/',
+});
+
+app.ProductShopUrlList = Backbone.Tastypie.Collection.extend({
+	model : app.ProductShopUrl,
+	urlRoot : '/api/v1/shopurl_p/?product={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+});
+
+app.ProductShopUrlView = Backbone.View.extend({
+	el : $('#shopurllist'),
+	template : Handlebars.compile($('#shopurl_template').html()),
+
+    events : {
+        'click .click_shopurl' : 'newShopUrlInteraction',
+    },
+
+	initialize : function() {
+		this.listenTo(app.shopUrls, 'add', this.addAll);
+	},
+
+	addAll : function() {
+		this.$el.html('');
+		app.shopUrls.each(this.render, this);
+	},
+
+	render : function(model) {
+		this.$el.append(this.template(model.toJSON()));
+		return;
+	},
+
+    newShopUrlInteraction : function(event) {
+        var shopUrlId = parseInt(event.target.id.substring(8));
+        var newInteraction = new app.ShopUrlClick();
+        newInteraction.set({
+            'event_id' : shopUrlId,
+            'user' : app.cur_fb_user,
+        });
+        newInteraction.save();
+        
+        // alert("this is a test");
+        shopUrl=app.shopUrls.get('/api/v1/shopurl_p/'+shopUrlId+'/');
+        //for mixpanel
+        var position = app.shopUrls.indexOf(shopUrl);
+        shopUrl=shopUrl.attributes;
+        var user="";
+        if (app.cur_fb_user)
+            user=app.cur_fb_user.facebook_name
+        mixpanel.track("Clicked Get it from", {id:shopUrlId,user:user,store_name:shopUrl.shop.name,store_likes:shopUrl.shop.likes.length,position:position});
+        
+        return this;
+    },
+});
+
+
+/** Product Reviews **/
+app.ProductReview = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/review_p/',
+	idAttribute : 'id',
+
+	defaults : {
+        added_time : 'Now',
+        title : '',
+        review : '',
+        rating : 0,
+        votes : 0,
+        cur_user_vote : 0,
+    },
+
+	initialize : function() {
+		this.bind('change:cur_user_vote', this.updateVoteBools, this);
+
+		this.initStars();
+		this.initCurUserLike();
+	},
+
+	initStars : function() {
+        var stars = "";
+        for(var i=0; i<this.get('rating'); i++) {
+            stars += "<i class=\"icon-star\"></i>";
+        }
+        for(var i=0; i<(5-this.get('rating')); i++) {
+            stars += "<i class=\"icon-star-empty\"></i>";
+        }
+        this.set({'stars':stars});
+    },
+
+    initCurUserLike : function() {
+        var curUserVotes = new app.VoteReviewList();
+        curUserVotes.setUserId(cur_user_details.id);
+        curUserVotes.setReviewId(this.id);
+
+        var that = this;
+        curUserVotes.fetch({
+            success : function(model, response) {
+                if(response.objects.length > 0){
+                    if(response.objects[0].vote)
+                        that.set({'cur_user_vote' : 1});
+                    else
+                        that.set({'cur_user_vote' : -1});
+                } else  {
+                    that.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    updateVoteBools : function() {
+        var cur_user_vote = this.get('cur_user_vote');
+
+        if(cur_user_vote == 1) {
+            this.set({
+                'cur_user_upvote' : true,
+                'cur_user_downvote' : false,
+            });
+        } else if(cur_user_vote == 0) {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : false,
+            });
+        } else {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : true,
+            });
+        }
+    },
+});
+
+app.ProductReviewList = Backbone.Tastypie.Collection.extend({
+	model : app.ProductReview,
+	urlRoot : '/api/v1/review_p/?limit=30&product={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+});
+
+app.ProductReviewView = Backbone.View.extend({
+	el : '#product_reviews',
+    template : Handlebars.compile($('#review_template').html()),
+
+    options : {
+    	'change_ratings' : true,
+        'rating' : 0,
+    },
+
+    initialize : function() {
+    	this.listenTo(app.reviews, 'add', this.addAllReviews);
+    	this.listenTo(app.reviews, 'change', this.addAllReviews);
+    },
+
+    reInitialize : function() {
+        $('#new_review').hide();
+        $('#create_review').show();
+
+        this.changeReviewRatings(0);
+        this.options.change_ratings = true;
+        this.options.rating = 0;
+    },
+
+    addAllReviews : function() {
+    	this.$('#reviews_list').html('');
+    	app.reviews.each(this.renderReview, this);
+    },
+
+    renderReview : function(model) {
+    	this.$('#reviews_list').append(this.template(model.toJSON()));
+    	this.$el.find('.tooltips').tooltip();
+    	return this;
+    },
+
+    events : {
+        'click #create_review' : 'createReview',
+        'click #submit_review' : 'submitReview',
+        'mouseover .review_ratings' : 'mouseoverRating',
+        'click .review_ratings' : 'clickRating',
+        'click .upvote' : 'upvoteReview',
+        'click .downvote' : 'downvoteReview',
+    },
+
+    upvoteReview : function(event) {
+        var review_id = parseInt(event.target.id.substring(7));
+        var newVote = new app.VoteReview({
+            user : cur_user_details.id,
+            reviewId : review_id,
+            vote : true,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curReview = app.reviews.get(review_id);
+                var cur_user_vote = parseInt(curReview.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curReview.set({'votes' : curReview.get('votes')-1});
+                    curReview.set({'cur_user_vote' : 0});
+                } else if (cur_user_vote == 0) {
+                    curReview.set({'votes' : curReview.get('votes')+1});
+                    curReview.set({'cur_user_vote' : 1});
+                } else {
+                    curReview.set({'votes' : curReview.get('votes')+2});
+                    curReview.set({'cur_user_vote' : 1});
+                }
+            },
+        });
+    },
+
+    downvoteReview : function(event) {
+        var review_id = parseInt(event.target.id.substring(9));
+        var newVote = new app.VoteReview({
+            user : cur_user_details.id,
+            reviewId : review_id,
+            vote : false,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curReview = app.reviews.get(review_id);
+                var cur_user_vote = parseInt(curReview.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curReview.set({'votes' : curReview.get('votes')-2});
+                    curReview.set({'cur_user_vote' : -1});
+                } else if(cur_user_vote == 0) {
+                    curReview.set({'votes' : curReview.get('votes')-1});
+                    curReview.set({'cur_user_vote' : -1});
+                } else {
+                    curReview.set({'votes' : curReview.get('votes')+1});
+                    curReview.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    createReview : function() {
+        $("#new_review").show();
+        $("#create_review").hide();
+    },
+
+    submitReview : function() {
+        var review_title = $('#new_review').find('input').val();
+        $('#new_review').find('input').val('');
+
+        var review_body = $('#new_review').find('textarea').val();
+        $('#new_review').find('textarea').val('');
+
+        var newReview = new app.ProductReview({
+            title : review_title,
+            review : review_body,
+            user : app.cur_fb_user,
+            product : '/api/v1/product_p/' + app.product.get('id') + '/',
+            rating : this.options.rating,
+        });
+
+        newReview.save(null, {
+            success : function(model, response) {
+                app.reviews.add(response);
+            },
+        });
+
+        this.reInitialize();
+    },
+
+    changeReviewRatings : function(rating) {
+        for(var i=1; i<=rating; i++) {
+            $('.rating_'+i)[0].className = "icon-star review_ratings rating_"+i;
+        }
+        for(var i=rating+1; i<=5; i++) {
+            $('.rating_'+i)[0].className = "icon-star-empty review_ratings rating_"+i;
+        }
+    },
+
+    mouseoverRating : function(event) {
+        if(this.options.change_ratings) {
+            var rating = parseInt(event.target.classList[2].substring(7));
+            this.changeReviewRatings(rating);
+        }
+    },
+
+    clickRating : function(event) {
+        this.options.change_ratings = false;
+        var rating = parseInt(event.target.classList[2].substring(7));
+        this.changeReviewRatings(rating);
+        this.options.rating = rating;
+    }
+});
+
+app.VoteReview = Backbone.Tastypie.Model.extend({
+    defaults : {
+        user : '',
+        vote : '',
+        added_time : 'Now',
+        review : '',
+    },
+
+    urlRoot : '/api/v1/votes/review_p/',
+
+    url : function() {
+        if(this.id!=undefined) {
+            return this.urlRoot + this.id + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('reviewId') != undefined) {
+            this.set({'review' : '/api/v1/review_p/' + this.get('reviewId') + "/"});
+        }
+    },
+
+    idAttribute : "id",
+});
+
+app.VoteReviewList = Backbone.Tastypie.Collection.extend({
+    model : app.VoteReview,
+    urlRoot : '/api/v1/votes/review_p/',
+
+    url : function() {
+        if(this.userId != undefined && this.reviewId != undefined) {
+            return this.urlRoot + "?review=" + this.reviewId + "&user=" + this.userId;
+        }
+        return this.urlRoot;
+    },
+
+    setUserId : function(userId) {
+        this.userId = userId;
+    },
+
+    setReviewId : function(reviewId) {
+        this.reviewId = reviewId;
+    },
+});
+
+
+/** Tutorials **/
+app.Tutorial = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/tutorial_p/',
+	idAttribute : 'id',
+
+	defaults : {
+        added_time : 'Now',
+        description : '',
+        url : '',
+        votes : 0,
+        cur_user_vote : 0,
+        cur_user_upvote : false,
+        cur_user_downvote : false,
+    },
+
+    initialize : function() {
+    	this.bind('change:cur_user_vote', this.updateVoteBools, this);
+
+		this.initCurUserVote();
+    },
+
+    initCurUserVote : function() {
+        var curUserVotes = new app.VoteTutorialList();
+        curUserVotes.setUserId(cur_user_details.id);
+        curUserVotes.setTutorialId(this.id);
+
+        var that = this;
+        curUserVotes.fetch({
+            success : function(model, response) {
+                if(response.objects.length > 0){
+                    if(response.objects[0].vote)
+                        that.set({'cur_user_vote' : 1});
+                    else
+                        that.set({'cur_user_vote' : -1});
+                } else {
+                    that.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    updateVoteBools : function() {
+        var cur_user_vote = this.get('cur_user_vote');
+
+        if(cur_user_vote == 1) {
+            this.set({
+                'cur_user_upvote' : true,
+                'cur_user_downvote' : false,
+            });
+        } else if(cur_user_vote == 0) {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : false,
+            });
+        } else {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : true,
+            });
+        }
+    },
+});
+
+app.TutorialList = Backbone.Tastypie.Collection.extend({
+	model : app.Tutorial,
+	urlRoot : '/api/v1/tutorial_p/?limit=0&products={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+});
+
+app.TutorialView = Backbone.View.extend({
+	el : '#product_tutorials',
+    template : Handlebars.compile($('#tutorial_template').html()),
+
+    initialize : function() {
+    	this.listenTo(app.tutorials, 'add', this.addAllTutorials);
+    	this.listenTo(app.tutorials, 'change', this.addAllTutorials);
+    },
+
+    addAllTutorials : function() {
+        $('#tutoriallist').html('');
+        app.tutorials.each(this.renderTutorial, this);
+    },
+
+    renderTutorial : function(model) {
+        $('#tutoriallist').append(this.template(model.toJSON()));
+        $('#tutoriallist').find('.tooltips').tooltip();
+        return this;
+    },
+
+    events : {
+    	'click #tutorialsubmit' : 'submitTutorial',
+		'click .upvote' : 'upvoteTutorial',
+        'click .downvote' : 'downvoteTutorial',
+    },
+
+    upvoteTutorial : function(event) {
+        var tutorial_id = parseInt(event.target.id.substring(7));
+        var newVote = new app.VoteTutorial({
+            user : app.cur_fb_user,
+            tutorialId : tutorial_id,
+            vote : true,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curTutorial = app.tutorials.get(tutorial_id);
+                var cur_user_vote = parseInt(curTutorial.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curTutorial.set({
+                        'votes' : curTutorial.get('votes')-1,
+                        'cur_user_vote' : 0,
+                    });
+                    curTutorial.set({});
+                } else if (cur_user_vote == 0) {
+                    curTutorial.set({
+                        'votes' : curTutorial.get('votes')+1,
+                        'cur_user_vote' : 1,
+                    });
+                } else {
+                    curTutorial.set({
+                        'votes' : curTutorial.get('votes')+2,
+                        'cur_user_vote' : 1,
+                    });
+                }
+            },
+        });
+    },
+
+    downvoteTutorial : function(event) {
+        var tutorial_id = parseInt(event.target.id.substring(9));
+        var newVote = new app.VoteTutorial({
+            user : app.cur_fb_user,
+            tutorialId : tutorial_id,
+            vote : false,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curTutorial = app.tutorials.get(tutorial_id);
+                var cur_user_vote = parseInt(curTutorial.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curTutorial.set({'votes' : curTutorial.get('votes')-2});
+                    curTutorial.set({'cur_user_vote' : -1});
+                } else if(cur_user_vote == 0) {
+                    curTutorial.set({'votes' : curTutorial.get('votes')-1});
+                    curTutorial.set({'cur_user_vote' : -1});
+                } else {
+                    curTutorial.set({'votes' : curTutorial.get('votes')+1});
+                    curTutorial.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    submitTutorial : function(event) {
+        var url = $('#tutorial_url_input').val();
+        $('#tutorial_url_input').val('');
+
+        var newTutorial = new app.Tutorial({
+        	description : '',
+            user : app.cur_fb_user,
+            url : url,
+            products : [
+            	'/api/v1/product_p/' + app.product.get('id') + '/',
+            ],
+        });
+
+        newTutorial.save(null, {
+            success : function(model, response) {
+                app.tutorials.add(response);
+            },
+        });
+    },
+});
+
+app.VoteTutorial = Backbone.Tastypie.Model.extend({
+    defaults : {
+        user : '',
+        vote : '',
+        added_time : 'Now',
+        tutorial : '',
+    },
+
+    urlRoot : '/api/v1/votes/tutorial_p/',
+
+    url : function() {
+        if(this.id!=undefined) {
+            return this.urlRoot + this.id + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('tutorialId') != undefined) {
+            this.set({'tutorial' : '/api/v1/tutorial_p/' + this.get('tutorialId') + "/"});
+        }
+    },
+
+    idAttribute : "id",
+});
+
+app.VoteTutorialList = Backbone.Tastypie.Collection.extend({
+    model : app.VoteTutorial,
+    urlRoot : '/api/v1/votes/tutorial_p/',
+
+    url : function() {
+        if(this.userId != undefined && this.tutorialId != undefined) {
+            return this.urlRoot + "?tutorial=" + this.tutorialId + "&user=" + this.userId;
+        }
+        return this.urlRoot;
+    },
+
+    setUserId : function(userId) {
+        this.userId = userId;
+    },
+
+    setTutorialId : function(tutorialId) {
+        this.tutorialId = tutorialId;
+    },
+});
+
+
+/** Makeys **/
+app.Makey = Backbone.Tastypie.Model.extend({
+	urlRoot : '/api/v1/makey_p/',
+	idAttribute : 'id',
+
+	defaults : {
+        added_time : 'Now',
+        description : '',
+        votes : 0,
+        cur_user_vote : 0,
+    },
+
+    initialize : function() {
+    	this.bind('change:cur_user_vote', this.updateVoteBools, this);
+
+        // if(this.get('user')==undefined)
+    		this.initCurUserVote();
+    },
+
+    initCurUserVote : function() {
+        var curUserVotes = new app.VoteMakeyList();
+        curUserVotes.setUserId(cur_user_details.id);
+        curUserVotes.setMakeyId(this.id);
+
+        var that = this;
+        curUserVotes.fetch({
+            success : function(model, response) {
+                if(response.objects.length > 0){
+                    if(response.objects[0].vote)
+                        that.set({'cur_user_vote' : 1});
+                    else
+                        that.set({'cur_user_vote' : -1});
+                } else  {
+                    that.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    updateVoteBools : function() {
+        var cur_user_vote = this.get('cur_user_vote');
+
+        if(cur_user_vote == 1) {
+            this.set({
+                'cur_user_upvote' : true,
+                'cur_user_downvote' : false,
+            });
+        } else if(cur_user_vote == 0) {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : false,
+            });
+        } else {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : true,
+            });
+        }
+    },
+});
+
+app.MakeyList = Backbone.Tastypie.Collection.extend({
+	model : app.Makey,
+	urlRoot : '/api/v1/makey_p/?limit=0&parts={{product_id}}',
+
+	initialize : function() {
+		this.fetch();
+	},
+})
+
+app.MakeyView = Backbone.View.extend({
+	el : '#product_makeys',
+    template : Handlebars.compile($('#makey_template').html()),
+
+    initialize : function() {
+    	this.listenTo(app.makeys, 'add', this.addAll);
+    	this.listenTo(app.makeys, 'change', this.addAll);
+    },
+    
+    addAll : function() {
+        $('#makeylist').html('');
+        app.makeys.each(this.render, this);
+    },
+
+    render : function(model) {
+        $('#makeylist').append(this.template(model.toJSON()));
+        $('#makeylist').find('.tooltips').tooltip();
+        return this;
+    },
+
+    events : {
+    	'click #makeysubmit' : 'submitMakey',
+		'click .upvote' : 'upvoteMakey',
+        'click .downvote' : 'downvoteMakey',
+    },
+
+    upvoteMakey : function(event) {
+        var makey_id = parseInt(event.target.id.substring(7));
+        var newVote = new app.VoteMakey({
+            user : app.cur_fb_user,
+            makeyId : makey_id,
+            vote : true,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curMakey = app.makeys.get(makey_id);
+                var cur_user_vote = parseInt(curMakey.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curMakey.set({'votes' : curMakey.get('votes')-1});
+                    curMakey.set({'cur_user_vote' : 0});
+                } else if (cur_user_vote == 0) {
+                    curMakey.set({'votes' : curMakey.get('votes')+1});
+                    curMakey.set({'cur_user_vote' : 1});
+                } else {
+                    curMakey.set({'votes' : curMakey.get('votes')+2});
+                    curMakey.set({'cur_user_vote' : 1});
+                }
+            },
+        });
+    },
+
+    downvoteMakey : function(event) {
+        var makey_id = parseInt(event.target.id.substring(9));
+        var newVote = new app.VoteMakey({
+            user : app.cur_fb_user,
+            makeyId : makey_id,
+            vote : false,
+        });
+        newVote.save(null, {
+            success : function(model, response) {
+                var curMakey = app.makeys.get(makey_id);
+                var cur_user_vote = parseInt(curMakey.get('cur_user_vote'));
+                if(cur_user_vote == 1) {
+                    curMakey.set({'votes' : curMakey.get('votes')-2});
+                    curMakey.set({'cur_user_vote' : -1});
+                } else if(cur_user_vote == 0) {
+                    curMakey.set({'votes' : curMakey.get('votes')-1});
+                    curMakey.set({'cur_user_vote' : -1});
+                } else {
+                    curMakey.set({'votes' : curMakey.get('votes')+1});
+                    curMakey.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    submitMakey : function(event) {
+        var makey = $('#makey_input').val();
+        $('#makey_input').val('');
+
+        var makey_url = $('#makey_url_input').val();
+        $('makey_url_input').val('');
+
+        var newMakey = new app.Makey({
+        	description : '',
+            user : app.cur_fb_user,
+            url : makey_url,
+            parts : [
+            	'/api/v1/product_p/' + app.product.get('id') + '/',
+            ],
+            name : makey,
+        });
+
+        newMakey.save(null, {
+            success : function(model, response) {
+                app.makeys.add(response);
+            },
+        });
+    },
+});
+
+app.VoteMakey = Backbone.Tastypie.Model.extend({
+    defaults : {
+        user : '',
+        vote : '',
+        added_time : 'Now',
+        makey : '',
+    },
+
+    urlRoot : '/api/v1/votes/makey_p/',
+
+    url : function() {
+        if(this.id!=undefined) {
+            return this.urlRoot + this.id + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('makeyId') != undefined) {
+            this.set({'makey' : '/api/v1/makey_p/' + this.get('makeyId') + "/"});
+        }
+    },
+
+    idAttribute : "id",
+});
+
+app.VoteMakeyList = Backbone.Tastypie.Collection.extend({
+    model : app.VoteMakey,
+    urlRoot : '/api/v1/votes/makey_p/',
+
+    url : function() {
+        if(this.userId != undefined && this.makeyId != undefined) {
+            return this.urlRoot + "?makey=" + this.makeyId + "&user=" + this.userId;
+        }
+        return this.urlRoot;
+    },
+
+    setUserId : function(userId) {
+        this.userId = userId;
+    },
+
+    setMakeyId : function(makeyId) {
+        this.makeyId = makeyId;
+    },
+});
+
+
+/** Product Main **/
+app.Product = Backbone.Tastypie.Model.extend({
+	url : '/api/v1/product_p/{{product_id}}',
+	idAttribute : "id",
+
+	initialize : function() {
+		this.fetch();
+	},
+});
+
+app.ProductView = Backbone.View.extend({
+	el : $('#product_info'),
+	template : Handlebars.compile($('#product_template').html()),
+
+	initialize : function() {
+		this.listenTo(app.product, 'change', this.render);
+	},
+
+	render : function() {
+		this.$el.html('');
+		this.$el.find('.tooltips').tooltip();
+		this.$el.append(this.template(app.product.toJSON()));
+	},
+
+});
+
+app.Router = Backbone.Router.extend({
+    routes: {
+        "*actions": "defaultRoute" // matches http://example.com/#anything-here
+    }
+});
+// Initiate the router
+
+
+/** INTIALIZING **/
+app.initializeUser();
+// app.router= new app.Router();
+// Backbone.history.start();
+
+
+
+
+
+
+app.images = new app.ImageList();
+app.descriptions = new app.ProductDescriptionList();
+app.shopUrls = new app.ProductShopUrlList();
+app.reviews = new app.ProductReviewList();
+app.tutorials = new app.TutorialList();
+app.makeys = new app.MakeyList();
+app.likes = new app.ProductLikeList();
+
+app.product = new app.Product();
+
+app.productView = new app.ProductView();
+app.shopurlView = new app.ProductShopUrlView();
+app.tutorialsView = new app.TutorialView();
+app.makeysView = new app.MakeyView();
+app.reviewsView = new app.ProductReviewView();
+app.descriptionsView = new app.ProductDescriptionView();
+app.imagesView = new app.ImageView();
+app.likesView = new app.ProductLikeView();
+
+// This is the part that is specific to the router. After the entire data is loaded, a click function call to the corresponding element will trigger off the scroll.
+
+app.router = new app.Router;
+app.router.on('route:defaultRoute', function(actions) {
+    // $('#a_reviews').click();
+})
+// Start Backbone history a necessary step for bookmarkable URL's
+Backbone.history.start();
+
+</script>

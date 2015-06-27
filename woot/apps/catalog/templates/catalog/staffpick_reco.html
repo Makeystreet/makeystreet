@@ -1,0 +1,51 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-12 col-md-12 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Current staff picks</h2>
+        </div>
+        <table id="article-table" class="table table-bordered table-condensed table-vcenter">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th class='text-center'>Title</th>
+                    <th class='text-center'>Description</th>
+                    <th class='text-center'>Recommendation</th>
+                    <th class='text-center'>User</th>
+                    <th class='text-center'>Staff picked date</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for recommendation in recommendations %}
+                <tr>
+                    <td><a href="/recommendation/{{recommendation.id}}">{{recommendation.id}}</a></td>
+                    <td class='text-center'>{{recommendation.title}}</td>
+                    <td class='text-center'>{{recommendation.description}}</td>
+                    <td class='text-center'>{{recommendation.recommendation}}</td>
+                    <td class='text-center'>{{recommendation.user.first_name}} {{recommendation.user.last_name}}</td>
+                    <td class='text-center'>{{recommendation.added_time_staff_pick}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

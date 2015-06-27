@@ -1,0 +1,211 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+<meta property="og:title"  content="{{makey.name}}" />
+<meta property="og:type"   content="makey_street:makey" />
+<meta property="og:url"    content="{{makey_url}}" />
+{% if makey.cover_pic %}
+<meta property="og:image"  content="{{makey.cover_pic}}"/>
+<meta property="og:image:url" content="{{makey.cover_pic}}" />
+{% else %}
+<meta property="og:image"  content="{{makey.images.all.0}}"/>
+<meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+{% endif %}
+
+<meta name="og:description" content="{{makey.about}}">
+<meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  var GLOBALS = {
+    'MAKEY_ID' : '{{makey.id}}',
+    'MAKEY_URL_ROOT' : '{% url 'catalog:makey_new_slug' makey.user.username makey.slug %}',
+    'SEARCH_URL' : '{% url 'catalog:search_in_makey' makey.user.username makey.slug %}'
+  }
+</script>
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/makey/search.js' %}"></script>
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/makey/search.css' %}" type="text/css">
+{% endcompress %}
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="eight wide column">
+        <h1 class="ui header makey-header"><a href="{{makey.get_absolute_url}}">{{makey.name}}</a></h1>
+        {% if parents %}
+        <div class="ui medium breadcrumb makey-parents">
+          {% for parent in parents %}
+          <a class="section" href="{{parent.get_absolute_url}}">{{parent.name}}</a>
+          <i class="right chevron icon divider"></i>
+          {% endfor %}
+          <div class="active section">{{makey.name}}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui fluid action input search-box">
+        <input type="text" placeholder="Search this Makey" value="{{q}}" class="search-input">
+        <div class="ui button search-button">Search</div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ui grid">
+        <div class="four wide column">
+          {% for cur_makey, result_set in results %}
+          {% if forloop.first %}
+          <div class="ui vertical pointing menu vertical-makey-menu">
+            <div class="header item">
+              {{cur_makey.name}}
+            </div>
+            <a class="item tab-item {% if forloop.first %}active{% endif %}" data-tab="{{cur_makey.slug}}-insights">
+              <div class="ui small label">{{result_set.notes.count}}</div>
+              Insights
+            </a>
+            {% comment %}
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-issues">
+              <div class="ui small label">0</div>
+              Issues
+            </a>
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-bom">
+              <div class="ui small label">0</div>
+              BOM
+            </a>
+            {% endcomment %}
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-bom">
+              <div class="ui small label">{{result_set.bom.count}}</div>
+              BOM
+            </a>
+          </div>
+          {% if results|length > 1 %}
+          <h4 class="ui header submodules">
+            Submodules
+          </h4>
+          {% endif %}
+          {% else %}
+          {% if result_set.count %}
+          <div class="ui vertical pointing menu vertical-makey-menu">
+            <div class="header item">
+              {{cur_makey.name}}
+            </div>
+            <a class="item tab-item {% if forloop.first %}active{% endif %}" data-tab="{{cur_makey.slug}}-insights">
+              <div class="ui small label">{{result_set.notes.count}}</div>
+              Insights
+            </a>
+            {% comment %}
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-issues">
+              <div class="ui small label">0</div>
+              Issues
+            </a>
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-bom">
+              <div class="ui small label">0</div>
+              BOM
+            </a>
+            {% endcomment %}
+            <a class="item tab-item" data-tab="{{cur_makey.slug}}-bom">
+              <div class="ui small label">{{result_set.bom.count}}</div>
+              BOM
+            </a>
+          </div>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+        </div>
+        {% load catalog_tags %}
+        <div class="twelve wide column">
+          {% for cur_makey, result_set in results %}
+          <div class="ui segment insights-segment ui tab {% if forloop.first %}active{% endif %}" data-tab="{{cur_makey.slug}}-insights">
+            <div class="ui top attached label">We found {{result_set.notes.count}} insights in '{{cur_makey.name}}'</div>
+            <div class="ui divided items">
+              {% for note in result_set.notes %}
+              <div class="item" data-href="{% url 'catalog:makey_new_insight_slug' cur_makey.user.username cur_makey.slug note.id %}">
+                {% if note.image %}
+                <span class="ui tiny image">
+                  <img src="{{note.image.large_url}}">
+                </span>
+                {% endif %}
+                <div class="content">
+                  <span class="header">{{note.title|highlight:q}}</span>
+                  <div class="meta">
+                    <span class="time">posted {{note.added_time|timesince}} ago by</span>
+                    <span class="author">{{note.user.first_name}} {{note.user.last_name}}</span>
+                  </div>
+                  <div class="description">
+                    <div>
+                      {{note.body|urlize_target_blank:None|linebreaks|highlight:q}}
+                    </div>
+                  </div>
+                  <div class="extra">
+                    <span class="comments"><i class="icon comments"></i>
+                      {{note.comments.count}} comment{{note.comments.count|pluralize}}
+                    </span>
+                    {% if note.tags.count != 0 %}
+                    <i class="icon tags"></i>
+                    {% for tag in note.tags.all %}
+                    {% if forloop.last %}
+                    {{tag.name}}
+                    {% else %}
+                    {{tag.name}},
+                    {% endif %}
+                    {% endfor %}
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <center>
+                <p>No insights found</p>
+              </center>
+              {% endfor %}
+            </div>
+          </div>
+            <table class="ui striped table ui tab" data-tab="{{cur_makey.slug}}-bom">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Comments</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for bom in result_set.bom.all %}
+                <tr>
+                  <td>{{bom.name|highlight:q}}</td>
+                  <td>{{bom.quantity}}</td>
+                  <td>{{bom.comments|urlize_target_blank:None|linebreaks|highlight:q}}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3">
+                    <center>No parts found</center>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

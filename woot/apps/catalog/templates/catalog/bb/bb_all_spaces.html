@@ -1,0 +1,284 @@
+<script>
+var app = {};
+app.current_page_number = -1;
+app.items_per_page = 12;
+app.items_count = 0;
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            // alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+app.Image = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/image/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('resource_uri') != undefined || this.get('id') != undefined){
+            this.fetch();
+        }
+    },
+});
+
+
+app.Space = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/top_spaces/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    // initialize : function() {
+    //     this.cover_pic = new app.Image();
+
+    //     if(this.get('cover_pic') != null){
+    //         this.cover_pic.set({'resource_uri' : this.get('cover_pic')});
+    //         var that = this;
+    //         this.cover_pic.fetch({
+    //             success : function(model, response){
+    //                 that.set({'cover_pic_url' : response.large_url });
+    //             },
+    //         });
+    //     }
+    // },
+});
+
+app.SpaceList = Backbone.Tastypie.Collection.extend({
+    model : app.Space,
+    urlRoot : '/api/v1/top_spaces/',
+
+    url : function() {
+        var offset = (app.current_page_number-1) * app.items_per_page;
+        // return this.urlRoot;
+        return this.urlRoot + "?limit=" + app.items_per_page + "&offset=" + offset;
+    },
+});
+
+app.SpaceView = Backbone.View.extend({
+    el : "#results",
+    template : Handlebars.compile($("#space_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.spaces, 'add', this.addAll);
+        this.listenTo(app.spaces, 'change', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        this.options.cur_item_count = 0;
+        app.spaces.each(this.render, this);
+        this.$el.find('.tooltips').tooltip();
+    },
+
+    render : function(model) {
+        if(this.options.cur_item_count%app.row_count == 0) {
+            this.$el.append(this.new_row);
+        }
+
+        var json = model.toJSON();
+        if(json.user == null) {
+            json.has_user = false;
+        } else {
+            json.has_user = true;
+        }
+
+        this.$el.find(".new_row").last().append(this.template(json));
+        this.options.cur_item_count++;
+        return this;
+    },
+});
+
+app.initializePageNumber = function() {
+    var urlParams;
+    (window.onpopstate = function () {
+        var match,
+            pl     = /\+/g,  // Regex for replacing addition symbol with a space
+            search = /([^&=]+)=?([^&]*)/g,
+            decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+            query  = window.location.search.substring(1);
+
+        urlParams = {};
+        while (match = search.exec(query))
+           urlParams[decode(match[1])] = decode(match[2]);
+    })();
+
+    var currentPageNumber;
+    if(urlParams["page"]){
+        currentPageNumber = parseInt(urlParams["page"]);
+    } else {
+        currentPageNumber = 1;
+    }
+
+    app.current_page_number = currentPageNumber;
+};
+
+app.PaginationView = Backbone.View.extend({
+    el : "#pagination",
+    template : Handlebars.compile($('#pagination_template').html()),
+
+    initialize : function(response) {
+        var currentPageNumber = app.current_page_number;
+        var total_items = response.meta.total_count;
+        var items_per_page = app.items_per_page;
+        var total_pages = Math.ceil(total_items/items_per_page);
+
+        var first_disabled = false;
+        if(currentPageNumber == 1) {
+            first_disabled = true;
+        }
+
+        var previous_disabled = false;
+        if(currentPageNumber == 1) {
+            previous_disabled = true;
+        }
+        var previous_page = currentPageNumber-1;
+
+        var list_pages = new Array();
+        if(total_pages == 1) {
+            list_pages = [1];
+        } else if (total_pages <= 8) {
+            for(var i=1; i<total_pages+1; i++) {
+                list_pages.push(i);
+            }
+        } else if (currentPageNumber <= 2) {
+            list_pages = [1,2,3,4,'. . .',total_pages];
+        } else if (currentPageNumber >= total_pages - 2) {
+            list_pages = [1,'. . .',];
+            for(var i=total_pages-3; i<total_pages+1; i++) {
+                list_pages.push(i);
+            }
+        } else {
+            list_pages = ['. . .',];
+            for(var i=currentPageNumber-2; i<currentPageNumber+3; i++) {
+                list_pages.push(i);
+            }
+            list_pages.push('. . .');
+        }
+
+        var next_page = currentPageNumber + 1;
+
+        var page_class = new Array();
+        for(var i=0; i<list_pages.length; i++) {
+            if(currentPageNumber == list_pages[i]) {
+                page_class.push("active");
+            } else if ('. . .' == list_pages[i]) {
+                page_class.push("disabled");
+            } else {
+                page_class.push("");
+            }
+        }
+
+        var page_link = new Array();
+        for(var i=0; i<list_pages.length; i++) {
+            if('. . .' != list_pages[i]) {
+                page_link.push("?page="+list_pages[i]);
+            } else {
+                page_link.push("");
+            }
+        }
+
+        var next_disabled = false;
+        if(currentPageNumber == total_pages) {
+            next_disabled = true;
+        }
+
+        var last_disabled = false;
+        if(currentPageNumber == total_pages) {
+            last_disabled = true;
+        }
+
+        var pages = new Array();
+        for(var i=0; i<list_pages.length; i++) {
+            pages.push({
+                page_class : page_class[i],
+                page_link : page_link[i],
+                page : list_pages[i],
+            });
+        }
+
+        this.$el.append(this.template({
+            first_disabled : first_disabled,
+            previous_disabled : previous_disabled,
+            previous_page : previous_page,
+            pages : pages,
+            next_disabled : next_disabled,
+            next_page : next_page,
+            last_disabled : last_disabled,
+            last_page : total_pages,
+        }));
+
+        return this;
+    },
+});
+
+/* INITIALISE */
+app.initializeUser();
+app.initializePageNumber();
+
+// app.makeys = new app.MakeyList();
+// app.makeys.fetch({s
+//     success : function(collection, response) {
+//         // app.pagination = new app.PaginationView(collection);
+//     },
+// });
+app.spaces = new app.SpaceList();
+// console.log("haha1");
+app.spaces.fetch({
+    success : function(collection, response) {
+        app.pagination = new app.PaginationView(collection);
+        // console.log("haha3");
+        // console.log(app.spaces);
+    },
+});
+// console.log("haha2");
+
+
+
+app.spaceView = new app.SpaceView();
+</script>

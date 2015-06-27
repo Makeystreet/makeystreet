@@ -1,0 +1,280 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create a Review {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+    .bootstrap-tagsinput {
+        width: 100%;
+    }
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 400px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+
+</style>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_create_product_review.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_create_product_review.html" %}
+{% endblock %}
+
+{% block content_full %}
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="col-sm-8 col-md-8 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Review a Part</h2>
+        </div>
+
+        <form id="product_review_wizard" action="#" method="POST" class="form-horizontal form-bordered" novalidate="novalidate">
+            <div class="form-group" id="type">
+                <label class="col-md-4 control-label" for="val_type">Review about a <span class="text-danger">*</span></label>
+                <div class="col-md-8">
+                    <select id="val_type" name="val_type" class="select-chosen" data-placeholder="What do you want to review?" style="display:none;" required>
+                        <option></option>
+                        <option value="PART">Part/Tool</option>
+                        <option value="SHOP">Store (Online/Offline)</option>
+                        <option value="SPACE">Space (Makerspace/Hackerspace)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="parts" style="display:none;">
+                <label class="col-md-4 control-label" for="val_part">Select a Part</label>
+                <div class="col-md-8">
+                    <input type="text" id="val_part" name="val_part" class="" data-role="tagsinput" placeholder="Enter name of part">
+                </div>
+            </div>
+            <div class="form-group" id="shops" style="display:none;">
+                <label class="col-md-4 control-label" for="val_shop">Select a Shop</label>
+                <div class="col-md-8">
+                    <input type="text" id="val_shop" name="val_shop" class="" data-role="tagsinput" placeholder="Enter name of shop">
+                </div>
+            </div>
+            <div class="form-group" id="spaces" style="display:none;">
+                <label class="col-md-4 control-label" for="val_space">Select a Space</label>
+                <div class="col-md-8">
+                    <input type="text" id="val_space" name="val_space" class="" data-role="tagsinput" placeholder="Enter name of space">
+                </div>
+            </div>
+            <div id="common_review" style="display:none;">
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_title">Review Heading<span class="text-danger">&nbsp;*</span></label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_title" name="val_title" class="form-control ui-wizard-content" placeholder="Heading for the review" required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_review">Description<span class="text-danger">&nbsp;*</span></label>
+                    <div class="col-md-8">
+                        <textarea id="val_review" name="val_review" class="form-control ui-wizard-content" placeholder="Briefly describe the Makey.." required="" rows="3" maxlength="99990"></textarea>
+                    </div>
+                </div>
+                <div class="form-group" id="rating">
+                    <label class="col-md-4 control-label" for="val_rating">Rating<span class="text-danger">&nbsp;*</span></label>
+                    <div class="col-md-8">
+                        <input type="hidden" id="val_rating" name="val_rating" class="form-control ui-wizard-content" placeholder="Name of the Makey.." required="">
+                        <span style="display:inline-block;">
+                            <i class="fa fa-star-o review_ratings rating_1"></i>
+                            <i class="fa fa-star-o review_ratings rating_2"></i>
+                            <i class="fa fa-star-o review_ratings rating_3"></i>
+                            <i class="fa fa-star-o review_ratings rating_4"></i>
+                            <i class="fa fa-star-o review_ratings rating_5"></i>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group form-actions">
+                    <div class="col-md-8 col-md-offset-4">
+                        <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-angle-right"></i> Submit</button>
+                        <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-repeat"></i> Reset</button>
+                    </div>
+                </div>
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('button[type="submit"]').click(function(){
+            if(cur_user_details.id === undefined) {
+                $('#login_modal').modal('show');
+                return false;
+            }
+        })
+    });
+</script>
+<script type="text/javascript">
+var FormsWizard = function() {
+    return {
+        init: function() {
+            /*
+             *  Jquery Wizard, Check out more examples and documentation at http://www.thecodemine.org
+             *  Jquery Validation, Check out more examples and documentation at https://github.com/jzaefferer/jquery-validation
+             */
+
+            /* Initialize Advanced Wizard with Validation */
+            $('#product_review_wizard').formwizard({
+                disableUIStyles: true,
+                validationEnabled: true,
+                validationOptions: {
+                    errorClass: 'help-block animation-slideDown',
+                    errorElement: 'span',
+                    errorPlacement: function(error, e) {
+                        e.parents('.form-group > div').append(error);
+                    },
+                    highlight: function(e) {
+                        $(e).closest('.form-group').removeClass('has-success has-error').addClass('has-error');
+                        $(e).closest('.help-block').remove();
+                    },
+                    success: function(e) {
+                        e.closest('.form-group').removeClass('has-success has-error');
+                        e.closest('.help-block').remove();
+                    },
+                    // rules: {
+                    //     val_title: {
+                    //         required: true,
+                    //         minlength: 4,
+                    //     },
+                    //     val_review: {
+                    //         required: true,
+                    //     },
+                    //     val_rating: {
+                    //         required: true,
+                    //         range: [1,5],
+                    //     },
+                    // },
+                    // messages: {
+                    //     val_title: {
+                    //         required: 'Please enter a headline for your review',
+                    //         minlength: 'Headline must consist of at least 4 characters'
+                    //     },
+                    //     val_review: {
+                    //         required: 'Please enter a few words about the part',
+                    //     },
+                    //     val_rating: {
+                    //         required: 'Please enter a rating',
+                    //         range: 'Please give a rating between 1-5',
+                    //     },
+                    // },
+                },
+                inDuration: 0,
+                outDuration: 0
+            });
+        }
+    };
+}();
+
+// $(function(){ FormsWizard.init(); });
+</script>
+{% endblock %}

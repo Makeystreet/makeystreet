@@ -1,0 +1,65 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+{% load url from future %}
+{% load i18n %}
+
+{% block title %}MakeyStreet | Signup{% endblock %}
+
+{% block content_full %}
+
+    <h1>{% trans "Sign Up" %}</h1>
+
+    <p>{% blocktrans with provider_name=account.get_provider.name site_name=site.name %}You are about to use your {{provider_name}} account to login to
+    {{site_name}}. As a final step, please complete the following form:{% endblocktrans %}</p>
+
+    <form style="display: block;" class="form-horizontal form-bordered" method="POST" action="{% url 'socialaccount_signup' %}" id="signup_form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        <div class="form-group">
+            <div class="col-xs-3">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input id="id_first_name" name="first_name" maxlength="30" class="form-control input-lg" placeholder="First Name" type="text" value="{{form.first_name.value}}">
+                    {{ form.first_name.errors }}
+                </div>
+            </div>
+            <div class="col-xs-3">
+                <input id="id_last_name" name="last_name" maxlength="30" class="form-control input-lg" placeholder="Last Name" type="text" value="{{form.last_name.value}}">
+                {{ form.last_name.errors }}
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-user"></i></span>
+                    <input id="id_username" name="username" maxlength="30" class="form-control input-lg" placeholder="Username" type="text"  value="{{form.username.value}}">
+                    {{ form.username.errors }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-addon"><i class="fa fa-envelope"></i></span>
+                    <input id="id_email" name="email" class="form-control input-lg" placeholder="Email" type="email"  autofocus="autofocus" value="{{form.email.value}}">
+                    {% if redirect_field_value %}
+                        <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                    {% endif %}
+                    {{ form.email.errors }}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-xs-6 text-right">
+                <button type="submit" class="btn btn-sm btn-success"><i class="fa fa-plus"></i> Save</button>
+            </div>
+        </div>
+    </form>
+
+
+    <p>Please contact us at alex@makeystreet.com if you have any trouble.</p>
+{% endblock %}

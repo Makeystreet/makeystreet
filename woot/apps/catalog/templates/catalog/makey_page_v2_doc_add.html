@@ -1,0 +1,238 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+<meta property="og:title"  content="{{makey.name}}" />
+<meta property="og:type"   content="makey_street:makey" />
+<meta property="og:url"    content="{{makey_url}}" />
+{% if makey.cover_pic %}
+<meta property="og:image"  content="{{makey.cover_pic}}"/>
+<meta property="og:image:url" content="{{makey.cover_pic}}" />
+{% else %}
+<meta property="og:image"  content="{{makey.images.all.0}}"/>
+<meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+{% endif %}
+
+<meta name="og:description" content="{{makey.about}}">
+<meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  var GLOBALS = {
+    'MAKEY_ID' : '{{makey.id}}',
+    'MAKEY_URL_ROOT' : '{% url 'catalog:makey_new_slug' makey.user.username makey.slug %}',
+    'SEARCH_URL' : '{% url 'catalog:search_in_makey' makey.user.username makey.slug %}'
+  }
+</script>
+<script src="{% static 'app/lib/wysihtml/wysihtml5x-toolbar.min.js' %}"></script>
+<script src="{% static 'app/lib/wysihtml/advanced.js' %}"></script>
+
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/makey/doc_add.js' %}"></script>
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/makey/doc_add.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'app/common/typeahead.css' %}" type="text/css">
+{% endcompress %}
+<script src="{% static 'js/typeahead.js' %}"></script>
+{% endblock %}
+
+{% block templates %}
+{% verbatim %}
+<script type="text/template" id="tag-template">
+  <div class="ui label tag-item" data-tag-name="{{name}}">{{name}}<i class="icon close"></i></div>
+</script>
+<script type="text/x-handlebars-template" id="tag-item-input-template">
+  <input type="hidden" name="tag_name" value="{{name}}">
+</script>
+{% endverbatim %}
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="eight wide column">
+        <h1 class="ui header makey-header"><a href="{{makey.get_absolute_url}}">{{makey.name}}</a></h1>
+        {% if parents %}
+        <div class="ui medium breadcrumb makey-parents">
+          {% for parent in parents %}
+          <a class="section" href="{{parent.get_absolute_url}}">{{parent.name}}</a>
+          <i class="right chevron icon divider"></i>
+          {% endfor %}
+          <div class="active section">{{makey.name}}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui secondary pointing menu tabular">
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'overview' %}">
+          <i class="home icon"></i> OVERVIEW
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'insights' %}">
+          <i class="idea icon"></i>
+          {% if insights_count %}
+          {{insights_count}}
+          {% endif %}
+          INSIGHTS
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'discussions' %}">
+          <i class="comments outline icon"></i>
+          {% if discussions_count %}
+          {{discussions_count}}
+          {% endif %}
+          DISCUSSIONS
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'files' %}">
+          <i class="folder icon"></i>
+          {% if files_count %}
+          {{files_count}}
+          {% endif %}
+          FILES
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'gallery' %}">
+          <i class="photo icon"></i>
+          {% if gallery_count %}
+          {{gallery_count}}
+          {% endif %}
+          GALLERY
+        </a>
+        <a class="item active" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'docs' %}">
+          <i class="book icon"></i>
+          {% if docs_count %}
+          {{docs_count}}
+          {% endif %}
+          DOCS
+        </a>
+        <div class="right menu">
+          <div class="item">
+            <div class="ui icon input search-box">
+              <input type="text" placeholder="Search this Makey..." class="search-input">
+              <i class="search link icon search-button"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ui grid">
+        <div class="row">
+          <div class="eleven wide column add-doc-column">
+            <div class="right ui rail">
+              <div class="ui sticky add-doc-button-sticky">
+                <div class="ui primary medium button add-doc-button"><i class="icon add"></i>Add this documentation</div>
+              </div>
+            </div>
+            <div class="ui basic segment back-segment">
+              <a class="back-button" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'docs' %}"><i class="left chevron icon"></i>Go back to all documentations</a>
+            </div>
+            <div class="ui segment doc-segment" style="margin-top: 0;">
+              <h3 class="ui header">Add documentation</h3>
+              <form action="/makey_action/" method="post" class="add-doc-form">
+                <div class="ui form add-doc">
+                  <div class="required field">
+                    <label>Title</label>
+                    <input type="text" placeholder="Title of this documentation entry" name="title">
+                  </div>
+                  <div class="required field">
+                    <label>Description</label>
+                    <div class="ui toolbar">
+                      <div id="wysihtml-toolbar" style="display: none;">
+                        <div class="ui icon tiny buttons">
+                          <a title="Bold" data-wysihtml5-command="bold" class="ui icon button"><i class="bold icon"></i></a>
+                          <a title="Italic" data-wysihtml5-command="italic" class="ui icon button"><i class="italic icon"></i></a>
+                          <a title="Underline" data-wysihtml5-command="underline" class="ui icon button"><i class="underline icon"></i></a>
+                        </div>
+                        <div class="ui icon tiny buttons">
+                          <a title="Add link" data-wysihtml5-command="createLink" class="ui icon button"><i class="linkify icon"></i></a>
+                          <a title="Remove link" data-wysihtml5-command="removeLink" class="ui icon button"><i class="unlink icon"></i></a>
+                          <a title="Add Image" data-wysihtml5-command="insertImage" class="ui icon button"><i class="file image outline icon"></i></a>
+                        </div>
+                        <div class="ui icon tiny buttons">
+                          <a title="Unordered list" data-wysihtml5-command="insertUnorderedList" class="ui icon button"><i class="unordered list icon"></i></a>
+                          <a title="Ordered list" data-wysihtml5-command="insertOrderedList" class="ui icon button"><i class="ordered list icon"></i></a>
+                        </div>
+                        <div class="ui icon tiny buttons">
+                          <a title="Align Left" data-wysihtml5-command="alignLeftStyle" class="ui icon button"><i class="align left icon"></i></a>
+                          <a title="Align Center" data-wysihtml5-command="alignCenterStyle" class="ui icon button"><i class="align center icon"></i></a>
+                          <a title="Align Right" data-wysihtml5-command="alignRightStyle" class="ui icon button"><i class="align right icon"></i></a>
+                        </div>
+                        <div class="ui icon tiny buttons">
+                          <a title="Heading 1" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h1" class="ui icon button">h1</a>
+                          <a title="Heading 2" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h2" class="ui icon button">h2</a>
+                          <a title="Heading 3" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="h3" class="ui icon button">h3</a>
+                          <a title="Paragraph" data-wysihtml5-command="formatBlock" data-wysihtml5-command-value="p" class="ui icon button"><i class="paragraph icon"></i></a>
+                          <a title="Blockquote" data-wysihtml5-command="insertBlockQuote" class="ui icon button"><i class="quote right icon"></i></a>
+                          <a title="Code" data-wysihtml5-command="formatCode" data-wysihtml5-command-value="language-html" class="ui icon button"><i class="code icon"></i></a>
+                        </div>
+                        <div class="ui icon tiny buttons">
+
+                          <a title="Clear formatting" data-wysihtml5-command="formatBlock" data-wysihtml5-command-blank-value="true" class="ui icon button"><i class="remove icon"></i></a>
+                        </div>
+
+                        <div data-wysihtml5-dialog="createLink" style="display: none;">
+                          <div class="ui grid" style="margin-top: 0">
+                            <div class="thirteen wide column">
+                            <div class="ui action input">
+                                <input data-wysihtml5-dialog-field="href" placeholder="Link address - http://example.com" class="text">
+                                <a class="ui positive button" data-wysihtml5-dialog-action="save">Save</a>
+                              </div>
+                            </div>
+                            <div class="three wide column">
+                              <a class="ui basic button" data-wysihtml5-dialog-action="cancel">Cancel</a>
+                            </div>
+                          </div>
+                        </div>
+                        <div data-wysihtml5-dialog="insertImage" style="display: none;">
+                          <div class="ui grid" style="margin-top: 0">
+                            <div class="thirteen wide column">
+                              <div class="ui action input">
+                                <input type="text" data-wysihtml5-dialog-field="src" placeholder="Image link - http://example.com" class="text">
+                                <a class="ui positive button" data-wysihtml5-dialog-action="save">Save</a>
+                              </div>
+                            </div>
+                            <div class="three wide column">
+                              <a class="ui basic button" data-wysihtml5-dialog-action="cancel">Cancel</a>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <textarea id="wysihtml-textarea" style="max-height: 30em; height: 30em;" placeholder="What do you want to document?" name="body"></textarea>
+                </div>
+                <input type="hidden" name="makey_id" value="{{makey.id}}">
+                <input type="hidden" name="action" value="add-doc">
+              </form>
+            </div>
+            <div class="ui segment">
+              <h3 class="ui header">Add tags</h3>
+              <div class="ui basic segment">
+                <div class="ui labels tags-container">
+                </div>
+                <div class="ui icon input">
+                  <input type="text" placeholder="Search for tags..." class="tags-search">
+                  <i class="add link icon add-tag-icon"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock %}

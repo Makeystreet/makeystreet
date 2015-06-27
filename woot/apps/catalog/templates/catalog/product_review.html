@@ -1,0 +1,135 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet - Product Review - {{review.product.name}} - {{review.title}} {% endblock %}
+
+{% block contentmeta%}
+    <meta property="og:type"   content="makey_street:review" />
+    <meta property="og:url"    content="http://www.makeystreet.com/review/product/{{review.id}}/" />
+    <meta property="og:title"  content="{{review.title}}" />
+    <meta property="og:image"  content="{{review.product.productimages.first.url}}" />
+    <meta property="og:description" content="{{review.review}}" />
+    <meta property="og:site_name" content="Makeystreet" />
+    <meta property="og:determiner" content="a" />
+{% endblock%}
+
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_product_review.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_product_review.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+                <div class="row">
+                    <div class="col-xs-3">
+                        <img src="{{review.product.productimages.first.url}}" class="img-responsive">
+                    </div>
+                    <div class="col-xs-9">
+                        <h2>Product Review</h2>
+                        <table class="table table-borderless">
+                            <tbody>
+                                <tr>
+                                    <td style="width:17%;">
+                                        <b>Product</b>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'catalog:product' review.product.id %}" target="_blank">{{review.product.name}}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>Reviewer</b>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'catalog:maker' review.user.username %}">{{review.user.first_name}} {{review.user.last_name}}</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <b>Rating</b>
+                                    </td>
+                                    <td>
+                                        {% if review.rating > 0 %}
+                                        <span>
+                                            {% if review.rating == 5 %}
+                                                <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> (5/5)
+                                            {% endif %}
+                                            {% if review.rating == 4 %}
+                                                <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> (4/5)
+                                            {% endif %}
+                                            {% if review.rating == 3 %}
+                                                <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (3/5)
+                                            {% endif %}
+                                            {% if review.rating == 2 %}
+                                                <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (2/5)
+                                            {% endif %}
+                                            {% if review.rating == 1 %}
+                                                <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (1/5)
+                                            {% endif %}
+                                            {% if review.rating == 0 %}
+                                                <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (0/5)
+                                            {% endif %}
+                                        </span>
+                                        {% else %}
+                                            No Rating
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        {% if review.voteproductreview_set.count > 0 %}
+                            {{review.upvotes.count}} out of {{review.voteproductreview_set.count}} people found this review useful!
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr style="border-top: dotted 1px #DDD;" />
+
+                <div class="row">
+                    <div class ="col-xs-12">
+                        <h3 style="margin-top: 0px;">{{review.title}}</h3>
+                        <p>{{review.review}}</p>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="votes_info">
+                            Did you find this review useful?
+                            <span id="votes" style="display:inline-block">
+                                <div class="btn btn-default btn-sm upvote" id="upvote_{{id}}">
+                                    Yes
+                                </div>
+                                <div class="btn btn-default btn-sm downvote" id="downvote_{{id}}">
+                                    No
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <br/>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-3 col-md-3">
+</div>
+{% endblock %}

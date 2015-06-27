@@ -1,0 +1,187 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Search {{q}} {% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+{% endblock %}
+
+
+{% block content_full %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="content-header">
+            <div class="header-section">
+                <h1>
+                    <a href="{{makey.get_absolute_url}}">{{makey.name}}</a>
+                </h1>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-xs-12">
+        <div class="input-group" style="padding-bottom:5px;">
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-primary makey-search-btn"><i class="fa fa-search"></i> Search</button>
+            </span>
+            <input type="text" class="form-control makey-search-input" placeholder="Search this project" value="{{q}}">
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-sm-3 col-md-3">
+        {% for cur_makey, result_set in results %}
+        <div class="row module-nav" data-result-size="{{result_set.notes.count|add:result_set.questions.count|add:result_set.answers.count}}">
+            <div class="col-xs-12">
+                <ul class="nav nav-pills nav-stacked">
+                    <li class="disabled">
+                        <a href="javascript:void(0);">
+                            <b>{{cur_makey.name}}</b>
+                        </a>
+                    </li>
+                    <li class="notes-link {% if forloop.first %}active{% endif %}" data-id="{{cur_makey.id}}">
+                        <a href="javascript:void(0);">
+                            <span class="badge pull-right">{{result_set.notes.count}}</span>Insights
+                        </a>
+                    </li>
+                    <li class="questions-link" data-id="{{cur_makey.id}}">
+                        <a href="javascript:void(0);">
+                            <span class="badge pull-right">{{result_set.questions.count|add:result_set.answers.count}}</span>Discussions
+                        </a>
+                    </li>
+                    <hr/>
+                    {% if forloop.first and results|length > 1 %}
+                    <li class="disabled">
+                        <a href="javascript:void(0);">
+                            <h3>Sub-Modules</h3>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="col-sm-9 col-md-9">
+        {% for cur_makey, result_set in results %}
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="row notes-list" data-id="{{cur_makey.id}}" style="{% if not forloop.first %}display:none;{% endif %}">
+                    <div class="col-xs-12">
+                        <div class="list-group">
+                            {% for note in result_set.notes %}
+                            <a href="{{note.makeynotes.all.0.get_absolute_url}}#insights/{{note.id}}" class="list-group-item">
+                                <h4 class="list-group-item-heading">{{note.title}}</h4>
+                                <p class="list-group-item-text">{{note.body}}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row questions-list" data-id="{{cur_makey.id}}" style="display:none;">
+                    <div class="col-xs-12">
+                        <div class="list-group">
+                            {% for question in result_set.questions %}
+                            <a href="javascript:void(0)" class="list-group-item">
+                                <span class="badge">{{question.id}}</span>
+                                <h4 class="list-group-item-heading">{{question.name}}</h4>
+                                <p class="list-group-item-text">{{question.body}}</p>
+                            </a>
+                            {% endfor %}
+                            {% for answer in result_set.answers %}
+                            <a href="javascript:void(0)" class="list-group-item">
+                                <span class="badge">{{answer.id}}</span>
+                                <h4 class="list-group-item-heading">{{answer.title}}</h4>
+                                <p class="list-group-item-text">{{answer.description}}</p>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if count == 0 %}
+        <div class="row">
+            <div class="col-xs-12">
+                There are not results in <b>{{makey.name}}</b> or its sub-modules for the query <b>{{q}}</b>. Please try searching for something else!
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+$(document).ready(function() {
+
+    function hideAll() {
+        hideQuestions();
+        hideNotes();
+    }
+
+    function showNotes(id) {
+        hideAll();
+        $('.notes-list[data-id="'+id+'"]').show();
+        $('.notes-link[data-id="'+id+'"]').attr('class', 'notes-link active');
+    }
+
+    function hideNotes() {
+        $('.notes-list').hide();
+        $('.notes-link').attr('class', 'notes-link');
+    }
+
+    function showQuestions(id) {
+        hideAll();
+        $('.questions-list[data-id="'+id+'"]').show();
+        $('.questions-link[data-id="'+id+'"]').attr('class', 'questions-link active');
+    }
+
+    function hideQuestions() {
+        $('.questions-list').hide();
+        $('.questions-link').attr('class', 'questions-link');
+    }
+
+    $('.notes-link').click(function(event){
+        var id = event.currentTarget.getAttribute('data-id');
+        showNotes(id);
+    });
+
+    $('.questions-link').click(function(event){
+        var id = event.currentTarget.getAttribute('data-id');
+        showQuestions(id);
+    });
+
+    $('.module-nav[data-result-size="0"]').hide();
+});
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        function search_in_makey(){
+            var url = "{% url 'catalog:search_in_makey' makey.user.username makey.slug %}";
+            url += "?q=" + $('.makey-search-input').val();
+            $(location).attr('href', url);
+        }
+
+        $('.makey-search-btn').click(function(event){
+            search_in_makey();
+        });
+
+        $('.makey-search-input').keypress(function(event){
+            if(event.which == 13){
+                search_in_makey();
+            }
+        });
+
+
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,84 @@
+            
+{% verbatim %}
+<!-- spaces template -->
+<script type="text/template" id="space_template">
+    <div class="col-sm-4 col-md-4">
+        <div class="widget themed-background-dark">
+            <!--
+                <a href="/space/{{id}}">
+                    {{#if cover_pic}}
+                        <img src="{{cover_pic_url}}" alt="avatar" class="img-responsive">
+                    {{else}}
+                        <img src="{{images.0.large_url}}" alt="avatar" class="img-responsive">
+                    {{/if}}
+                </a>
+            -->
+            <div class="widget-extra">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h3 style="margin:10px;"><a href="/space/{{id}}" style="color:#ffffff;">{{name}}</a></h3>
+                    </div>
+                </div> 
+                <hr style="margin:0px;">
+                <!-- showing space stats-->
+                <div class="row text-center">
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <a href="/space/{{id}}/members" style="color:#ffffff;">
+                                <strong>{{members.length}}</strong><br>
+                                <small>Members</small>
+                            </a>
+                        </h3>
+                    </div>
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <a href="/space/{{id}}/makeys" style="color:#ffffff;">
+                                <strong>{{makeys.length}}</strong><br>
+                                <small>Makeys</small>
+                            </a>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+                    <!--
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{tools.length}}</strong><br>
+                            <small>Tools</small>
+                        </h3>
+                    </div>
+                    -->
+
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+{% endverbatim %}

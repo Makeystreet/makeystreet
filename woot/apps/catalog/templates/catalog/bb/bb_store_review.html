@@ -1,0 +1,293 @@
+<script>
+
+var app = {};
+app.review_id = {{review.id}};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user === undefined) {
+        if(!cur_user_details.id) {
+            // $('#login_modal').modal('show');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+        // mixpanel.track("StoreReview: Event", {event_type: "store_re", user_id:user_id, article:{{article.id}} });
+    }
+};
+app.initializeUser();
+
+app.StoreReview = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/review/shop/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+
+    initialize : function() {
+        this.bind('change:cur_user_vote', this.updateVoteBools, this);
+
+        this.initCurUserLike();
+    },
+
+    initCurUserLike : function() {
+        var curUserVotes = new app.VoteReviewList();
+        curUserVotes.setUserId(cur_user_details.id);
+        curUserVotes.setReviewId(this.id);
+
+        var that = this;
+        curUserVotes.fetch({
+            success : function(model, response) {
+                if(response.objects.length > 0){
+                    if(response.objects[0].vote)
+                        that.set({'cur_user_vote' : 1});
+                    else
+                        that.set({'cur_user_vote' : -1});
+                    that.set({'cur_user_vote_id': response.objects[0].id});
+                } else  {
+                    that.set({'cur_user_vote' : 0});
+                }
+            },
+        });
+    },
+
+    updateVoteBools : function() {
+        var cur_user_vote = this.get('cur_user_vote');
+
+        if(cur_user_vote == 1) {
+            this.set({
+                'cur_user_upvote' : true,
+                'cur_user_downvote' : false,
+            });
+        } else if(cur_user_vote == 0) {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : false,
+            });
+        } else {
+            this.set({
+                'cur_user_upvote' : false,
+                'cur_user_downvote' : true,
+            });
+        }
+    },
+});
+
+app.VoteReview = Backbone.Tastypie.Model.extend({
+    idAttribute : "id",
+
+    defaults : {
+        user : '',
+        vote : '',
+        added_time : 'Now',
+        review : '',
+    },
+
+    urlRoot : '/api/v1/votes/shop_review/',
+
+    url : function() {
+        if(this.id!=undefined) {
+            return this.urlRoot + this.id + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('reviewId') != undefined) {
+            this.set({'review' : '/api/v1/review/shop/' + this.get('reviewId') + "/"});
+        }
+    },
+});
+
+app.VoteReviewList = Backbone.Tastypie.Collection.extend({
+    model : app.VoteReview,
+    urlRoot : '/api/v1/votes/shop_review/',
+
+    url : function() {
+        if(this.userId != undefined && this.reviewId != undefined) {
+            return this.urlRoot + "?review=" + this.reviewId + "&user=" + this.userId;
+        }
+        return this.urlRoot;
+    },
+
+    setUserId : function(userId) {
+        this.userId = userId;
+    },
+
+    setReviewId : function(reviewId) {
+        this.reviewId = reviewId;
+    },
+});
+
+app.StoreVotesView = Backbone.View.extend({
+    el : '#votes',
+    votes_template: Handlebars.compile($('#votes_template').html()),
+
+    options : {
+        'change_ratings' : true,
+        'rating' : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.review, 'sync', this.addReview);
+        this.listenTo(app.review, 'change', this.addReview);
+    },
+
+    addReview : function() {
+        this.$el.html('');
+        this.renderReview(app.review);
+    },
+
+    renderReview : function(model) {
+        this.$el.append(this.votes_template(model.toJSON()));
+        this.$el.find('.tooltips').tooltip();
+        return this;
+    },
+
+    events : {
+        'click .upvote' : 'upvoteReview',
+        'click .downvote' : 'downvoteReview',
+    },
+
+    upvoteReview : function(event) {
+        var review_id = parseInt(event.target.id.substring(7));
+        if(app.review.get('cur_user_vote') == 1){
+            var existingVote = new app.VoteReview({
+                id: app.review.get('cur_user_vote_id'),
+            });
+
+            existingVote.fetch({
+                success: function(model, response){
+                    model.destroy();
+
+                    var curReview = app.review;
+                    curReview.set({
+                        'votes': curReview.get('votes') - 1,
+                        'cur_user_vote': 0
+                    });
+                },
+            });
+        } else {
+            var newVote = new app.VoteReview({
+                user : cur_user_details.id,
+                reviewId : review_id,
+                vote : true,
+            });
+            newVote.save(null, {
+                success : function(model, response) {
+                    var curReview = app.review;
+                    var cur_user_vote = parseInt(curReview.get('cur_user_vote'));
+                    if(cur_user_vote == 1) {
+                        curReview.set({
+                            'votes' : curReview.get('votes')-1,
+                            'cur_user_vote': 0,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    } else if (cur_user_vote == 0) {
+                        curReview.set({
+                            'votes' : curReview.get('votes')+1,
+                            'cur_user_vote' : 1,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    } else {
+                        curReview.set({
+                            'votes' : curReview.get('votes')+2,
+                            'cur_user_vote' : 1,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    }
+                },
+            });
+        }
+    },
+
+    downvoteReview : function(event) {
+        var review_id = parseInt(event.target.id.substring(9));
+
+        if(app.review.get('cur_user_vote') == -1) {
+            var existingVote = new app.VoteReview({
+                id: app.review.get('cur_user_vote_id'),
+            });
+
+            existingVote.fetch({
+                success: function(model, response) {
+                    model.destroy();
+
+                    var curReview = app.review;
+                    curReview.set({
+                        'votes': curReview.get('votes') + 1,
+                        'cur_user_vote': 0,
+                    });
+                },
+            });
+        } else {
+            var newVote = new app.VoteReview({
+                user : cur_user_details.id,
+                reviewId : review_id,
+                vote : false,
+            });
+            newVote.save(null, {
+                success : function(model, response) {
+                    var curReview = app.review;
+                    var cur_user_vote = parseInt(curReview.get('cur_user_vote'));
+                    if(cur_user_vote == 1) {
+                        curReview.set({
+                            'votes' : curReview.get('votes')-2,
+                            'cur_user_vote' : -1,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    } else if(cur_user_vote == 0) {
+                        curReview.set({
+                            'votes' : curReview.get('votes')-1,
+                            'cur_user_vote': -1,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    } else {
+                        curReview.set({
+                            'votes' : curReview.get('votes')+1,
+                            'cur_user_vote': 0,
+                            'cur_user_vote_id': model.get('id'),
+                        });
+                    }
+                },
+            });
+        }
+    },
+});
+
+/* INITIALIZE */
+app.initializeUser();
+app.review = new app.StoreReview({'id' : app.review_id});
+app.review.fetch();
+
+app.reviewView = new app.StoreVotesView();
+
+</script>

@@ -1,0 +1,116 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Recommendations | Curated recommendations from community of makers {% endblock %}
+{% block contentmeta%}
+    <meta name="description" content="Interesting content for makers!! We are creating a collection of articles/videos that we totally love. We think anyone starting off as a makers should go through some of these articles. We have collected some of them and tagged them for you. ">
+    <meta name="author" content="Makeystreet">
+{% endblock%}
+
+{% block extra_js %}
+    <script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+    </script>
+    <style type="text/css">
+    blockquote:before {
+        display: none;
+    }
+    </style>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="row">
+        <div class="col-sm-12 col-xs-12">
+            <div class="jumbotron" style="padding-bottom: 25px; padding-top: 25px; margin-bottom: 0">
+                <center>
+                    <h1 style="margin: 25px;">Makeystreet Recommendations</h1>
+                    <p>Curated recommendations for hardware enthusiasts</p>
+                </center>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Weekly Staff Picks
+                <a href="/recommendation/all/"><button type="button" class=" pull-right btn btn-success btn-sm"> See more </button></a>
+            </h1>
+        </div>
+    </div>
+    <div class="row" id="staff_picks_reco">
+        {% for reco in staff_picks %}
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <div class="block">
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <a href="{% url 'catalog:article_page' reco.id %}">
+                                <div style="background-image: url('{{reco.image_url}}');" class="landscape-img"></div>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <h5><a href="{% url 'catalog:article_page' reco.id %}">{{reco.title}}</a></h5>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <blockquote style="padding: 0; margin: 0 0 10px 0; ">
+                                <p style="padding: 0 0 0 10px; margin-bottom: 0; font-size: 14px;">{{reco.recommendation|truncatechars:200}}</p>
+                                <footer style="padding: 0 10px 0 10px;"><a href="{% url 'catalog:article_user_page' reco.user.username %} ">{{reco.user.username}}</a>
+                                </footer>
+                            </blockquote>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% if forloop.counter|divisibleby:"4" %}
+            <div class="clearfix"> </div>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8 col-xs-offset-2">
+            <div class="block" style="padding-bottom: 20px">
+                <div class="row">
+                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                        <p style="font-weight: bold; margin-bottom: 0px; padding-top: 7px;" class="pull-right">Get weekly staff picks right in your inbox!</p>
+                    </div>
+                    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                        <form action="/recommendation/" method="POST" class="form-inline">
+                            <div class="input-group">
+                                <input id="staff-pic-reco-email" name="staff-pic-reco-email" class="form-control" placeholder="Email" type="email">
+                                {% csrf_token %}
+                                <span class="input-group-btn">
+                                    <button type="submit" class="btn btn-primary">Subscribe</button>
+                                </span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <h1>Featured channels
+                <a href="/recommendation/all/"><button type="button" class=" pull-right btn btn-success btn-sm"> See more </button></a>
+            </h1>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+
+        </div>
+    </div>
+</div>
+{% endblock %}

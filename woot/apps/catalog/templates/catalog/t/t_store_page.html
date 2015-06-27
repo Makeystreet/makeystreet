@@ -1,0 +1,136 @@
+{% verbatim %}
+<!-- Template for all product -->
+<script type="text/template" id="item_template">
+    <div class="col-sm-3 col-md-3">
+        <div class="thumbnail">
+            <a href="/product/{{product.id}}">
+                <img alt="Image for {{product.name}}" src="{{ product.images.0.url }}">
+            </a>
+
+            <h5>
+                <a href="/product/{{product.id}}">{{product.name}}</a>
+            </h5>
+        </div>
+    </div>
+</script>
+<!-- Like Template -->
+<script type="text/template" id="shop_like_template">
+<div id="like_{{shop.id}}" class="btn like_shop btn-default btn-sm {{#if cur_user_likes}}btn-success{{/if}}" data-toggle="tooltip" data-container="body" rel="tooltip" data-title="{{likes_string}}">
+    {{#if cur_user_likes}}
+        Liked!
+    {{else}}
+        Like!
+    {{/if}}
+</div>
+</script>
+
+
+<!--
+    // reference
+    <div class="col-sm-2 col-md-2">
+        <div class="row">
+            <div class="col-xs-12"><center>
+                
+            </center></div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12"><center>
+                {{upvote}}
+            </center></div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12"><center>
+                <span class="glyphicon glyphicon-chevron-down"></span>
+            </center></div>
+        </div>
+    </div>
+
+    <div class="col-sm-10 col-md-10">
+        <div class="row">
+            <strong><a href="{{url}}">{{url}}</a></strong>
+        </div>
+        <div class="row">
+            <strong>submitted by <a href="/maker/{{user.username}}">{{user.username}}</a></strong>
+        </div>
+    </div>
+    // reference
+    -->
+
+<!-- Review Template -->
+<script type="text/template" id="review_template">
+<div class="row">
+    
+    <div class="col-sm-2 col-md-2">
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="btn {{#if cur_user_upvote}} btn-success{{/if}} upvote btn-default btn-sm" id="upvote_{{id}}">
+                    <span class="glyphicon glyphicon-chevron-up" id="upvote_{{id}}"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <center>{{votes}}</center>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="btn {{#if cur_user_downvote}} btn-success{{/if}} downvote btn-default btn-sm" id="downvote_{{id}}">
+                    <span class="glyphicon glyphicon-chevron-down" id="downvote_{{id}}"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-10 col-md-10">
+        <div class="row">
+            <div class="col-xs-12">
+                <strong>{{title}}</strong>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <strong>Rating - {{{stars}}}</strong>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <p>{{review}}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12">
+                <strong>submitted by <a href="/maker/{{user.username}}">{{user.facebook_name}}</a></strong>
+            </div>
+        </div>
+    </div>
+</div>
+<br/>
+</script>
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+{% endverbatim %}

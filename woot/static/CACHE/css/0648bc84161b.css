@@ -1,0 +1,137 @@
+.page-container {
+	background-color: white;
+}
+
+.hero-section {
+	background-color: #004F65;
+}
+
+.features-heading {
+	background-color: #7AE0CB;
+}
+
+.open-source-section {
+	background-color: #004F65;
+}
+
+.firefly-heading {
+	background-color: #7AE0CB;
+}
+
+.hero-section h1.ui.header {
+	font-family: 'Exo-Bold', sans-serif;
+	color: #AFEFE0;
+	padding-top: 1em;
+	padding-bottom: 0;
+	margin-bottom: 0;
+	font-size: 5em;
+	font-weight: 400;
+}
+
+.hero-section h2.ui.header {
+	font-family: 'DINMittelschrift', sans-serif;
+	color: #AFEFE0;
+	padding-top: 0;
+	padding-bottom: 1em;
+	margin-top: 0;
+	font-size: 3em;
+	font-weight: 400;
+}
+
+.hero-section p {
+	font-family: 'DINMittelschrift', sans-serif;
+	color: #AFEFE0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	margin-bottom: 0;
+	width: 70%;
+	margin-left: auto;
+	margin-right: auto;
+	font-size: 2em;
+	font-weight: 100;
+}
+
+.ui.button.get-started {
+	margin-top: 2em;
+}
+
+.features-heading h2.ui.header {
+	font-family: 'DINMittelschrift', sans-serif;
+	color: #004F65;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	font-size: 3em;
+	font-weight: 400;
+}
+
+.features h3.ui.header {
+	font-family: 'SegoeUI', sans-serif;
+	font-size: 2em;
+	color: #004F65;
+}
+
+.features p {
+	font-family: 'SegoeUI', sans-serif;
+	font-size: 1.5em;
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+	color: #004F65;
+}
+
+.ui.divider.mini-divider {
+	width: 30%;
+	margin-left: auto;
+	margin-right: auto;
+	border-top-color: #e07b53 !important;
+	border-bottom-color: #e07b53 !important;
+}
+
+.open-source-section h2.ui.header {
+	font-family: 'DINMittelschrift', sans-serif;
+	color: #AFEFE0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	font-size: 3em;
+	font-weight: 400;
+}
+
+.open-source-section p {
+	font-family: 'DINMittelschrift', sans-serif;
+	color: #AFEFE0;
+	padding-top: 0;
+	padding-bottom: 0;
+	margin-top: 0;
+	font-size: 2em;
+	font-weight: 100;
+}
+
+.firefly-section h3.ui.header {
+	font-family: 'SegoeUI', sans-serif;
+	font-size: 2em;
+	color: #004F65;
+}
+
+.firefly-section p {
+	font-family: 'SegoeUI', sans-serif;
+	font-size: 1.5em;
+	margin-left: auto;
+	margin-right: auto;
+	width: 70%;
+	color: #004F65;
+}
+
+.row.footer {
+	background-color: #7AE0CB;
+}
+
+.social-button {
+	margin: 1rem 0 !important;
+}
+
+.login-grid {
+	position: relative;
+}

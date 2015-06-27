@@ -1,0 +1,78 @@
+{% extends "catalog/base.html" %} 
+
+{% load static from staticfiles %} 
+
+{% block title %}MakeyStreet | CFI Store{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script>
+    function popover_card(){
+        $('.popovers').popover({
+            html: true,
+            trigger: 'manual',
+            container: $(this).attr('id'),
+        }).on("mouseenter", function () {
+            var _this = this;
+            $(this).popover("show");
+            $(this).siblings(".popover").on("mouseleave", function () {
+                $(_this).popover('hide');
+            });
+        }).on("mouseleave", function () {
+            var _this = this;
+            setTimeout(function () {
+                if (!$(".popover:hover").length) {
+                    $(_this).popover("hide")
+                }
+            }, 100);
+        });
+    };
+    $(document).ready(function(){
+        $('a.img').nivoLightbox();
+        popover_card();
+    });
+</script>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_cfi_store_page.html" %} 
+{% endblock %}
+
+{% block content_top %}
+<div class="row">
+    <div class="col-lg-offset-1 col-sm-10 col-md-10">
+    <div id="cfi_store_info"><h3>Cfi Store</h3></div>
+    <p>CFI and Makeystreet is setting up a virual technical store in IIT Madras. Now you will be able to spend less time buying stuff and more time being awesome!!</p>
+    <p>We are collecting list of components to stocked by CFI store. Like the components that you want us to stock!</p>
+    </div>
+</div>
+{% endblock %} 
+
+{% block backbone %} 
+    {% include "catalog/bb/bb_cfi_store_page.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <div id="results">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <center><img src="{% static 'images/loading.gif' %}"></center>
+        </div>
+        <div class="col-lg-offset-3 text_center row" id="pagination">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

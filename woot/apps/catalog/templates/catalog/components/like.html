@@ -1,0 +1,8 @@
+{# This file requires item and itemname ... use a with tag for this #}
+
+<a href="#" id="{% if item.like %}un{% endif %}like_{{ item.id }}"
+            class="btn btn-small {% if login %}like{{itemname}}{% else %}loginrequired{% endif %} popover_people preventDefault"
+            rel="popover" data-title="Other people who like this"
+            data-content="{% for likes in item.all_likes %}{{likes.user.get_full_name}}{% if not forloop.last %}, {% endif %}{% endfor%}" >
+{% if not item.like %}Like{% else %}Unlike{% endif %} (<span class="{{itemname}}likes">{{item.all_likes|length}}</span>)
+</a>

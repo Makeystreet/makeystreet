@@ -1,0 +1,83 @@
+{% extends "catalog/embed/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Makey{% endblock %}
+
+{% block content_full %}
+<div class="col-xs-12 text-center" style="width:100%;height:100%;position:relative;padding-left:0px;padding-right:0px;">
+    <div class="widget themed-background-dark" style="height:100%;">
+        <div style="width: 100%; height: 50%;">
+            <a href="/makey/{{makey.id}}" target="_parent" class="suggested_makey" id="link-img" style="display: block; width: 100%; height: 100%">
+                {% if cover_pic %}
+                    <div style="background-image: url('{{cover_pic.large_url}}');" class="landscape-img"></div>
+                {% endif %}
+            </a>
+        </div>
+        <!-- <a href="" class="preventDefault">
+            <div class="square-thumbnail " id="img_288" style="background-image:url('{{cover_pic.large_url}}');">
+            </div>
+        </a> -->
+        <div class="widget-extra"  style="height:50%;padding:0px;margin-top:-10px;">
+            <div class="row" style="height:25%;">
+                <div class="col-xs-12">
+                    <h3 style=" margin: 0; padding-top: 5px;"><a href="/makey/{{makey.id}}" target="_parent" style="color:#ffffff;">{{makey.name}}</a></h3>
+                </div>
+            </div>
+            <div class="row" style="height:10%;">
+                <div class="col-xs-12" style="color: white">
+                    <span class="glyphicon glyphicon-heart"></span><span>&nbsp;{{makey.likes_count}} Likes</span>
+                </div>
+            </div>
+
+            <div class="row text-center"  style="height:20%;">
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{makey.images.all | length}}</strong><br>
+                        <small>Images</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{makey.notes.all | length}}</strong><br>
+                        <small>Insights</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{makey.parts_count}}</strong><br>
+                        <small>Parts</small>
+                    </h3>
+                </div>
+            </div>
+
+            <div class="row"  style="height:25%;">
+                <div class="col-xs-12">
+                    <div class="table-responsive" style="overflow: hidden; border: none;">
+                        <table class="table" style="margin:0px; padding:0px; border:none;">
+                            <tbody>
+                            <tr>
+                                {% for collab in makey.collaborators.all %}
+                                <td style="padding:2px; border: none;">
+                                    <a href="/maker/{{collab.username}}" target="_parent">
+                                        <img style="max-height:50px;max-width:50px; border-top-left-radius: 25px; border-top-right-radius: 25px; border-bottom-right-radius: 25px; border-bottom-left-radius: 25px;" src="{{collab.profile.profile_img_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="" data-original-title="{{collab.first_name}} {{collab.last_name}}">
+                                    </a>
+                                </td>
+                                {% endfor %}
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <br>
+                </div>
+            </div>
+
+            <div class="row" style="height:10%;">
+                <div class="col-xs-12" style="margin-top: -35px;">
+                    <p id="powered-by" class="widget-content-light pull-right" style="padding-right: 10px; color: #aaaaaa; font-size: 12px;">Powered by <a id="link-makeystreet" href="http://www.makeystreet.com" style="color: white; font-size: 14px;">Makeystreet</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

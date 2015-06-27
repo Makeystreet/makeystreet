@@ -1,0 +1,66 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create Maker{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-6 col-md-6 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Create Maker</h2>
+        </div>
+
+        <form action="#" method="post" class="form-horizontal form-bordered">
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="username">Username<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="text" id="username" name="username" class="form-control" required>
+                    {% if existing_username %}
+                        <span class="text-danger">Username already taken</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="email">Email<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="email" id="email" name="email" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="first_name">First Name<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="text" id="first_name" name="first_name" class="form-control" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="last_name">Last Name</label>
+                <div class="col-md-9">
+                    <input type="text" id="last_name" name="last_name" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="image_url">Image URL</label>
+                <div class="col-md-9">
+                    <input type="url" id="image_url" name="image_url" class="form-control">
+                </div>
+            </div>
+            <div class="form-group form-actions">
+                <div class="col-xs-12">
+                    <button type="submit" class="btn btn-sm btn-primary pull-right"><i class="fa fa-save"></i>&nbsp;Save</button>
+                </div>
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

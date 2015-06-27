@@ -1,0 +1,423 @@
+<script>
+var app = {};
+
+app.ReviewSelectorView = Backbone.View.extend({
+    el: $('#product_review_wizard'),
+
+    events: {
+        'change #val_type': 'selectReviewType'
+    },
+
+    initialize: function(){
+        this.$('#val_type').chosen({
+            width: '100%',
+            allow_single_deselect: true,
+        });
+    },
+
+    selectReviewType: function(event, params){
+        this.$('#parts').hide();
+        this.$('#val_part').tagsinput('removeAll');
+        this.$('#shops').hide();
+        this.$('#val_shop').tagsinput('removeAll');
+        this.$('#spaces').hide();
+        this.$('#val_space').tagsinput('removeAll');
+
+        if(params.selected == "PART") {
+            this.$('#parts').show();
+        } else if(params.selected == "SHOP") {
+            this.$('#shops').show();
+        } else {
+            this.$('#spaces').show();
+        }
+
+        this.$('#common_review').show();
+    },
+});
+
+app.PartsView = Backbone.View.extend({
+    el : $('#parts'),
+
+    part_select_template: Handlebars.compile($('#part_select_template').html()),
+
+    events : {
+        'keydown .bootstrap-tagsinput-max': 'ignoreTyping',
+    },
+
+    initialize : function() {
+        var products = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '../../../api/v1/product/search/?q=%QUERY',
+                        filter: function(list) {
+                            return $.map(list.products, function(product) {
+                                return { name: product.name, id: "old_"+product.id };
+                            });
+                        }
+                }
+        });
+        products.initialize();
+
+        $('#val_part').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            maxTags: 1,
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'products',
+                displayKey: 'name',
+                source: products.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-suggestion-empty-template').html()),
+                    footer: Handlebars.compile($('#tt-suggestion-footer-template').html()),
+                }
+            }
+        });
+    },
+
+    preventEnter: function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    },
+
+    ignoreTyping: function(event){
+        return false;
+    },
+
+    hideLocalHelps: function(selector){
+        this.$('#val_' + selector).closest('.form-group').removeClass('has-success has-warning has-error');
+
+        this.$('#success_' + selector).hide();
+        this.$('#waiting_' + selector).hide();
+        this.$('#error_' + selector).hide();
+
+        return this;
+    },
+
+    showSuccess: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#success_' + selector).closest('.form-group').addClass('has-success');
+        this.$('#success_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    showWaiting: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#waiting_' + selector).closest('.form-group').addClass('has-warning');
+        this.$('#waiting_' + selector).show();
+        this.$('#btn_submit_new_parts').button('loading');
+    },
+
+    showError: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#error_' + selector).closest('.form-group').addClass('has-error');
+        this.$('#error_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    // saveNewPart: function(){
+    //     var new_part_name = $('#val_part_name_v2').val();
+    //     var new_part_url = $('#val_part_url_v2').val();
+
+    //     var part = new app.NewPart({
+    //         'name' : new_part_name,
+    //         'url' : new_part_url,
+    //     });
+
+    //     var that = this;
+    //     this.showWaiting('new_part');
+    //     part.save(null, {
+    //         success : function(model, response) {
+    //             that.showSuccess('new_part', that);
+    //             that.$('#val_parts_v2').tagsinput('add',{
+    //                 'id': 'new_' + model.get('id'),
+    //                 'name': model.get('name'),
+    //             });
+    //             that.hideNewPart();
+    //         },
+
+    //         error : function(model, response) {
+    //             that.showError('new_part', that);
+    //         },
+    //     });
+    // }
+});
+
+app.ShopsView = Backbone.View.extend({
+    el : $('#shops'),
+
+    shop_select_template: Handlebars.compile($('#shop_select_template').html()),
+
+    events : {
+        'keydown .bootstrap-tagsinput-max': 'ignoreTyping',
+    },
+
+    initialize : function() {
+        var shops = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '../../../api/v1/shop/search/?q=%QUERY',
+                        filter: function(list) {
+                            return $.map(list.shops, function(shop) {
+                                return { name: shop.name, id: "old_"+shop.id };
+                            });
+                        }
+                }
+        });
+        shops.initialize();
+
+        $('#val_shop').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            maxTags: 1,
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'shops',
+                displayKey: 'name',
+                source: shops.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-suggestion-empty-template').html()),
+                    footer: Handlebars.compile($('#tt-suggestion-footer-template').html()),
+                }
+            }
+        });
+    },
+
+    preventEnter: function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    },
+
+    ignoreTyping: function(event){
+        return false;
+    },
+
+    hideLocalHelps: function(selector){
+        this.$('#val_' + selector).closest('.form-group').removeClass('has-success has-warning has-error');
+
+        this.$('#success_' + selector).hide();
+        this.$('#waiting_' + selector).hide();
+        this.$('#error_' + selector).hide();
+
+        return this;
+    },
+
+    showSuccess: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#success_' + selector).closest('.form-group').addClass('has-success');
+        this.$('#success_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    showWaiting: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#waiting_' + selector).closest('.form-group').addClass('has-warning');
+        this.$('#waiting_' + selector).show();
+        this.$('#btn_submit_new_parts').button('loading');
+    },
+
+    showError: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#error_' + selector).closest('.form-group').addClass('has-error');
+        this.$('#error_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    // saveNewPart: function(){
+    //     var new_part_name = $('#val_part_name_v2').val();
+    //     var new_part_url = $('#val_part_url_v2').val();
+
+    //     var part = new app.NewPart({
+    //         'name' : new_part_name,
+    //         'url' : new_part_url,
+    //     });
+
+    //     var that = this;
+    //     this.showWaiting('new_part');
+    //     part.save(null, {
+    //         success : function(model, response) {
+    //             that.showSuccess('new_part', that);
+    //             that.$('#val_parts_v2').tagsinput('add',{
+    //                 'id': 'new_' + model.get('id'),
+    //                 'name': model.get('name'),
+    //             });
+    //             that.hideNewPart();
+    //         },
+
+    //         error : function(model, response) {
+    //             that.showError('new_part', that);
+    //         },
+    //     });
+    // }
+});
+
+app.SpacesView = Backbone.View.extend({
+    el : $('#spaces'),
+
+    shop_select_template: Handlebars.compile($('#space_select_template').html()),
+
+    events : {
+        'keydown .bootstrap-tagsinput-max': 'ignoreTyping',
+    },
+
+    initialize : function() {
+        var spaces = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '../../../api/v1/space/search/?q=%QUERY',
+                        filter: function(list) {
+                            return $.map(list.spaces, function(space) {
+                                return { name: space.name, id: "old_"+space.id };
+                            });
+                        }
+                }
+        });
+        spaces.initialize();
+
+        $('#val_space').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            maxTags: 1,
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'spaces',
+                displayKey: 'name',
+                source: spaces.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-suggestion-empty-template').html()),
+                    footer: Handlebars.compile($('#tt-suggestion-footer-template').html()),
+                }
+            }
+        });
+    },
+
+    preventEnter: function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    },
+
+    ignoreTyping: function(event){
+        return false;
+    },
+
+    hideLocalHelps: function(selector){
+        this.$('#val_' + selector).closest('.form-group').removeClass('has-success has-warning has-error');
+
+        this.$('#success_' + selector).hide();
+        this.$('#waiting_' + selector).hide();
+        this.$('#error_' + selector).hide();
+
+        return this;
+    },
+
+    showSuccess: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#success_' + selector).closest('.form-group').addClass('has-success');
+        this.$('#success_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    showWaiting: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#waiting_' + selector).closest('.form-group').addClass('has-warning');
+        this.$('#waiting_' + selector).show();
+        this.$('#btn_submit_new_parts').button('loading');
+    },
+
+    showError: function(selector){
+        this.hideLocalHelps(selector);
+        this.$('#error_' + selector).closest('.form-group').addClass('has-error');
+        this.$('#error_' + selector).show();
+        this.$('#btn_submit_new_parts').button('reset');
+    },
+
+    // saveNewPart: function(){
+    //     var new_part_name = $('#val_part_name_v2').val();
+    //     var new_part_url = $('#val_part_url_v2').val();
+
+    //     var part = new app.NewPart({
+    //         'name' : new_part_name,
+    //         'url' : new_part_url,
+    //     });
+
+    //     var that = this;
+    //     this.showWaiting('new_part');
+    //     part.save(null, {
+    //         success : function(model, response) {
+    //             that.showSuccess('new_part', that);
+    //             that.$('#val_parts_v2').tagsinput('add',{
+    //                 'id': 'new_' + model.get('id'),
+    //                 'name': model.get('name'),
+    //             });
+    //             that.hideNewPart();
+    //         },
+
+    //         error : function(model, response) {
+    //             that.showError('new_part', that);
+    //         },
+    //     });
+    // }
+});
+
+app.RatingView = Backbone.View.extend({
+    el: $('#rating'),
+
+    options : {
+        'change_ratings' : true,
+        'rating' : 0,
+    },
+
+    events : {
+        'mouseover .review_ratings' : 'mouseoverRating',
+        'click .review_ratings' : 'clickRating',
+    },
+
+    changeReviewRatings : function(rating) {
+        for(var i=1; i<=rating; i++) {
+            $('.rating_'+i)[0].className = "fa fa-star review_ratings rating_"+i;
+        }
+
+        for(var i=rating+1; i<=5; i++) {
+            $('.rating_'+i)[0].className = "fa fa-star-o review_ratings rating_"+i;
+        }
+    },
+
+    mouseoverRating : function(event) {
+        if(this.options.change_ratings) {
+            var rating = parseInt(event.target.classList[3].substring(7));
+            this.changeReviewRatings(rating);
+        }
+    },
+
+    clickRating : function(event) {
+        this.options.change_ratings = false;
+        var rating = parseInt(event.target.classList[3].substring(7));
+        this.changeReviewRatings(rating);
+        this.options.rating = rating;
+        this.$('input').val(rating);
+    },
+
+});
+
+app.partView = new app.PartsView();
+app.shopView = new app.ShopsView();
+app.spaceView = new app.SpacesView();
+app.ratingView = new app.RatingView();
+app.reviewSelector = new app.ReviewSelectorView();
+
+</script>

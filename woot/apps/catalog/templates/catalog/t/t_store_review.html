@@ -1,0 +1,12 @@
+{% verbatim %}
+
+<script type="text/template" id="votes_template">
+<div class="btn btn-default btn-sm {{#if cur_user_upvote}}btn-success{{/if}} upvote" id="upvote_{{id}}">
+    Yes
+</div>
+<div class="btn btn-default btn-sm {{#if cur_user_downvote}}btn-success{{/if}} downvote" id="downvote_{{id}}">
+    No
+</div>
+</script>
+
+{% endverbatim %}

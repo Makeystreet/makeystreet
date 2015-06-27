@@ -1,0 +1,489 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Collection of maker articles.. {% endblock %}
+{% block contentmeta%}
+    <meta name="description" content="Interesting content for makers!! We are creating a collection of articles/videos that we totally love. We think anyone starting off as a makers should go through some of these articles. We have collected some of them and tagged them for you. ">
+    <meta name="author" content="Alex VJ">
+    {% endblock%}
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+
+        {% if user.is_authenticated %}
+            var global_user_id = "{{user.id}}";
+        {% else %}
+            {% load auth_tags %}
+            {% uuid temp_id %}
+            var global_user_id = "{{temp_id}}";
+            $(document).ready(function(){
+                $('input[name="temp_id"]').val(global_user_id);
+            });
+        {% endif %}
+</script>
+
+<script type="text/javascript">
+
+    $(function(){
+        $('#sort-popular').on('click', function(){
+            window.open('?sort=popular','_self');
+        });
+        $('#sort-latest').on('click', function(){
+            window.open('?sort=latest','_self');
+        });
+    });
+
+    mixpanel.track("ArticleP: Event", {
+        event_type: "page_opened",
+        // channel: {{current_tag}},
+        user_id: global_user_id,
+    });
+
+</script>
+
+<style type="text/css">
+    blockquote:before {
+        display: none;
+    }
+
+    .list-group-item {
+        padding: 5px 10px;
+    }
+
+</style>
+
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+.search-tags .typeahead {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 8px;
+    max-width: 100%;
+    margin: 1px 0;
+    color: #394263;
+    border: 1px solid #dbe1e8;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.search-users .typeahead {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 8px;
+    max-width: 100%;
+    margin: 1px 0;
+    color: #394263;
+    border: 1px solid #dbe1e8;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.twitter-typeahead {
+    width: 100%;
+}
+
+.tt-query,
+.tt-hint {
+  margin-bottom: 0;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  /*min-width: 400px;*/
+  width: 100%;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+
+</style>
+
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_article_tag_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_article_tag_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' next=request.get_full_path %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' next=request.get_full_path %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<div class="row">
+    <div class="col-xs-3">
+        <h4>Channels</h4>
+        <div class="search-tags form-group">
+            <input class="typeahead" type="text" placeholder="Search for channels" class="form-control">
+        </div>
+        <h5>Popular channels</h5>
+        <div class="list-group">
+        {% ifequal current_tag "all" %}
+            <a href="{% url 'catalog:all_articles' %}" class="list-group-item active">
+            All
+            <span class="badge pull-right">{{article_count}}</span>
+            </a>
+        {% else %}
+            <a href="{% url 'catalog:all_articles' %}" class="list-group-item">
+            All
+            <span class="badge pull-right">{{article_count}}</span>
+            </a>
+        {% endifequal %}
+        {% for tag in all_tags %}
+            {% if current_tag != "all" and current_tag.id == tag.id %}
+                <a href="{% url 'catalog:tag_page' tag.url_snippet %}" class="list-group-item active">
+                {{tag.name}}
+                <span class="badge pull-right">{{tag.num_articles}}</span>
+                {% if tag in fav_channel %}
+                <span class="badge pull-right"><span class="glyphicon glyphicon-heart"></span></span>
+                {% endif %}
+                </a>
+            {% else %}
+                <a href="{% url 'catalog:tag_page' tag.url_snippet %}" class="list-group-item">
+                {{tag.name}}
+                <span class="badge pull-right">{{tag.num_articles}}</span>
+                {% if tag in fav_channel %}
+                <span class="badge pull-right"><span class="glyphicon glyphicon-heart"></span></span>
+                {% endif %}
+                </a>
+            {% endif %}
+        {% endfor %}
+        </div>
+        <h5><strong>Want to recommend something?</strong></h5>
+        <button type="button" class="btn btn-block btn-success" onclick="window.open('{% url 'catalog:create_article' %}','_self');">Create recommendation</button>
+    </div>
+    <div class="col-xs-6">
+        <div class="row">
+            <div class="block">
+                <div class="col-xs-12">
+                    {% ifequal current_tag "all" %}
+                    <center>
+                        <h2 style="margin-top: 0">All recommendations</h2>
+                    </center>
+                    {% else %}
+                    <center>
+                        <h2 style="margin-top: 0">Recommendations tagged as '{{current_tag.name}}'</h2>
+                    </center>
+                    {% endifequal %}
+                    {% ifequal current_tag "all" %}
+                    {% else %}
+                    <span class="channel-data" data-channel-id="{{current_tag.id}}" style="display: none;"></span>
+                    <span id="channel-{{current_tag.id}}-likes">
+                        <center style="margin-bottom: 10px">
+                            {% if user.is_authenticated %}
+                            <span class="likes"></span>
+                            {% endif %}
+                        </center>
+                    </span>
+                    {% endifequal %}
+                </div>
+                <div class="clearfix">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="block" id="sort-filter" style="padding: 5px;">
+                <div class="col-xs-4">
+                    <strong class="pull-right" style="padding-top: 5px;">Sort by:</strong>
+                </div>
+                <div class="col-xs-8">
+                    {% ifequal request.GET.sort 'latest' %}
+                    <div class="btn-group" data-toggle="buttons">
+                      <label class="btn btn-primary btn-sm btn-alt" id="sort-popular">
+                        <span>Popular</span>
+                      </label>
+                      <label class="btn btn-primary btn-sm btn-alt active" id="sort-latest">
+                        <span>Latest</span>
+                      </label>
+                    </div>
+                    {% else %}
+                    <div class="btn-group" data-toggle="buttons">
+                      <label class="btn btn-primary btn-sm btn-alt active" id="sort-popular">
+                        <span>Popular</span>
+                      </label>
+                      <label class="btn btn-primary btn-sm btn-alt" id="sort-latest">
+                        <span>Latest</span>
+                      </label>
+                    </div>
+                    {%  endifequal %}
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            {% for article in articles %}
+            <div class="row article" id="article-{{article.id}}">
+                <span class="article-data" data-article-id="{{article.id}}" style="display: none;"></span>
+                <div class="col-xs-12">
+                    <div class="block">
+                        <div class="row">
+                            <div class="col-xs-3">
+                                <img src="{{article.image_url}}" class="img-thumbnail">
+                                <!-- <div style="background: url('{{article.image_url}}')" class="landscape-img"></div> -->
+                            </div>
+                            <div class="col-xs-9">
+                                <a href="{{article.url}}" target="_blank"><h4 style="margin-top: 0;">{{article.title}}</h4></a>
+                                <p style="margin-bottom: 10px;">{{article.description}}</p>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div style="padding: 0 15px;">
+                                <blockquote style="padding: 0; margin: 10px 0; font-size: 15px;">
+                                    {% if article.recommendation %}
+                                    <p style="padding: 0 0 0 10px; margin-bottom: 0;">{{article.recommendation}}</p>
+                                    {% endif %}
+                                    <footer style="padding: 0 0 0 10px;"><a href="{% url 'catalog:article_user_page' article.user.username %} ">{{article.user.first_name}} {{article.user.last_name}}</a></footer>
+                                </blockquote>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12" style="padding-bottom: 10px;">
+                                <span class="pull-left" style="font-size: 13px;">
+                                Tags:
+                                {% for tag in article.tags.all %}
+                                    {% if forloop.last %}
+                                        <a href="{% url 'catalog:tag_page' tag.url_snippet %}">{{tag.name}}</a>
+                                    {% else %}
+                                        <a href="{% url 'catalog:tag_page' tag.url_snippet %}">{{tag.name}}</a>,
+                                    {% endif %}
+                                {% endfor %}
+                                </span>
+                                {% if 0 and article.rating > 0 %}
+                                <span class="pull-right">
+                                Rating:
+                                    {% if article.rating == 5 %}
+                                        <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i>
+                                    {% endif %}
+                                    {% if article.rating == 4 %}
+                                        <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i>
+                                    {% endif %}
+                                    {% if article.rating == 3 %}
+                                        <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i>
+                                    {% endif %}
+                                    {% if article.rating == 2 %}
+                                        <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i>
+                                    {% endif %}
+                                    {% if article.rating == 1 %}
+                                        <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i>
+                                    {% endif %}
+                                    {% if article.rating == 0 %}
+                                        <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i>
+                                    {% endif %}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="row" style="margin-bottom: 10px;">
+                            <div class="col-xs-12">
+                                <span id="article-{{article.id}}-likes">
+                                    <span class="likes"></span>
+                                    <div class="modal fade col-sm-12" id="all_likes_modal" tabindex="-1" role="dialog" aria-labelledby="all_likes_label" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content col-sm-offset-1">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                    <h4 class="modal-title" id="all_likes_label">People who like this</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    List of likers
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default close_comment_modal" data-dismiss="modal" id="close_new_comment_modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </span>
+                                {% if article.comments.all|length > 0 %}
+                                <span class="pull-right" style="padding-top: 10px; font-size: 13px;">
+                                    <a href="{% url 'catalog:article_page' article.id %}">
+                                    {% if article.comments.all|length == 1 %}
+                                        1 Comment
+                                    {% else %}
+                                        {{article.comments.all|length}} Comments
+                                    {% endif %}
+                                    </a>
+                                </span>
+                                {% else %}
+                                <span class="pull-right" style="padding-top: 10px; font-size: 13px;">
+                                    <a href="{% url 'catalog:article_page' article.id %}">
+                                    Leave a comment
+                                    </a>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="row">
+                <center><p>No articles</p></center>
+            </div>
+            {% endfor %}
+
+            {% if not user.is_authenticated %}
+            {% if articles.count > 0 %}
+            <div class="row block">
+                <center>
+                <div class="col-xs-12">
+                    {% if not email_submitted %}
+                    <h4>Awesome, right? Get new articles right in your mail!</h4>
+                    <form action="{% url 'catalog:article_subscribe_page' %}" method="post" class="form-inline" onsubmit="mixpanel.track('ArticleP: Event', {event_type: 'email_submitted',tag_id: {% ifequal current_tag "all" %} "all" {% else %} {{current_tag.id}} {% endifequal %},user_id: global_user_id,});return true;">
+                        <div class="form-group">
+                            <label class="sr-only" for="email_id">Email</label>
+                            <input type="email" id="email_id1" name="email_id" class="form-control" placeholder="Enter Email.." required>
+                            <input type="hidden" name="tag_id" value="{{current_tag.url_snippet}}" />
+                            <input type="hidden" name="temp_id" value="-1" />
+                            <input type="hidden" name="step" value="start" />
+                            {% csrf_token %}
+                        </div>
+                        <div class="form-group" id="submit_email1">
+                            <button type="submit" class="btn btn-success"><i class="fa fa-envelope-o"></i> Subscribe</button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <h4>Great! Get ready to get some kick-ass articles in your mail :-) </h4>
+                    {% endif %}
+                </div>
+                </center>
+            </div>
+            {% endif %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-xs-3">
+        {% if not user.is_authenticated %}
+        <div class="block-section">
+            {% if not email_submitted %}
+            <h3 class="sub-header text-center"><strong>Awesome articles in your mail!</strong></h3>
+            <p class="clearfix"><i class="fa fa-envelope-o fa-5x text-danger pull-left animation-pulse"></i>Sign up today and receive the best content on web right in your inbox! Our recommendations will save you time and give you access to only the best.</p>
+            <p>
+                <form action="{% url 'catalog:article_subscribe_page' %}" method="post" class="form" onsubmit="mixpanel.track('ArticleP: Event', {event_type: 'email_submitted',tag_id: {% ifequal current_tag "all" %} "all" {% else %} {{current_tag.id}} {% endifequal %},user_id: global_user_id,});return true;">
+                    <div class="form-group">
+                        <label class="sr-only" for="email_id">Email</label>
+                        <input type="email" id="email_id2" name="email_id" class="form-control" placeholder="Enter Email.." required>
+                        <input type="hidden" name="tag_id" value="{{current_tag.url_snippet}}" />
+                        <input type="hidden" name="temp_id" value="-1" />
+                        <input type="hidden" name="step" value="start" />
+                        {% csrf_token %}
+                    </div>
+                    <div class="form-group" id="submit_email2">
+                        <center><button type="submit" class="btn btn-lg btn-success btn-block"><i class="fa fa-user"></i> Subscribe</button></center>
+                    </div>
+                </form>
+            </p>
+            {% else %}
+            <h3>Great! Get ready to get some kick-ass articles about <span class="text-success">{{current_tag.name}}</span> in your mail :-)</h3>
+            {% endif %}
+        </div>
+        {% endif %}
+        <h4>Users</h4>
+        <div class="search-users form-group">
+            <input class="typeahead" type="text" placeholder="Search for users" class="form-control">
+        </div>
+        <h5>Popular users</h5>
+        <div class="list-group">
+        {% for user in popular_users %}
+            <a href="{% url 'catalog:article_user_page' user.username %}" class="list-group-item">
+            {{user.first_name}} {{user.last_name}}
+            <span class="badge pull-right">{{user.article_count}}</span>
+            </a>
+        {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

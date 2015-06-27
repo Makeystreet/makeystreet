@@ -1,0 +1,103 @@
+.ui.grid.title-bar-container {
+	margin-top: 0;
+}
+
+.ui.grid.title-bar-container .row {
+	padding-top: 0;
+}
+
+.ui.grid.title-bar {
+	background-color: #FFFFFF;
+	border-bottom: 1px solid #DDDDDD;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.ui.grid.page-content {
+	background-color: #FFFFFF;
+	box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.05);
+	border-left: 1px solid #DDDDDD;
+	border-right: 1px solid #DDDDDD;
+	border-bottom: 2px solid #DDDDDD;
+}
+
+.updates-feed {
+	height: 115px;
+	overflow-y: scroll;
+	padding-top: 0.5rem;
+}
+
+.collaborators {
+	padding-top: 5px;
+}
+
+.insights-preview-segment {
+	height: 300px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.discussions-preview-segment {
+	height: 300px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+}
+
+.ui.form.upvote-insight-toggle {
+	display: inline;
+}
+
+.upvote.login-button {
+	padding-top: 4px !important;
+}
+
+.upvote.submit {
+	padding-top: 4px !important;
+}
+
+.insights-preview-segment {
+	font-size: 0.9em;
+}
+
+.discussions-preview-segment {
+	font-size: 0.9em;
+}
+
+.upload-image-input {
+	display: none;
+}
+
+.upload-file-input {
+	display: none;
+}
+
+.social-button {
+	margin: 1rem 0 !important;
+}
+
+.login-grid {
+	position: relative;
+}
+
+.login-actions {
+	text-align: left !important;
+}
+
+.ui.secondary.pointing.menu>.item, .ui.secondary.pointing.menu>.menu>.item {
+	margin: 0 0 -2px !important;
+}
+
+.makey-parents {
+	margin-top: 0 !important;
+}
+
+.makey-header {
+	margin-bottom: 0 !important;
+}
+
+.file-progress-name {
+	padding-top: 0.5rem !important;
+}
+
+.file-progress-bar {
+	margin-bottom: 0 !important;
+}

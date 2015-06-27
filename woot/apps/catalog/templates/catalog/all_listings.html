@@ -1,0 +1,47 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | All Listings{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+        <div id="results">
+        {% for listing in listings %}
+        <div class="row">
+            <div class="col-xs-12">
+                <div class="block">
+                    <div class="row">
+                        <div class ="col-xs-12">
+                            <h3 style="margin-top: 0px;"><a href="{% url 'catalog:listing' listing.id %}">{{listing.company}} - {{listing.title}}</a>
+                            {% if listing.likes_count > 0 %}
+                                <small>{{listing.likes_count}} p{{listing.likes_count|pluralize:"erson,eople"}} found this useful!</small>
+                            {% endif %}
+                            </h3>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-top: dotted 1px #DDD;margin:2px;" />
+
+        {% endfor %}
+        </div>
+        <div class="col-lg-offset-3 text_center row" id="pagination">
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "catalog/base_v2.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} {{maker.first_name}} {{maker.last_name}} {% endblock %}
+
+{% block contentmeta%}
+    <meta property="og:type"   content="makey_street:maker" />
+    <meta property="og:url"    content="http://www.makeystreet.com/maker/{{maker.username}}/" />
+    <meta property="og:title"  content="{{maker.first_name}} {{maker.last_name}}" />
+    <meta property="og:image"  content="{{maker.profile.profile_img_url}}" />
+    <meta property="fb:profile_id" content="{{maker.socialaccount_set.first.extra_data.link}}">
+{% endblock%}
+
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+        $(document).ready(function(){
+            $('.show_location').show();
+            $('#{{tab}}').addClass('active');
+        });
+$(document).ready(function(){
+    // Nar Bar
+    $('.right.menu.open').on("click",function(e){
+        e.preventDefault();
+        $('.ui.vertical.menu').toggle();
+    });
+
+    $('.ui.dropdown').dropdown();
+});
+</script>
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_maker_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_maker_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/maker_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="tab-content">
+                <div class="tab-pane " id ="tab_makeys">
+                    <div id="my_makeys">
+                        <div class="row">
+                            {% for makey in makeys %}
+                            <div class="col-sm-4 col-md-4">
+                                <div class="widget themed-background-dark">
+                                    <a href="{{makey.get_absolute_url}}">
+                                    {% if makey.cover_pic %}
+                                        <div style="background-image: url('{{makey.cover_pic.large_url}}');" class="landscape-img"></div>
+                                    {% else %}
+                                        {% if makey.images.count %}
+                                            <div style="background-image: url('{{makey.images.all.0.large_url}}');" class="landscape-img"></div>
+                                        {% else %}
+                                            <div style="background-image: url('{% static 'images/tools.jpg' %}');" class="landscape-img"></div>
+                                        {% endif %}
+                                    {% endif %}
+                                    </a>
+                                    <div class="widget-extra">
+                                        <div class="row">
+                                            <div class="col-xs-12">
+                                                <h3 style="margin:10px;"><a href="{{makey.get_absolute_url}}" style="color:#ffffff;">{{makey.name}}</a></h3>
+                                            </div>
+                                        </div>
+                                        <hr style="margin:0px;">
+                                        <!-- showing makey stats-->
+                                        <div class="row text-center">
+                                            <div class="col-xs-4">
+                                                <h3 style="margin:10px;" class="widget-content-light">
+                                                    <strong>{{makey.images.count}}</strong><br>
+                                                    <small>Images</small>
+                                                </h3>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                <h3 style="margin:10px;" class="widget-content-light">
+                                                    <strong>{{makey.notes.count}}</strong><br>
+                                                    <small>Insights</small>
+                                                </h3>
+                                            </div>
+                                            <div class="col-xs-4">
+                                                <h3 style="margin:10px;" class="widget-content-light">
+                                                    <strong>{{makey.partsused.count|add:makey.new_parts.count|add:makey.modules_used.count}}</strong><br>
+                                                    <small>Parts</small>
+                                                </h3>
+                                            </div>
+                                        </div>
+                                        <!-- showing user images-->
+                                        <div class="row">
+                                            <div class="col-xs-12"  >
+                                                <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                                                <div class="table-responsive">
+                                                    <table class="table" style="margin:0px; padding:0px; border:none;">
+                                                    <tbody>
+                                                    <tr>
+                                                    {% for collaborator in makey.collaborators.all %}
+                                                        <td style="padding:2px">
+                                                        <a href="/maker/{{collaborator.username}}">
+                                                        <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{collaborator.profile.profile_img_url}}" border="0"></a>
+                                                        </td>
+                                                    {% endfor %}
+                                                    </tr
+                                                    </tbody>
+                                                    </table>
+                                                </div>
+                                                </br>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if forloop.counter|divisibleby:"3" %}
+                                <div class="clearfix"></div>
+                            {% endif %}
+                            {% empty %}
+                                <center>No makeys yet</center>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-lg-offset-3 text_center row" id="pagination">
+                    </div>
+                </div>
+
+                <div class="tab-pane" id ="tab_following">
+                    <div id="following_list">
+                        <div class="row new_row">
+                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                            <center>Loading makers who {{maker.first_name}} {{maker.last_name}} follow</center>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id ="tab_followers">
+                    <div id="followers_list">
+                        <div class="row new_row">
+                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                            <center>Loading {{maker.first_name}} {{maker.last_name}}'s followers list</center>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane" id ="tab_comments">
+                    Comments written by <strong>{{maker}}</strong>
+                    <p>Coming soon!</p>
+                </div>
+
+                <div class="tab-pane" id ="tab_likes">
+                    Items that <strong>{{maker}}</strong>  likes
+                    <p>Coming soon!</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

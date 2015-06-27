@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en" xmlns:fb="http://ogp.me/ns/fb#">
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# makey_street: http://ogp.me/ns/fb/makey_street#">
+    {% load static from staticfiles %}
+    {% include "components/google_analytics.html" %}
+    {% include "components/mixpanel.html" %}
+
+    <title> {% block title %} {% endblock %} </title>
+
+    <!-- Meta Info -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block contentmeta%}
+    <meta name="description" content="Enabling large scale open source hardware">
+    <meta name="author" content="Alex VJ">
+    {% endblock%}
+
+    <!-- Open Graph Values -->
+    <meta property="fb:app_id" content="455683431181264" />
+    {% block opengraph %} {% endblock %}
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- CSS Styles -->
+    <script src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
+
+    <!-- Semantic UI Stuff -->
+    <link href="{% static 'js/semantic.min.css' %}" rel="stylesheet">
+    <script src="{% static 'js/semantic.min.js' %}"></script>
+
+    <!-- Django AllAuth -->
+    {% load account %}
+    {% load socialaccount %}
+    {% providers_media_js %}
+
+    {% block templates %} {% endblock %}
+    {% block extra_js %} {% endblock %}
+    {% block extra_css %} {% endblock %}
+    {% block fb_meta %} {% endblock %}
+
+    <meta name="csrf-token" content="{{csrf_token}}" />
+</head>
+
+<body>
+    {% include "catalog/components/navbar_v2.html" %}
+    {% block content_full %}
+    {% endblock %}
+    {% block sample_data%} {% endblock%}
+    {% block extra_js_end %} {% endblock %}
+</body>
+</html>

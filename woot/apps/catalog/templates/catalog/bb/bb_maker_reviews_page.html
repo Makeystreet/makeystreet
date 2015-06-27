@@ -1,0 +1,387 @@
+<script>
+var app = {};
+app.maker_id = {{maker.id}};
+app.maker_profile_id={{maker.profile.id}};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+
+        this.following = new app.FollowingList(options);
+        this.followers = new app.FollowersList(options);
+
+        this.on('change', this.loadProfile);
+    },
+
+    loadProfile : function() {
+        this.profile = new app.UserProfile({'id' : this.get('profile_id')});
+    },
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.FollowersList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/followers/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.FollowingList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/following/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+app.initializeMaker = function() {
+    app.cur_maker = new app.User({'id' : app.maker_id});
+    app.cur_maker.fetch();
+
+    app.cur_maker_profile = new app.UserProfile({'id' : app.maker_profile_id});
+    app.cur_maker_profile.fetch();
+};
+
+app.Product = Backbone.Tastypie.Model.extend({
+    urlRoot: '/api/v1/product/',
+    idAttribute: 'id',
+
+    url: function(){
+        if(this.get('resource_uri') !== undefined){
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + '/';
+        } else {
+            return this.urlRoot;
+        }
+    },
+});
+
+app.ProductReview = Backbone.Tastypie.Model.extend({
+    urlRoot: '/api/v1/product_review/',
+    idAttribute: 'id',
+
+    url: function(){
+        if(this.get('resource_uri') !== undefined){
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + '/';
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(){
+        this.product = new app.Product();
+
+        if(this.get('product') !== undefined){
+            this.product.set({'resource_uri': this.get('product')});
+
+            var that = this;
+            this.product.fetch({
+                success: function(model, response){
+                    that.set({'product_fetched': true});
+                },
+            });
+        }
+    },
+});
+
+app.ProductReviewList = Backbone.Tastypie.Collection.extend({
+    model: app.ProductReview,
+    urlRoot: '/api/v1/product_review/',
+
+    url: function() {
+        if(app.maker_id !== undefined){
+            return this.urlRoot + "?limit=10&user=" + app.maker_id;
+        }
+        return false;
+    }
+});
+
+app.Store = Backbone.Tastypie.Model.extend({
+    urlRoot: '/api/v1/shop/',
+    idAttribute: 'id',
+
+    url: function(){
+        if(this.get('resource_uri') !== undefined){
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + '/';
+        } else {
+            return this.urlRoot;
+        }
+    },
+});
+
+app.StoreReview = Backbone.Tastypie.Model.extend({
+    urlRoot: '/api/v1/shop_review/',
+    idAttribute: 'id',
+
+    url: function(){
+        if(this.get('resource_uri') !== undefined){
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + '/';
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(){
+        this.store = new app.Store();
+
+        if(this.get('shop') !== undefined){
+            this.store.set({'resource_uri': this.get('shop')});
+
+            var that = this;
+            this.store.fetch({
+                success: function(){
+                    that.set({'store_fetched': true});
+                },
+            });
+        }
+    },
+});
+
+app.StoreReviewList = Backbone.Tastypie.Collection.extend({
+    model: app.StoreReview,
+    urlRoot: '/api/v1/shop_review/',
+
+    url: function() {
+        if(app.maker_id !== undefined){
+            return this.urlRoot + "?limit=10&user=" + app.maker_id;
+        }
+        return false;
+    }
+});
+
+app.ReviewsView = Backbone.View.extend({
+    el: $('#reviews'),
+    productReviewTemplate: Handlebars.compile($('#product_review_template').html()),
+    storeReviewTemplate: Handlebars.compile($('#store_review_template').html()),
+
+    initialize: function() {
+        this.listenTo(app.product_reviews, 'change', this.addAll);
+        this.listenTo(app.product_reviews, 'add', this.addAll);
+        this.listenTo(app.product_reviews, 'remove', this.addAll);
+
+        this.listenTo(app.store_reviews, 'change', this.addAll);
+        this.listenTo(app.store_reviews, 'add', this.addAll);
+        this.listenTo(app.store_reviews, 'remove', this.addAll);
+
+        this.addAll();
+    },
+
+    addAll: function() {
+        this.$('#product_reviews').html('');
+        this.$('#store_reviews').html('');
+
+        if(app.product_reviews.length == 0 && app.store_reviews.length == 0) {
+            $('.show_no_reviews').show();
+        } else {
+            $('.show_no_reviews').hide();
+        }
+
+        if(app.product_reviews.length > 0){
+            $('.show_product_reviews').show();
+            app.product_reviews.each(this.addProductReview, this);
+        }
+
+        if(app.store_reviews.length > 0) {
+            $('.show_store_reviews').show();
+            app.store_reviews.each(this.addStoreReview, this);
+        }
+
+        var reviews_no = app.product_reviews.meta.total_count +
+            app.store_reviews.meta.total_count;
+        $('.notes_no').html(reviews_no);
+
+        this.$el.find('.tooltips').tooltip();
+    },
+
+    addStoreReview: function(model){
+        var json = model.toJSON();
+
+        if(model.get('store_fetched')){
+            json.store_name = model.store.get('name');
+        }
+
+        this.$('#store_reviews').append(
+            this.storeReviewTemplate(json)
+        );
+    },
+
+    addProductReview: function(model){
+        var json = model.toJSON();
+
+        if(model.get('product_fetched')){
+            json.product_id = model.product.get('id');
+            json.product_name = model.product.get('name');
+        }
+
+        this.$('#product_reviews').append(
+            this.productReviewTemplate(json)
+        );
+
+    },
+});
+
+app.MakerView = Backbone.View.extend({
+    el : '#cur_maker_follow',
+    template : Handlebars.compile($('#user_follow_template').html()),
+
+    events : {
+        'click .follow_user' : 'followUser',
+        'click .unfollow_user' : 'unfollowUser',
+    },
+
+    initialize : function() {
+        if (app.cur_fb_user)
+        {
+            this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'reset', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+        }
+
+        this.listenTo(app.cur_maker, 'change', this.addAll);
+
+        this.addAll();
+    },
+
+    addAll : function() {
+        var json = {};
+
+        if(app.cur_fb_user)
+        {
+            if(app.cur_maker.get('id') == app.cur_fb_user.get('id')) {
+                json.is_cur_user = true;
+            } else if(app.cur_fb_user.following.get(app.cur_maker.get('profile_id')) == undefined) {
+                json.cur_user_follows = false
+                json.id = app.cur_maker.get('profile_id');
+            } else {
+                json.cur_user_follows = true;
+                json.id = app.cur_maker.get('profile_id');
+            }
+        }
+
+
+        this.$el.html(this.template(json));
+    },
+
+    followUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(7));
+        var userProfile = app.cur_maker.profile;
+
+        app.cur_fb_user.profile.get('following').push(userProfile.get('resource_uri'));
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.push(userProfile);
+                app.cur_maker.followers.push(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.add({'id' : userProfile.get('id')});
+        }
+    },
+
+    unfollowUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(9));
+        var userProfile = app.cur_maker.profile;
+
+        var index = app.cur_fb_user.profile.get('following').indexOf(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.get('following').splice(index, 1);
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.remove(app.cur_fb_user.following.get(userProfile.get('id')));
+                app.cur_maker.followers.remove(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.remove(userProfile);
+        }
+    },
+});
+
+/* INITIALIZE */
+app.initializeUser();
+app.initializeMaker();
+
+app.makerView = new app.MakerView();
+
+app.product_reviews = new app.ProductReviewList();
+app.product_reviews.fetch();
+app.store_reviews = new app.StoreReviewList();
+app.store_reviews.fetch();
+
+app.reviewsView = new app.ReviewsView();
+
+</script>

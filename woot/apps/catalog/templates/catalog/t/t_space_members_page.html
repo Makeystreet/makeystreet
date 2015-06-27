@@ -1,0 +1,106 @@
+{% verbatim %}
+
+<!-- Members -->
+<script type="text/template" id="members_template">
+<div class="col-xs-4">
+    <div class="widget">
+        <div class="widget-simple">
+            <a href="/maker/{{username}}/">
+                <img src="{{profile_url}}" alt="avatar" class="widget-image img-circle pull-left">
+            </a>
+            <h4 class="widget-content">
+                <a href="/maker/{{username}}/" class="themed-color">
+                    <strong>{{first_name}} {{last_name}}</strong>
+                </a>
+                {{#if is_cur_user}}
+                {{else}}
+                    {{#if cur_user_follows}}
+                        <button class="btn btn-info unfollow_user" id="unfollow_{{id}}"><i class="fa fa-check"></i> Following</button>
+                    {{else}}
+                        <button class="btn btn-default follow_user" id="follow_{{id}}"><i class="fa fa-users"></i> Follow</button>
+                    {{/if}}
+                {{/if}}
+            </h4>
+        </div>
+
+        <div class="widget-extra">
+            <div class="row text-center themed-background-dark">
+                <div class="col-xs-4">
+                    <a href="/maker/{{username}}/makeys/">
+                        <h3 class="widget-content-light">
+                            <strong>{{makeys_count}}</strong><br>
+                            <small>Makeys</small>
+                        </h3>
+                    </a>
+                </div>
+                <div class="col-xs-4">
+                    <a href="/maker/{{username}}/insights/">
+                        <h3 class="widget-content-light">
+                            <strong>{{insights_count}}</strong><br>
+                            <small>Insights</small>
+                        </h3>
+                    </a>
+                </div>
+                <div class="col-xs-4">
+                    <a href="/maker/{{username}}/followers/">
+                        <h3 class="widget-content-light">
+                            <strong>{{followers_count}}</strong><br>
+                            <small>Followers</small>
+                        </h3>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></script>
+
+
+<!-- New row -->
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+
+
+<!-- pagination template -->
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+
+<script type="text/template" id="tt-member-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+<script type="text/template" id="tt-member-suggestion-footer-template">
+    <div class="tt-suggestion-empty">
+        <hr align="center" color="#000000" size="2" width="70%">
+        <span>Cant find your member?</span>
+        <button id="btn_add_new_collab" type="button" class="btn btn-sm btn-primary pull-right" style="display: inline">
+            Add new member
+        </button>
+    </div>
+</script>
+
+{% endverbatim %}

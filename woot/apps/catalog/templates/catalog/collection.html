@@ -1,0 +1,40 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet {% endblock %}
+
+{% block extra_js %}
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-12 col-md-12 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Collection: {{collection.name}}</h2>
+        </div>
+        <table id="collection-table" class="table table-bordered table-condensed table-vcenter">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th class='text-center'>Name</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for makey in collection.makeys.all %}
+                <tr>
+                    <td><a href="/makey_new/{{makey.id}}">{{makey.id}}</a></td>
+                    <td class='text-center'>{{makey.name}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

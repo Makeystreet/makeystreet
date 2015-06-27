@@ -1,0 +1,191 @@
+{% extends "catalog/base_v2_landing.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet| Build hardware faster, better, together {% endblock %}
+
+{% block extra_js %}
+
+<style>
+  @font-face {
+    font-family: 'Exo-Bold';
+    src: url('{% static 'fonts/Exo-Bold.eot?#iefix' %}') format('embedded-opentype'),  url('{% static 'fonts/Exo-Bold.otf' %}')  format('opentype'),
+    url('{% static 'fonts/Exo-Bold.woff' %}') format('woff'), url('{% static 'fonts/Exo-Bold.ttf' %}')  format('truetype'), url('{% static 'fonts/Exo-Bold.svg#Exo-Bold' %}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'DINMittelschrift';
+    src: url('{% static 'fonts/DINMittelschrift.eot?#iefix' %}') format('embedded-opentype'), url('{% static 'fonts/DINMittelschrift.ttf' %}')  format('truetype'), url('{% static 'fonts/DINMittelschrift.svg#DINMittelschrift' %}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+  @font-face {
+    font-family: 'SegoeUI';
+    src: url('{% static 'fonts/SegoeUI.eot?#iefix' %}') format('embedded-opentype'),  url('{% static 'fonts/SegoeUI.woff' %}') format('woff'), url('{% static 'fonts/SegoeUI.ttf' %}')  format('truetype'), url('{% static 'fonts/SegoeUI.svg#SegoeUI' %}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+</style>
+
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/common/navbar.js' %}"></script>
+<script src="{% static 'app/common/landing.js' %}"></script>
+{% endcompress %}
+
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/common/landing.css' %}" type="text/css">
+{% endcompress %}
+{% endblock extra_js %}
+
+{% block content_full %}
+<div class="ui grid page-container">
+  <div class="row hero-section">
+    <div class="ui page padded grid">
+      <div class="sixteen wide center aligned column">
+        <h1 class="ui header">Build Hardware</h1>
+        <h2 class="ui header">Better, Faster, Together</h2>
+        <p>Makeystreet is a developer tool for product design companies that helps you innovate faster and reduce time to market.</p>
+        <a class="ui orange huge button get-started" href="{% url 'account_signup' %}">Get Started For Free</a>
+      </div>
+    </div>
+  </div>
+  <div class="row features-section">
+    <div class="ui grid">
+      <div class="one column row features-heading">
+        <div class="ui page padded grid">
+          <div class="center aligned column">
+            <h2 class="ui header">Why you will love Makeystreet</h2>
+          </div>
+        </div>
+      </div>
+      <div class="row features">
+        <div class="ui grid padded page">
+          <div class="center aligned middle aligned doubling row">
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/1.png' %}" class="ui image">
+              </center>
+            </div>
+            <div class="ten wide column">
+              <h3 class="ui header">Modular System Design</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Breakdown projects into sub-assemblies that are managed by sub-teams</p>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="center aligned middle aligned doubling row">
+            <div class="ten wide column">
+              <h3 class="ui header">Version Hardware</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Derive new versions of your product and change only the subassemblies needed.</p>
+            </div>
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/5.png' %}" class="ui image">
+              </center>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="center aligned middle aligned doubling row">
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/2.png' %}" class="ui image">
+              </center>
+            </div>
+            <div class="ten wide column">
+              <h3 class="ui header">Find information super fast</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Common documentation format and super fast search lets you find information fast.</p>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="center aligned middle aligned doubling row">
+            <div class="ten wide column">
+              <h3 class="ui header">Prevent information loss</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Make sure information doesn't get lost with the churn.</p>
+            </div>
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/3.png' %}" class="ui image">
+              </center>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="center aligned middle aligned doubling row">
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/6.png' %}" class="ui image">
+              </center>
+            </div>
+            <div class="ten wide column">
+              <h3 class="ui header">Structured technical documentation</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Common documentation format across projects and teams.</p>
+            </div>
+          </div>
+          <div class="ui divider"></div>
+          <div class="center aligned middle aligned doubling row">
+            <div class="ten wide column">
+              <h3 class="ui header">Archive and reopen projects</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Easily return to a project done in the past.</p>
+            </div>
+            <div class="six wide column">
+              <center>
+                <img src="{% static 'images/4.png' %}" class="ui image">
+              </center>
+            </div>
+          </div>
+          <div class="center aligned one column row">
+            <div class="column">
+              <a href="{% url 'account_signup' %}" class="ui orange huge button">Get Started For Free</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row open-source-section">
+    <div class="ui page padded grid">
+      <div class="sixteen wide center aligned column">
+        <h2 class="ui header">Built with Makeystreet</h2>
+        <p>Large scale open source hardware projects are now possible</p>
+      </div>
+    </div>
+  </div>
+  <div class="row firefly-section">
+    <div class="ui grid">
+      <div class="row">
+        <div class="ui grid padded page">
+          <div class="middle aligned row">
+            <div class="four wide column">
+              <center>
+                <a href="http://fireflyunicycle.com" target="_blank"><img src="{% static 'images/firefly-logo.png' %}" class="ui image"></a>
+              </center>
+            </div>
+            <div class="twelve wide center aligned column">
+              <h3 class="ui header">Firefly Unicycle</h3>
+              <div class="ui divider mini-divider"></div>
+              <p>Firefly Unicycle is an open source personal transportation device. Firefly Unicycle community uses Makeystreet for collaboration and documentation.</p>
+              <a href="http://fireflyunicycle.com" target="_blank" class="ui orange inverted button">Firefly Unicycle Website</a>
+              <a href="/alex/firefly-v1/" class="ui orange button">Firefly Unicycle on Makeystreet</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row footer">
+    <div class="ui page grid">
+      <div class="one column row">
+        <div class="center aligned column">
+          <p>© 2015, Makeystreet.</p>
+          <p>Suggestions or bugs? Reach us at <a href="https://twitter.com/Makeystreet">@makeystreet</a> | <a href="/privacy-policy/">Privacy Policy</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

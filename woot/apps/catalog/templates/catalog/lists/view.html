@@ -1,0 +1,22 @@
+{% extends "catalog/profile.html" %}
+
+{% load static from staticfiles %}
+
+{% block content_right %}
+    <div class=" well">
+        <form method="POST">
+            <table class="table">
+                <tr>
+                    <th colspan="2"><center><h3>List : {{ list_instance.name }}</h3></center></th>
+                </tr>
+                {% for i in list_items %}
+                    <tr>
+                        <th colspan="2">{{ i.product.name }}</th>
+                    </tr>
+                {% endfor %}
+                
+            </table>
+        </form>
+    </div>
+{% endblock %}
+

@@ -1,0 +1,55 @@
+{% extends "catalog/base.html" %} 
+
+{% load static from staticfiles %} 
+
+{% block title %}MakeyStreet | CFI Store{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %} 
+
+
+{% block content_full %}
+
+<div class="row">
+    <div class="col-xs-12">
+        <h2>Target%: {{target_cent}}%</h2>
+        <h2>Target: {{target|floatformat:1}}</h2>
+        Metrics are calculated from <b>Sunday 11:59pm</b>
+        <br/>
+    </div>
+</div>
+<div class="row">
+    {% for week in weeks %}
+        <div class="col-xs-1">
+            <h3><b>{{week.new_users}}</b></h3>
+            <h3>{{week.start_users}}</h3>
+            <h3>{{week.growth|floatformat:1}}%</h3>
+        </div>
+    {% endfor %}
+</div>
+<div class="row">
+    <div class="col-xs-12">
+        <br/><br/>
+        <b>Legend</b><br/>
+        New users<br/>
+        Starting users<br/>
+        Growth<br/>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create a Makey {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<script>
+    App.datatables();
+
+    $('#makeys-table').dataTable({
+        "aaSorting": [[0,'asc']],
+        "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "bPaginate" : true,
+        "bLengthChange": true
+    });
+
+    $('.dataTables_filter input').attr('placeholder', 'Search');
+</script>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_create_makey.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_create_makey.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-8 col-md-8 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Staff pick</h2>
+        </div>
+        You can select staff picks here..
+        
+    </div>
+</div>
+<div class="col-sm-12 col-md-12 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Data tables comes here</h2>
+        </div>
+        <table id="makeys-table" class="table table-bordered table-condensed table-vcenter">
+            <thead>
+                <tr>
+                    <th>Makey</th>
+                    <th class='text-center'>About</th>
+                    <th class='text-center'>Score</th>
+                    <th class='text-center'>Tags</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Cover Picture">CP</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Number of documentation">D</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Gallery">G</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Files">F</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Insights">I</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Available as a part">As a part</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Collaborators">Made in</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Collaborators">Collabs</th>
+                    <th class='text-center'>Date added</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for makey in makeys %}
+                <tr>
+                    <td><a href="/makey/{{makey.id}}" data-part-makey-count="{{inventory.part.makeys.count}}" class="part-pop-trigger" data-part-name="{{makey.name}}">{{makey.name}}</a> <a href="/makey/{{makey.id}}/edit/">(edit)</a></td>
+                    <td class='text-center'>{{makey.about}}</td>
+                    <td class='text-center'>{{makey.score}}</td>
+                    <td class='text-center'>
+                        {% for tag in makey.tags.all %}
+                            {% if forloop.last %}
+                                <b>{{ tag.name }}</b>
+                            {% else %}
+                                <b>{{ tag.name }}</b>,
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class='text-center'>
+                        {% if makey.cover_pic %}
+                        <i class="fa fa-check-square-o"></i>
+                        {% else %}
+                        <i class="fa fa-square-o"></i>
+                        {% endif%}
+                    </td>
+                    <td class='text-center'>{{makey.text_documentations.count}}</td>
+                    <td class='text-center'>{{makey.images.count}},{{makey.videos.count}}</td>
+                    <td class='text-center'>{{makey.files.count}}</td>
+                    <td class='text-center'>{{makey.notes.count}}</td>
+                    <td class='text-center'>
+                        {% if makey.as_part%}
+                            <a href = "/product/{{makey.as_part.id}}">{{makey.as_part}}</a>
+                        {% elif makey.as_part_new %}
+                            <a href = "{{makey.as_part_new.url}}">{{makey.as_part_new.name}}</a>
+                        {% endif %}
+                    </td>
+                    <td class='text-center'>
+                        <a href="/space/{{makey.made_in.id}}">{{makey.made_in}}</a>
+                    </td>
+                    <td class='text-center'>
+                        {% for collab in makey.collaborators.all %}
+                            {% if forloop.last %}
+                                <b><a href="/maker/{{collab.username}}" >{{collab.first_name}} {{collab.last_name}}</a></b>
+                            {% else %}
+                                <b><a href="/maker/{{collab.username}}" >{{collab.first_name}} {{collab.last_name}}</a></b>,
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class='text-center'>{{makey.added_time}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

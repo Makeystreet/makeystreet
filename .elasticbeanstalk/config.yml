@@ -1,0 +1,10 @@
+branch-defaults:
+  master:
+    environment: makeystreet-prod
+global:
+  application_name: makeystreet
+  default_ec2_keyname: makeystreet
+  default_platform: Python 2.7
+  default_region: us-east-1
+  profile: eb-cli
+  sc: git

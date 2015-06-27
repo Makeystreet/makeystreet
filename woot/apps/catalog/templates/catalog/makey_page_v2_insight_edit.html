@@ -1,0 +1,212 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+<meta property="og:title"  content="{{makey.name}}" />
+<meta property="og:type"   content="makey_street:makey" />
+<meta property="og:url"    content="{{makey_url}}" />
+{% if makey.cover_pic %}
+<meta property="og:image"  content="{{makey.cover_pic}}"/>
+<meta property="og:image:url" content="{{makey.cover_pic}}" />
+{% else %}
+<meta property="og:image"  content="{{makey.images.all.0}}"/>
+<meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+{% endif %}
+
+<meta name="og:description" content="{{makey.about}}">
+<meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  var GLOBALS = {
+    'MAKEY_ID' : '{{makey.id}}',
+    'MAKEY_URL_ROOT' : '{% url 'catalog:makey_new_slug' makey.user.username makey.slug %}',
+    'S3_SIGN_URL' : '{% url 'catalog:sign_image_s3' %}',
+    'S3_SIGN_FILE_URL' : '{% url 'catalog:sign_file_s3' %}',
+    'SEARCH_URL' : '{% url 'catalog:search_in_makey' makey.user.username makey.slug %}'
+  }
+</script>
+<script src="{% static 'js/s3upload.js' %}"></script>
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/makey/insight_edit.js' %}"></script>
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/makey/insight_edit.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'app/common/typeahead.css' %}" type="text/css">
+{% endcompress %}
+<script src="{% static 'js/typeahead.js' %}"></script>
+{% endblock %}
+
+{% block templates %}
+{% verbatim %}
+<script type="text/template" id="tag-template">
+  <div class="ui label tag-item" data-tag-name="{{name}}">{{name}}<i class="icon close"></i></div>
+</script>
+<script type="text/x-handlebars-template" id="tag-item-input-template">
+  <input type="hidden" name="tag_name" value="{{name}}">
+</script>
+{% endverbatim %}
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="eight wide column">
+        <h1 class="ui header makey-header"><a href="{{makey.get_absolute_url}}">{{makey.name}}</a></h1>
+        {% if parents %}
+        <div class="ui medium breadcrumb makey-parents">
+          {% for parent in parents %}
+          <a class="section" href="{{parent.get_absolute_url}}">{{parent.name}}</a>
+          <i class="right chevron icon divider"></i>
+          {% endfor %}
+          <div class="active section">{{makey.name}}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui secondary pointing menu tabular">
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'overview' %}">
+          <i class="home icon"></i> OVERVIEW
+        </a>
+        <a class="item active" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'insights' %}">
+          <i class="idea icon"></i>
+          {% if insights_count %}
+          {{insights_count}}
+          {% endif %}
+          INSIGHTS
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'discussions' %}">
+          <i class="comments outline icon"></i>
+          {% if discussions_count %}
+          {{discussions_count}}
+          {% endif %}
+          DISCUSSIONS
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'files' %}">
+          <i class="folder icon"></i>
+          {% if files_count %}
+          {{files_count}}
+          {% endif %}
+          FILES
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'gallery' %}">
+          <i class="photo icon"></i>
+          {% if gallery_count %}
+          {{gallery_count}}
+          {% endif %}
+          GALLERY
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'docs' %}">
+          <i class="book icon"></i>
+          {% if docs_count %}
+          {{docs_count}}
+          {% endif %}
+          DOCS
+        </a>
+        <div class="right menu">
+          <div class="item">
+            <div class="ui icon input search-box">
+              <input type="text" placeholder="Search this Makey..." class="search-input">
+              <i class="search link icon search-button"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ui grid">
+        <div class="row">
+          <div class="ten wide column add-insight-column">
+            <div class="right ui rail">
+              <div class="ui sticky add-insight-button-sticky">
+                <div class="ui primary medium button add-insight-button"><i class="icon add"></i>Update this insight</div>
+              </div>
+            </div>
+            <div class="ui basic segment back-segment">
+              <a class="back-button" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'insights' %}"><i class="left chevron icon"></i>Go back to all insights</a>
+            </div>
+            <div class="ui segment insights-segment" style="margin-top: 0;">
+              <h3 class="ui header">Edit Insight</h3>
+              <form action="/makey_action/" method="post" class="add-insight-form">
+                <div class="ui form add-insight">
+                  <div class="required field">
+                    <label>Title</label>
+                    <input type="text" placeholder="Title of your Insight" name="title" value="{{insight.title}}">
+                  </div>
+                  <div class="required field">
+                    <label>Description</label>
+                    <textarea placeholder="Describe your insight" name="description">{{insight.body}}</textarea>
+                  </div>
+                  <input type="hidden" name="action" value="edit-insight-image">
+                  <input type="hidden" name="makey_id" value="{{makey.id}}">
+                  <input type="hidden" name="insight_id" value="{{insight.id}}">
+                  <input type="hidden" name="image_id" value="{% if insight.image %}{{insight.image.id}}{% endif %}" class="add-insight-image-id">
+                  <input type="hidden" name="image_url" value="" class="add-insight-image-url">
+                </div>
+              </form>
+            </div>
+            <div class="ui segment">
+              <h3 class="ui header">Add tags</h3>
+              <div class="ui basic segment">
+                <div class="ui labels tags-container">
+                  {% for tag in insight.tags.all %}
+                  <div class="ui label tag-item" data-tag-name="{{tag.name}}">{{tag.name}}<i class="icon close"></i></div>
+                  {% endfor %}
+                </div>
+                <div class="ui icon input">
+                  <input type="text" placeholder="Search for tags..." class="tags-search">
+                  <i class="add link icon add-tag-icon"></i>
+                </div>
+              </div>
+            </div>
+            <div class="ui segment">
+              <h3 class="ui header">Link an image (optional)</h3>
+              <div class="ui basic segment center aligned">
+                <center>
+                  <img src="" class="ui fluid small image add-insight-upload-image-preview">
+                  <div class="ui basic medium button upload-image-button">
+                    <i class="upload icon"></i>
+                    Upload an image
+                  </div>
+                  <input type="file" accept="image/*" class="image-upload-selector" name="upload_image_input" id="upload_image_input" />
+                </center>
+                {% if images %}
+                <div class="ui horizontal divider">
+                  Or
+                </div>
+                <h4 class="ui header">Select an existing image</h4>
+                <div class="ui four column grid">
+                  {% for img in images %}
+                  <div class="column">
+                    <div class="ui segment tag-image-select {% if insight.image %} {% ifequal insight.image.id img.id %}selected{% endifequal %} {% endif %}" data-id="{{img.id}}">
+                      <img src="{{img.url}}" class="ui fluid image">
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

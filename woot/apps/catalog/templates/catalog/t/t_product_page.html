@@ -1,0 +1,197 @@
+{% verbatim %}
+<!-- product name template -->
+<script type="text/template" id="product_template">
+    <h3>{{name}}</h3>
+</script>
+<!-- Template for the like button -->
+<script type="text/template" id="like_template">
+<div id="like_{{product_id}}" class="btn btn-sm tooltips like_product {{#if cur_user_likes}}btn-success{{ else }}btn-default{{/if}}" data-toggle='tooltip' data-container='body' data-title="{{likes_string}}">
+    {{#if cur_user_likes}}
+        Liked!
+    {{else}}
+        Like!
+    {{/if}}
+</div>
+<!--<div><small><small>{{likes_string}}</small></small></div>-->
+</script>
+
+
+<!-- Tutorial template -->
+<script type="text/template" id="tutorial_template">
+    <div class="row">
+        <div class="col-xs-2">
+            <div class="row">
+                <div class="col-sm-12 col-md-12">
+                    <center>
+                        <div class="btn btn-default btn-sm {{#if cur_user_upvote}}btn-success {{/if}}upvote" id="upvote_{{id}}">
+                            <span class="glyphicon glyphicon-chevron-up upvote" id="upvote_{{id}}"></span>
+                        </div>
+                    </center>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <center>{{votes}}</center>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-xs-12">
+                    <center>
+                        <div class="btn btn-default btn-sm {{#if cur_user_downvote}}btn-success {{/if}}downvote" id="downvote_{{id}}">
+                            <span class="glyphicon glyphicon-chevron-down downvote" id="downvote_{{id}}"></span>
+                        </div>
+                    </center>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col-xs-10">
+            <div class="row">
+                <div class="col-xs-12">
+                    <strong><a href="{{url}}">{{url}}</a></strong>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <strong>submitted by <a href="/maker/{{user.username}}">{{user.username}}</a></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br/>
+</script>
+
+<!-- Review Template -->
+<script type="text/template" id="review_template">
+<div class="row">
+    <div class="col-xs-2">
+        <div class="row">
+            <div class="col-xs-12">
+                <center>
+                    <div class="btn btn-default btn-sm upvote {{#if cur_user_upvote}}btn-success {{/if}}" id="upvote_{{id}}">
+                        <span class="glyphicon glyphicon-chevron-up upvote" id="upvote_{{id}}"></span>
+                    </div>
+                </center>
+            </div>  
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <center>
+                    {{votes}}
+                </center>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12">
+                <center>
+                    <div class="btn btn-default btn-sm downvote {{#if cur_user_downvote}}btn-success {{/if}}" id="downvote_{{id}}">
+                        <span class="glyphicon glyphicon-chevron-down downvote" id="downvote_{{id}}"></span>
+                    </div>
+                </center>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xs-10">
+        <div class="row">
+            <strong>{{title}}</strong>
+        </div>
+        <div class="row">
+            <strong>Rating - {{{stars}}}</strong>
+        </div>
+        <div class="row">
+            <p>{{review}}</p>
+        </div>
+        <div class="row">
+            <strong>submitted by <a href="/maker/{{user.username}}">{{user.facebook_name}}</a></strong>
+        </div>
+    </div>
+</div>
+<br>
+</script>
+
+
+<!-- Image template -->
+<script type="text/template" id="image_template">
+    <div class="col-sm-2 col-md-2 ">
+        <div class="thumbnail">
+            <a class="img product_image" title="{{ caption }}" data-lightbox-gallery="gallery1">
+                <img id="img_{{id}}" src="{{url}}" alt="{{altname}}">
+            </a>
+        </div>
+    </div>
+</script>
+
+
+<!-- Description templates -->
+    <!-- tab -->
+<script type="text/template" id="description_tab_template">
+    <li class=""><a href="#tab{{shop.id}}" data-toggle="tab">By {{shop.name}}</a></li>
+</script>
+
+<!-- body -->
+<script type="text/template" id="description_template">
+      <div class="tab-pane " id="tab{{shop.id}}">
+          <h5>By {{shop.name}} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </h5>
+          <p>{{{description}}}</p>
+      </div>
+</script>
+
+<!-- ShopUrl template -->
+<script type="text/template" id="shopurl_template">
+        <a href="{{url}}" target="_blank" class="popovers click_shopurl" data-placement="left" data-toggle="popover" data-title="{{shop.name}}"
+        data-content="<a href=# id='like_{{shop.id}}' class='like_shop'>{{#if cur_user_likes}}Liked!{{else}}Like!{{/if}}</a></div>">
+        <h5 id="shopurl_{{id}}">{{shop.name}} | <small><small>{{likes_string}}</small></small></h5></a>
+</script>
+
+<!-- Makey template -->
+<script type="text/template" id="makey_template">
+    <div class="row">
+        <div class="col-sm-1 col-md-2">
+            <div class="row">
+                <div class="col-sm-12 col-md-12">
+                <center>
+                    <div class="btn btn-default btn-sm upvote {{#if cur_user_upvote}}btn-success {{/if}}" id="upvote_{{id}}">
+                        <span class="glyphicon glyphicon-chevron-up upvote" id="upvote_{{id}}"></span>
+                    </div>
+                    </center>
+                </div>
+            </div>
+
+            <div class="row">
+                <center><div class="col-xs-12">
+                    {{votes}}
+                </div></center>
+            </div>
+
+            <div class="row">
+                <div class="col-sm-12 col-md-12">
+                <center>
+                    <div class="btn btn-default btn-sm downvote {{#if cur_user_downvote}}btn-success {{/if}}" id="downvote_{{id}}">
+                        <span class="glyphicon glyphicon-chevron-down downvote" id="downvote_{{id}}"></span>
+                    </div>
+                    </center>
+                </div>
+            </div>
+        </div>
+    
+        <div class="col-xs-10">
+            <div class="row">
+                <div class="col-xs-12">
+                    <strong><a href="{{url}}" target="_blank">{{name}}</a></strong>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <strong>submitted by <a href="/maker/{{user.username}}">{{user.username}}</a></strong>
+                </div>
+            </div>
+        </div>
+    </div>
+    <br/>
+</script>
+{% endverbatim %}

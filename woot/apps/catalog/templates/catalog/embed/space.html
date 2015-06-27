@@ -1,0 +1,39 @@
+{% extends "catalog/embed/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Makey{% endblock %}
+
+{% block content_full %}
+<div class="col-xs-12 text-center" style="width:100%;height:100%;position:relative;">
+    <div class="widget themed-background-dark" style="height:100%;">
+        <div class="widget-extra" style="height:100%;">
+            <div class="row" style="height:50%;">
+                <div class="col-xs-12">
+                    <h3 style="margin:10px;"><a href="/space/1" style="color:#ffffff;">{{space.name}}</a></h3>
+                </div>
+            </div>
+            <hr style="margin:0px;">
+            <!-- showing space stats-->
+            <div class="row" style="height:50%;">
+                <div class="col-xs-6">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <a href="/space/1/members" style="color:#ffffff;">
+                            <strong>{{space.members.all | add:space.new_members.all | length}}</strong><br>
+                            <small>Members</small>
+                        </a>
+                    </h3>
+                </div>
+                <div class="col-xs-6">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <a href="/space/1/makeys" style="color:#ffffff;">
+                            <strong>{{space.makeys_made_in.all | length}}</strong><br>
+                            <small>Makeys</small>
+                        </a>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

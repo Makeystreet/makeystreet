@@ -1,0 +1,71 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet{% endblock %}
+{% block contentmeta %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  $(document).ready(function(){
+    setTimeout("location.reload(true);", 30000);
+  });
+</script>
+<script src="{% static 'app/wall/collection_wall.js' %}"></script>
+<link rel="stylesheet" href="{% static 'app/wall/collection_wall.css' %}" type="text/css">
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="eight wide column">
+        <h1 class="ui header">{{collection.name}}</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui grid">
+        <div class="sixteen wide column">
+          <div class="ui basic segment insights-segment">
+            <div class="ui divided items">
+              {% for insight in insights %}
+              <div class="item">
+                <div class="content">
+                  <a class="header" href="{% url 'catalog:makey_new_insight_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug insight.id %}">{{insight.title}}</a>
+                  <div class="meta">
+                    <span class="time">posted {{insight.added_time|timesince}} ago by</span>
+                    <a class="author" href="{% url 'catalog:maker' insight.user.username %}">{{insight.user.first_name}} {{insight.user.last_name}}</a>
+                    <span>on</span>
+                    <a class="makey-link" href="{% url 'catalog:makey_new_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug %}">{{insight.makeynotes.all.0.name}}</a>
+                  </div>
+                  <div class="description">
+                    {% load catalog_tags %}
+                    {{insight.body|linebreaks|urlize_target_blank:None}}
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <div class="item">
+                <div class="content">
+                  <p>No insights yet</p>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

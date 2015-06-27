@@ -1,0 +1,1547 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+    <meta property="og:title"  content="{{makey.name}}" />
+    <meta property="og:type"   content="makey_street:makey" />
+    <meta property="og:url"    content="{{makey_url}}" />
+    {% if makey.cover_pic %}
+    <meta property="og:image"  content="{{makey.cover_pic}}"/>
+    <meta property="og:image:url" content="{{makey.cover_pic}}" />
+    {% else %}
+    <meta property="og:image"  content="{{makey.images.all.0}}"/>
+    <meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+    {% endif %}
+
+    <meta name="og:description" content="{{makey.about}}">
+    <meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.userPopover{
+    max-width : 500px !important;
+    width : 350px !important;
+    padding: 1px;
+    margin: 1px;
+}
+.notePopover{
+    width: 275px !important;
+
+}
+.cn {
+    position: absolute;
+    display: table;
+    z-index: 2;
+    opacity: 0;
+    left: 10;
+    top: 10;
+    width:50px; /*replace this width programatically*/
+    height:50px;
+    vertical-align: middle;
+    text-align: center;
+    margin: auto;
+    opacity:1;
+    background:rgba(0,0,0,0) center no-repeat;
+}
+div.inner {
+    xdisplay: block;
+    display:table-cell;
+    vertical-align:middle;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- light box for showing images -->
+<link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/introjs.min.css' %}" type="text/css">
+
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script src="{% static 'js/jquery.backstretch.min.js' %}"></script>
+<script src="{% static 'js/jquery.cookie.js' %}"></script>
+<script src="{% static 'js/autogrow.min.js' %}"></script>
+<!-- NPROGRESS Stuff -->
+<link rel="stylesheet" href="{% static 'css/nprogress.css' %}" type="text/css">
+<script src="{% static 'js/nprogress.js' %}"></script>
+
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script type="text/javascript">
+    function onScroll(event){
+        var scrollPos = $(document).scrollTop();
+
+        $('#toc2 a').each(function () {
+            var currLink = $(this);
+            var refElement = $(currLink.attr("href"));
+            if (refElement.offset().top <= scrollPos+15 && refElement.offset().top + refElement.height() > scrollPos+15) {
+                $('#toc2 ul li a').removeClass("active"); //added to remove active class from all a elements
+                currLink.addClass("active");
+            }
+            else{
+                currLink.removeClass("active");
+            }
+        });
+    }
+    $(document).ready(function(){
+        $('a.img').nivoLightbox();
+        $('#sticker_leftcolumn').width($('#left_column').width());
+        $(window).resize(function() {
+            $('#sticker_leftcolumn').width($('#left_column').width());
+        });
+        $("#sticker_leftcolumn").sticky({topSpacing:0});
+
+        // mixpanel when this page is launched
+        mixpanel.track("MakeyP: Event", {
+            event_type: "makey_page_opened",
+            user_id: cur_user_details.id,
+            makey_id:{{makey.id}},
+        });
+
+        $(document).on("scroll", onScroll);
+        // end of scroll navigation animation
+
+        {% if makey.cover_pic %}
+            $.backstretch("{{makey.cover_pic.full_url}}");
+        {% elif makey.images.count > 0 %}
+            $.backstretch("{{makey.images.first.full_url}}");
+        {% else %}
+            $.backstretch("{% static 'images/tools.jpg' %}");
+        {% endif %}
+        $('#page-content').css('background-color','transparent');
+    });
+
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        mixpanel.track_links("a[rel=topbar]", "NavbarTop", function(target){
+        var details = {};
+
+        if(app.cur_fb_user == undefined) {
+            curUser = "NotLoggedIn";
+        } else {
+            curUser = app.cur_fb_user.facebook_name;
+        }
+
+        details.btn = target.innerText;
+        details.user = curUser;
+
+        return details;
+        });
+    });
+</script>
+
+
+<!-- D3 Stuff -->
+<style>
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+</style>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+{% endblock %}
+
+
+{% block templates %}
+    {% include "catalog/t/t_makey_page.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_makey_page.html" %}
+{% endblock %}
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Makey header -->
+<div class ="row" itemscope itemtype="http://schema.org/CreativeWork/Makey">
+    <div class="col-xs-12">
+        <div id="bg" class="row">
+            <div style="background:rgba(255,255,255,0.1);">
+                <div class="jumbotron" style="background:rgba(0,0,0,0.6);padding-bottom:5px;padding-top:10px;margin-bottom:10px;padding-right:10px" id="jumbo">
+                    <!-- Section: Title -->
+                    <div id="makey_info" style="display:block; width:100%; min-height=100px;color:#ffffff;">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <h1 id="makey_name" itemprop="name">
+                                    {{makey.name}}
+                                </h1>
+                            </div>
+
+                        </div>
+                        <meta itemprop="url" content="{{makey_url}}" />
+                        {% if makey.cover_pic %}
+                        <meta itemprop="image"  content="{{makey.cover_pic}}"/>
+                        {% else %}
+                        <meta itemprop="image"  content="{{makey.images.all.0}}"/>
+                        {% endif %}
+
+                        <!-- Section: Likes -->
+                        <div class="row" style="position: relative">
+                            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+                                <div class="row" style="margin-bottom: 5px;">
+                                    <div class="col-xs-12" id="makey-{{makey.id}}-likes">
+                                        <span class="likes" style="display:inline-block">
+                                            <button class="btn btn-sm btn-info" type="button">Like</button>
+                                            <small>Be the first one to like this!</small>
+                                        </span>
+                                        <div class="modal fade col-sm-12" id="all_likes_modal" tabindex="-1" role="dialog" aria-labelledby="all_likes_label" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content col-sm-offset-1">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 style="color:black;" class="modal-title" id="all_likes_label">People who like this</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        List of likers
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default close_likes_modal" data-dismiss="modal" id="close_likes_modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" id="collaborators">
+                                    <div class="row">
+                                        <p>Made By</p>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-10 col-md-10" style="margin-bottom:-15px;">
+                                            <div id="makey_collaborators" style="display:block; width:100%; height:135px;">
+                                                <div class="row">
+                                                    {% for collab in makey.collaborators.all %}
+                                                    <div class = "col-xs-1" style="padding: 0.5px; margin: 0.5px; margin-bottom:0px; width:110px;" itemprop="contributor" itemtype="http://schema.org/Person">
+                                                        <div class="thumbnail">
+                                                            <a id="collab_{{collab.id}}" href="/maker/{{collab.username}}/" class="collaborator" itemprop="url">
+                                                                <img class="img-responsive" height="auto" style="height:100px;width:100px;"  src="{{collab.profile.profile_img_url}}" imgId="collab_{{collab.id}}" itemprop="image" />
+                                                                <span itemprop="name">{{collab.first_name}}</span>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                    {% for collab in makey.new_users.all %}
+                                                    <div class = "col-xs-1" style="padding: 0.5px; margin: 0.5px; margin-bottom:0px; width:110px;" itemprop="contributor" itemtype="http://schema.org/Person">
+                                                        <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="auto bottom" title="{{collab.name}}">
+                                                            <a href="" class="preventDefault">
+                                                                <img height="auto" src="https://makeystatic.s3.amazonaws.com/images/newuser.gif" altname="{{collab.name}}" style="height:100px;width:100px;" />
+                                                                <span itemprop="name">{{collab.name}}</span>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            <div id="collab_hover_content" style="display:none;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2" style="position: absolute; bottom: 0; right: 0;">
+                                    {% if makey.derived_from %}
+                                        <div class="thumbnail" style="margin-bottom: 5px;">
+                                            <span style="color:black"><center>Derived from</center></span>
+                                            <a class="module" href="{% url 'catalog:makey' makey.derived_from.id %}">
+                                                {% if makey.derived_from.cover_pic %}
+                                                <img class="img-responsive" src="{{ makey.derived_from.cover_pic }}">
+                                                {% elif makey.derived_from.images.count > 0 %}
+                                                <img class="img-responsive" src="{{ makey.derived_from.images.first }}">
+                                                {% else %}
+                                                <img src="{% static 'images/tools.jpg' %}" class="img-responsive">
+                                                {% endif %}
+                                            </a>
+                                            <a href="{% url 'catalog:makey' makey.derived_from.id %}">
+                                                <h5>{{makey.derived_from.name}}</h5>
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Section: Collaborators -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<br/>
+<div class="row">
+    <div class="column1 col-md-3 hidden-xs hidden-sm" id="left_column">
+        <div id="sticker_leftcolumn">
+
+            <!-- Section: Makey Manage -->
+            {% if can_edit %}
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Manage">
+                        <strong>Manage Makey</strong>
+                    </h2>
+                </div>
+                <div class="block-content list-group">
+                    <a href="{% url 'catalog:edit_makey' makey.id %}" class="list-group-item">Edit</a>
+                    <a href="" class="list-group-item preventDefault">Delete</a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section: Navigation -->
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Table of content">
+                        <strong>Content</strong>
+                    </h2>
+                </div>
+                <div id='toc2' class="block-content list-group">
+                    <a href="#about" class="list-group-item active">
+                         What is this?
+                    </a>
+                    {% comment %}
+                    <a href="#whydo" class="list-group-item show_why">
+                         Why did we do this?
+                    </a>
+                    {% endcomment %}
+                    <a href="#hierarchy" class="list-group-item hierarchy-group">
+                         Hierarchy
+                    </a>
+                    {% comment %}
+                    <a href="#steps" class="list-group-item show_steps">
+                         Build Instructions <span class="badge steps_no">{{makey.instructablestep_set.count}}</span>
+                    </a>
+                    {% endcomment %}
+                    <a href="#text-docs" class="list-group-item show_textdoc">
+                         Documentation <span class="badge how_no">{{makey.text_documentations.count}}</span>
+                    </a>
+                    {% comment %}
+                    <a href="#how-to" class="list-group-item show_how">
+                         Resources<span class="badge how_no">{{makey.documentations.count}}</span>
+                    </a>
+                    {% endcomment %}
+                    <a href="#images" class="list-group-item show_gallery">
+                         Gallery <span class="badge images_no">{{gallery|length}}</span>
+                    </a>
+                    <a href="#notes" class="list-group-item show_notes">
+                         Insights <span class="badge notes_no">{{makey.notes.count}}</span>
+                    </a>
+                    <a href="#as_a_part" class="list-group-item show_as_a_part">
+                         Available as a part
+                    </a>
+                    <a href="#parts" class="list-group-item show_parts">
+                         Components used<span class="badge parts_no">{{makey.modules_used.count|add:makey.partsused.count|add:makey.new_parts.count}}</span>
+                    </a>
+                    {% comment %}
+                    <a href="#tools" class="list-group-item show_tools">
+                         Tools used<span class="badge tools_no">{{makey.tools_used.count|add:makey.new_tools.count}}</span>
+                    </a>
+                    {% endcomment %}
+                    <a href="#status" class="list-group-item show_status">
+                         Current Status
+                    </a>
+                    <a href="#mentors" class="list-group-item show_mentors">
+                         Mentors
+                    </a>
+                    {% comment %}
+                    <a href="#credits" class="list-group-item show_credits">
+                         Credits
+                    </a>
+                    {% endcomment %}
+                    <a href="#comments" class="list-group-item">
+                         Comments{# <span class="badge comments_no">0</span> #}
+                    </a>
+                </div>
+            </div>
+
+            <!-- Section: Made In -->
+            {% if makey.made_in%}
+            <div class="block" style="border: 0px;padding: 0px;">
+                <div class="block-title" style="margin: 0px;border-bottom-width: 0px;">
+                    <h2><strong>Made in</strong></h2>
+                </div>
+                <div class="block-content widget themed-background-dark" style="margin-bottom: 0px;">
+                    <div class="widget-extra">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <h3 style="margin:10px;">
+                                    <a href="/space/{{makey.made_in.id}}" style="color:#ffffff;">{{makey.made_in.name}}</a>
+                                </h3>
+                            </div>
+                        </div>
+                        <hr style="margin:0px;">
+                        <!-- showing space stats-->
+                        <div class="row text-center">
+                            <div class="col-xs-6">
+                                <h3 style="margin:10px;" class="widget-content-light">
+                                    <a href="/space/{{makey.made_in.id}}/members" style="color:#ffffff;">
+                                        <strong>{{makey.made_in.members.all|length}}</strong><br>
+                                        <small>Members</small>
+                                    </a>
+                                </h3>
+                            </div>
+                            <div class="col-xs-6">
+                                <h3 style="margin:10px;" class="widget-content-light">
+                                    <a href="/space/{{makey.made_in.id}}/makeys" style="color:#ffffff;">
+                                        <strong>{{makey.made_in.makeys_made_in.all|length}}</strong><br>
+                                        <small>Makeys</small>
+                                    </a>
+                                </h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="block">
+                <div class="block-content">
+                    <p>Found this makey interesting? Showcase your work here.</p>
+                    <p><a class="btn btn-lg btn-success btn-group-justified" href = "{% url 'catalog:create_makey' %}">
+                        Create a Makey now!
+                    </a></p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="column2 col-md-6" id='column2'>
+
+        <!-- Section: Project About -->
+        <div class="row" id="about">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>What is this?</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_about" class="">
+                            <p>{{makey.about}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- Section: Why did we do this project? -->
+        <div class="row show_why" id="whydo" >
+            <div class="col-xs-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>Why did we do this?</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_why" class="">
+                            {% load catalog_tags %}
+                            <p>{{makey.why|safe|urlize_target_blank:None}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+        <div class="row hierarchy-group" id='hierarchy-container'>
+            <div class="col-sm-12 col-md-12">
+                <div class="block" id="hierarchy">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Modular hierarchy"><strong>Hierarchy</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <div id="d3-container"></div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <div id="d3-container-prev"></div>
+                            </div>
+                        </div>
+                        <div class="row" id="empty-hierarchy" style="display:none; margin-bottom: 15px;">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <center><b>No hierarchy data available</b></center>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% comment %}
+        <div class="row show_steps" id="steps">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Build instructions"><strong>Build Instructions</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <ul class="nav nav-tabs push" data-toggle="tabs">
+                        {% for step in makey.instructablestep_set.all reversed %}
+                            <li class="{% if forloop.first %}active{% endif %}"><a class="stepMixpanel" id="step_{{step.id}}" href="#step-{{step.id}}">{{step.step}}. {{step.title}}</a></li>
+                        {% endfor %}
+                        </ul>
+                        <div class="tab-content">
+                            {% for step in makey.instructablestep_set.all reversed %}
+                            <div class='tab-pane {% if forloop.first %}active{% endif %}' id="step-{{step.id}}">
+                                {% load catalog_tags %}
+                                <p>{{step.body|safe|urlize_target_blank:None}}</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endcomment %}
+
+        <!-- Section: Text Documentations -->
+        <div class="row show_textdoc" id="text-docs" >
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Documentations"><strong>Documentation</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_text_documentations">
+                            <ol>
+                                {% for doc in makey.text_documentations.all|dictsort:"order" %}
+                                    <li class="doc-item-title"><a href="javascript:void();"><b>{{doc.title}}</b></a></li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal fade" id="doc-modal">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title">Documentation</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" id="doc-modal-sidebar">
+                                    <div id="textdoc-sidebar">
+                                        <ul class="nav nav-pills nav-stacked">
+                                            {% for doc in makey.text_documentations.all|dictsort:"order" %}
+                                                <li><a href="#textdoc-{{doc.id}}" style="display: block">{{doc.title}}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                                    <div style="position:relative; height: 500px; overflow-y:scroll;" data-spy="scroll" data-target="#textdoc-sidebar" id="textdoc-scroll-container">
+                                        {% for doc in makey.text_documentations.all|dictsort:"order" %}
+                                        <div data-id="{{doc.id}}" id="textdoc-{{doc.id}}">
+                                            <h4><b>{{doc.title}}</b></h4>
+                                            {% load catalog_tags %}
+                                            <p>{{doc.body|safe}}</p>
+                                            <br/>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div><!-- /.modal-content -->
+                    </div><!-- /.modal-dialog -->
+                </div><!-- /.modal -->
+            </div>
+        </div>
+        {% comment %}
+        <!-- Section: How did we do it? -->
+        <div class="row show_how" id="how-to" >
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="External resources"><strong>Resources</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div>
+                            <ol id="makey_documentation">
+                                {% for docu in makey.documentations.all %}
+                                <li><a class="docu" id="docu_{{docu.id}}" href="{{docu.url}}" target="_blank">
+                                    {{docu.title}}
+                                </a></li>
+                                {% endfor %}
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endcomment %}
+
+
+        <!-- Section: Gallery -->
+        <div class="row show_gallery" id="images">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2><strong>Gallery</strong></h2>
+                    </div>
+
+                    <div class="block-content" style="display: block;">
+                        <div class="image" id="makey_images">
+                            <div id="image_list" class="">
+                                {% for img_id, img_url in gallery.items %}
+                                {% cycle '<div class="row images_row" style="padding:0px;padding-left:10px; padding-right:10px;">' '' '' '' %}
+                                {% if "img" in img_id %}
+                                <div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design" style="padding:2px;padding-bottom:0px;">
+                                    <a href="" class="preventDefault">
+                                        <div class="square-thumbnail img makey_image " id="{{img_id}}" style="background-image:url('{{img_url}}');">
+                                        </div>
+                                    </a>
+                                </div>
+                                {% else %}
+                                <div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design" style="padding:2px;padding-bottom:0px;">
+                                    <a href="" class="preventDefault">
+                                        <div class="square-thumbnail img makey_video " id="{{img_id}}" style="background-image:url('{{img_url}}');">
+                                            <div class="content2 img " id="{{img_id}}" >
+                                                <div class="table2 img " id="{{img_id}}" >
+                                                    <div class="table-cell2 img " id="{{img_id}}" >
+                                                        <center class=" img "  id="{{img_id}}" >
+                                                            <i class="fa fa-play-circle fa-3x img" style="color:#ffffff" id="{{img_id}}"></i>
+                                                        </center>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endif %}
+                                {% cycle '' '' '' '</div>' %}
+                                {% endfor %}
+                                {% if not gallery|length|divisibleby:"4" %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="row" id="empty_images" style="display:none;">
+                                <div class="col-sm-12 col-md-12">
+                                    <p class="text-info">There are no images right now.</p>
+                                </div>
+                            </div>
+                            <div class="modal fade col-sm-12" id="images_modal" tabindex="-1" role="dialog" aria-labelledby="images_modal_label" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-sm-8 col-md-8">
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12">
+                                                            <div class="thumbnail" id="main_image">
+                                                                <img alt="Makey Image" width="450">
+                                                            </div>
+                                                            <div class="thumbnail"  id="main_video">
+                                                                <iframe width="100%" height="300" src="" frameborder="0"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12">
+                                                            <div id='gallery_like'>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12" id="gallery_pager">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-4 col-md-4">
+                                                    <div class="row">
+                                                        <div class="col-md-12" id="gallery_description">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" id="image_note_row" style="display:none;">
+                                                        <div class="col-md-12" id="image_note_body">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <h4>Comments</h4>
+                                                            <div id="gallery_comments_list">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Insights from the project -->
+        <div class="row show_notes" id="notes">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Specific things that the collaborators learned while doing this project"><strong>What did we learn? (Insights)</strong></h3>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_notes">
+                            {% for note in notes %}
+                            <div id="note_{{note.id}}" class="row note_item">
+                                <div class ="col-xs-12">
+                                    <p class=""><b>{{note.title}}</b></p>
+                                    {% load catalog_tags %}
+                                    <p>{{note.body|linebreaksbr|urlize_target_blank:None}}</p>
+
+                                    <p class="pull-right">
+                                    By <a href="/maker/{{note.user.username}}">{{note.user.first_name}}</a>
+                                    </p>
+
+                                    <p class="pull-left">
+                                        {{note.likes_count}}
+                                        <!-- TODO: Backbone to fetch and fill likes -->
+
+                                        {% if note.cur_user_likes %}
+                                        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                        {% else %}
+                                        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                        {% endif %}
+
+                                        &nbsp;&nbsp;
+                                        {{note.comments.count}}
+                                        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="comment_note fa fa-comments-o fa-lg text-primary-inverse" id="show_comments_{{note.id}}"></i></a>
+
+                                        &nbsp;&nbsp;
+                                        {% if note.image %}
+                                            <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{note.image_id}}"></i>
+                                        {% endif %}
+                                    </p>
+                                    <br/>
+                                    <hr>
+                                </div>
+                                <div id="note_comments_{{note.id}}" style="display:none;"></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: List of parts used in the project -->
+        <div class="row show_as_a_part" id="as_a_part">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Is this makey available as a part for purchase?"><strong>Available as a part</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_as_part">
+                            {% if makey.as_part %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail ">
+                                        <a class="partMixpanel part" id="partidI_{{makey.as_part.id}}" href="{% url 'catalog:product' makey.as_part.id %}">
+                                            {% if makey.as_part.productimages.count > 0 %}
+                                                <img class="img-responsive" src="{{ makey.as_part.productimages.first.url }}" imgId="part_{{makey.as_part.id}}">
+                                            {% else %}
+                                                <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" imgId="part_{{makey.as_part.id}}">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a class="partMixpanel" id="partidT_{{makey.as_part.id}}" href="{% url 'catalog:product' makey.as_part.id %}">
+                                        <h5>{{makey.as_part.name}}</h5>
+                                        <span class="label label-success">Part</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if makey.as_part_new %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="{{makey.as_part_new.name}}">
+                                        <a id="partidI_{{makey.as_part_new.id}}" href="{{makey.as_part_new.url}}" target="_blank">
+                                            {% if makey.as_part_new.image %}
+                                            <img class="img-responsive" src="{{makey.as_part_new.image.large_url}}" alt="Image for {{makey.as_part_new.name}}">
+                                            {% else %}
+                                            <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" alt="Image for {{makey.as_part_new.name}}">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a id="partidT_{{makey.as_part_new.id}}" href="{{makey.as_part_new.url}}" target="_blank">
+                                        <h5>{{makey.as_part_new.name}}</h5>
+                                        <span class="label label-success">Part</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div id="parts_hover_content" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: List of parts used in the project -->
+        <div class="row show_parts" id="parts">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="All the components that were consumed in making this project"><strong>Components used</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_modules">
+                            {% for makey in makey.modules_used.all %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail ">
+                                        <a class="module" href="{% url 'catalog:makey' makey.id %}">
+                                            {% if makey.cover_pic %}
+                                            <img class="img-responsive" src="{{ makey.cover_pic }}">
+                                            {% elif makey.images.count > 0 %}
+                                            <img class="img-responsive" src="{{ makey.images.first }}">
+                                            {% else %}
+                                            <img src="{% static 'images/tools.jpg' %}" class="img-responsive">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a class="moduleMixpanel" href="{% url 'catalog:makey' makey.id %}">
+                                        <h5>{{makey.name}}</h5>
+                                        <span class="label label-primary">Sub-Assembly</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="makey_parts">
+                            {% for part in makey.partsused.all %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail ">
+                                        <a class="partMixpanel part" id="partidI_{{part.id}}" href="{% url 'catalog:product' part.id %}">
+                                            {% if part.productimages.count > 0 %}
+                                                <img class="img-responsive" src="{{ part.productimages.first.url }}" imgId="part_{{part.id}}">
+                                            {% else %}
+                                                <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" imgId="part_{{part.id}}">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a class="partMixpanel" id="partidT_{{id}}" href="{% url 'catalog:product' part.id %}">
+                                        <h5>{{part.name}}</h5>
+                                        <span class="label label-success">Part</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for part in makey.new_parts.all %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="{{part.name}}">
+                                        <a id="partidI_{{part.id}}" href="{{part.url}}" target="_blank">
+                                            {% if part.image %}
+                                            <img class="img-responsive" src="{{part.image.large_url}}" alt="Image for {{part.name}}">
+                                            {% else %}
+                                            <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" alt="Image for {{part.name}}">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a id="partidT_{{part.id}}" href="{{part.url}}" target="_blank">
+                                        <h5>{{part.name}}</h5>
+                                        <span class="label label-success">Part</span>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="parts_hover_content" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- Section: List of tools used in the project -->
+        <div class="row show_tools" id="tools" >
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="A tool is something that is not used up in the project"><strong>Tools used</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_tools">
+                            {% for tool in makey.tools_used.all %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail">
+                                        <a class="partMixpanel tool" id="toolidI_{{tool.id}}" href="/product/{{tool.id}}" target="_blank">
+                                        {% if tool.productimages.count > 0 %}
+                                            <img class="img-responsive" src="{{ tool.productimages.first.url }}" imgId="tool_{{tool.id}}">
+                                        {% else %}
+                                            <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" imgId="part_{{tool.id}}">
+                                        {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a class="partMixpanel" id="toolidT_{{id}}" href="/product/{{tool.id}}" target="_blank">
+                                        <h5>{{tool.name}}</h5>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% for tool in makey.new_tools.all %}
+                            <div class="row">
+                                <div class = "col-xs-3">
+                                    <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="{{tool.name}}">
+                                        <a id="toolidI_{{tool.id}}" href="{{tool.url}}" target="_blank">
+                                            {% if tool.image %}
+                                                <img class="img-responsive" src="{{tool.image.large_url}}" alt="Image for {{tool.name}}">
+                                            {% else %}
+                                                <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" alt="Image for {{tool.name}}">
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="col-xs-9">
+                                    <a id="toolidT_{{tool.id}}" href="{{tool.url}}" target="_blank">
+                                        <h5>{{tool.name}}</h5>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div id="tools_hover_content" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+        <!-- Section: Current status of the project -->
+        <div class="row show_status" id="status" >
+            <div class="col-xs-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>Status</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_status" class="">
+                            <p>{{makey.status}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Mentors -->
+        <div class="row show_mentors" id="mentors" >
+            <div class="col-xs-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>Mentors</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_mentors" class="">
+                            <p>{{makey.mentors}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- Section: Credits -->
+        <div class="row show_credits" id="credits" >
+            <div class="col-xs-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>Credits</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_credits" class="">
+                            <p>{{makey.credits}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+        <!-- Comments -->
+        <div class="row show_comments">
+            <div class="col-sm-12 col-md-12">
+                <div class="block" id="comments">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Comments on this makey"><strong>Comments</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_comments">
+                            <center>Loading comments. Hold tight.&nbsp;<i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                        </div>
+                        <div id="makey_comments_add_container">
+                            {% if user.is_authenticated %}
+                            <div id="add-comment-form-container" style="margin-bottom:10px;">
+                                <div class="row">
+                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                        <textarea id="add-comment-input" row="1" class="form-control" placeholder="Add comment"></textarea>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                        <button type="button" class="btn btn-primary btn-sm pull-right" id="add-comment-save">Add</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="column3 col-md-3 hidden-xs hidden-sm">
+        {% if makey.is_private %}
+        <div class="row">
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Type of Makey">
+                        <strong>Makey Type</strong>
+                    </h2>
+                </div>
+                <div class="block-content" style="margin-bottom: 15px;">
+                    <center>
+                        <p><i class="fa fa-eye-slash"></i>&nbsp;Private</p>
+                    </center>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Tags">
+                            <strong>Tags</strong>
+                        </h2>
+                    </div>
+                    <div class="block-content" style="margin-bottom: 15px;">
+                    {% for tag in makey.tags.all %}
+                        {% if forloop.last %}
+                            {{ tag.name }}
+                        {% else %}
+                            {{ tag.name }},
+                        {% endif %}
+                    {% empty %}
+                        <center>No tags.</center>
+                    {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <div class="block" style="margin-bottom:0px;">
+                    <div class="block-title" style="margin-bottom:0px;">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Similar Makeys"><strong>Suggested Makeys</strong></h2>
+                    </div>
+                </div>
+                <div id="makey_list">
+                    {% for makey in similar %}
+                    <div class="widget themed-background-dark">
+                        <a href="/makey/{{makey.id}}" class="suggested_makey">
+                            {% if makey.cover_pic %}
+                                <div style="background-image: url('{{makey.cover_pic.large_url}}');" class="landscape-img"></div>
+                            {% elif makey.images.count > 0 %}
+                                <div style="background-image: url('{{makey.images.first.large_url}}');" class="landscape-img"></div>
+                            {% else %}
+                                <div style="background-image: url('{% static 'images/tools.jpg' %}');" class="landscape-img"></div>
+                            {% endif %}
+
+                        </a>
+                        <div class="widget-extra">
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <h3 style="margin:10px;"><a href="/makey/{{makey.id}}/" style="color:#ffffff;">{{makey.name}}</a></h3>
+                                </div>
+                            </div>
+                            <hr style="margin:0px;">
+                            <!-- showing makey stats-->
+                            <div class="row text-center">
+                                <div class="col-xs-4">
+                                    <h3 style="margin:10px;" class="widget-content-light">
+                                        <strong>{{makey.images.count}}</strong><br>
+                                        <small>Images</small>
+                                    </h3>
+                                </div>
+                                <div class="col-xs-4">
+                                    <h3 style="margin:10px;" class="widget-content-light">
+                                        <strong>{{makey.notes.count}}</strong><br>
+                                        <small>Insights</small>
+                                    </h3>
+                                </div>
+                                <div class="col-xs-4">
+                                    <h3 style="margin:10px;" class="widget-content-light">
+                                        <strong>{{makey.partsused.count|add:makey.new_parts.count}}</strong><br>
+                                        <small>Parts</small>
+                                    </h3>
+                                </div>
+                            </div>
+                            <!-- showing user images-->
+                            <div class="row">
+                                <div class="col-xs-12"  >
+                                    <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                                    <div class="table-responsive">
+                                        <table class="table" style="margin:0px; padding:0px; border:none;">
+                                        <tbody>
+                                        <tr>
+                                        {% for collab in makey.collaborators.all %}
+                                            <td style="padding:2px">
+                                            <a href="/maker/{{collab.username}}/">
+                                            <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{collab.profile.profile_img_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{collab.first_name}} {{collab.last_name}}"></a>
+                                            </td>
+                                        {% endfor %}
+                                        </tr>
+                                        </tbody>
+                                        </table>
+                                    </div>
+                                    </br>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="block">
+                    <div class="block-content">
+                        <p>Check out other interesting Makeys!</p>
+                        <p><a class="btn btn-lg btn-success btn-group-justified" href = "{% url 'catalog:all_makeys' %}">
+                            All Makeys
+                        </a></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('.modal').on('hidden.bs.modal', function( event ) {
+                $(this).removeClass( 'fv-modal-stack' );
+                $('body').data( 'fv_open_modals', $('body').data( 'fv_open_modals' ) - 1 );
+            });
+
+
+            $( '.modal' ).on( 'shown.bs.modal', function ( event ) {
+               // keep track of the number of open modals
+               if ( typeof( $('body').data( 'fv_open_modals' ) ) == 'undefined' ) {
+                 $('body').data( 'fv_open_modals', 0 );
+               }
+
+                // if the z-index of this modal has been set, ignore.
+                if($(this).hasClass('fv-modal-stack')) {
+                    return;
+                }
+
+                $(this).addClass( 'fv-modal-stack' );
+
+                $('body').data( 'fv_open_modals', $('body').data( 'fv_open_modals' ) + 1 );
+
+                $(this).css('z-index', 1040 + (10 * $('body').data( 'fv_open_modals' )));
+
+                $( '.modal-backdrop' ).not( '.fv-modal-stack' )
+                        .css( 'z-index', 1039 + (10 * $('body').data( 'fv_open_modals' )));
+
+
+                $( '.modal-backdrop' ).not( 'fv-modal-stack' )
+                        .addClass( 'fv-modal-stack' );
+             });
+        });
+    </script>
+
+    <script>
+
+        var margin = {top: 20, right: 20, bottom: 20, left: 20},
+            width = 500 - margin.right - margin.left,
+            height = 250 - margin.top - margin.bottom,
+            offsetX = 0,
+            offsetY = 100,
+            depthSeparation = 100,
+            fontSize = "12px",
+            nodeRadius = 5;
+
+        var i = 0,
+            duration = 700,
+            root;
+
+        var tree1 = d3.layout.tree()
+            .size([height, width]);
+
+        var tree2 = d3.layout.tree()
+            .size([height, width]);
+
+        var diagonal = d3.svg.diagonal()
+            .projection(function(d) { return [d.y, d.x]; });
+
+        var svg1 = d3.select("#d3-container").append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var svg2 = d3.select("#d3-container-prev").append("svg")
+            .attr("width", width + margin.right + margin.left)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.json("/api/v1/makey/hierarchy/?q={{makey.id}}", function(error, response) {
+            root1 = undefined;
+            if(response) {
+                root1 = response
+                root1.x0 = height / 2;
+                root1.y0 = offsetY;
+            }
+
+            root2 = undefined;
+            if(response && response.versions && response.versions.prev) {
+                root2 = response.versions.prev;
+                root2.x0 = height / 2;
+                root2.y0 = offsetY;
+            }
+
+
+          function toggleAll(d) {
+            if (d.children) {
+              d.children.forEach(toggleAll);
+              toggle(d);
+            }
+          }
+
+          // if(root1 && root2 || root1 && root1.children) {
+          //       update1(root1);
+          //       if(root2) {
+          //           update2(root2);
+          //       } else {
+          //           $('#d3-container-prev').hide();
+          //       }
+          // } else {
+          //   $('#d3-container').hide();
+          //   $('.hierarchy-group').hide();
+          // }
+
+            if(root1 && root1.children) {
+                update1(root1);
+          } else {
+            $('#d3-container').hide();
+            $('.hierarchy-group').hide();
+          }
+            $('#d3-container-prev').hide();
+
+
+        });
+
+
+        function update1(source) {
+
+          // Compute the new tree layout.
+          var nodes = tree1.nodes(root1).reverse();
+
+          // Normalize for fixed-depth.
+          nodes.forEach(function(d) { d.y = d.depth * depthSeparation + offsetY; });
+
+          // Update the nodes…
+          var node = svg1.selectAll("g.node")
+              .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+          // Enter any new nodes at the parent's previous position.
+          var nodeEnter = node.enter().append("svg:g")
+              .attr("class", "node")
+              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
+
+          nodeEnter.append("svg:circle")
+              .attr("r", 1e-6)
+              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+              .on("click", function(d) { toggle(d); update1(d); });
+
+          nodeEnter
+            .append("a")
+              .attr("xlink:target","_blank")
+              .attr("xlink:href", function(d) {
+                if (d.makey_id != root1.makey_id)
+                    return "/makey/" + d.makey_id;
+                else
+                    return "javascript:void()";
+              })
+            .append("svg:text")
+              .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+              .attr("dy", function(d) { return d.children || d._children ? "-1em" : ".35em"; })
+              .attr("text-anchor", function(d) { return d.children || d._children ? "middle" : "start"; })
+              .text(function(d) { return d.name; })
+              .style("fill-opacity", 1e-6);
+
+          // Transition nodes to their new position.
+          var nodeUpdate = node.transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+          nodeUpdate.select("circle")
+              .attr("r", nodeRadius)
+              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+          nodeUpdate.select("text")
+              .style("fill-opacity", 1)
+              .style("font-size", fontSize);
+
+          // Transition exiting nodes to the parent's new position.
+          var nodeExit = node.exit().transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+              .remove();
+
+          nodeExit.select("circle")
+              .attr("r", 1e-6);
+
+          nodeExit.select("text")
+              .style("fill-opacity", 1e-6);
+
+          // Update the links…
+          var link = svg1.selectAll("path.link")
+              .data(tree1.links(nodes), function(d) { return d.target.id; });
+
+          // Enter any new links at the parent's previous position.
+          link.enter().insert("svg:path", "g")
+              .attr("class", "link")
+              .attr("d", function(d) {
+                var o = {x: source.x0, y: source.y0};
+                return diagonal({source: o, target: o});
+              })
+            .transition()
+              .duration(duration)
+              .attr("d", diagonal);
+
+          // Transition links to their new position.
+          link.transition()
+              .duration(duration)
+              .attr("d", diagonal);
+
+          // Transition exiting nodes to the parent's new position.
+          link.exit().transition()
+              .duration(duration)
+              .attr("d", function(d) {
+                var o = {x: source.x, y: source.y};
+                return diagonal({source: o, target: o});
+              })
+              .remove();
+
+          // Stash the old positions for transition.
+          nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+          });
+        }
+
+        function update2(source) {
+
+          // Compute the new tree layout.
+          var nodes = tree2.nodes(root2).reverse();
+
+          // Normalize for fixed-depth.
+          nodes.forEach(function(d) { d.y = d.depth * depthSeparation + offsetY; });
+
+          // Update the nodes…
+          var node = svg2.selectAll("g.node")
+              .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+          // Enter any new nodes at the parent's previous position.
+          var nodeEnter = node.enter().append("svg:g")
+              .attr("class", "node")
+              .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
+
+          nodeEnter.append("svg:circle")
+              .attr("r", 1e-6)
+              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+              .on("click", function(d) { toggle(d); update2(d); });
+
+          nodeEnter
+              .append("a")
+              .attr("xlink:target","_blank")
+              .attr("xlink:href", function(d) { return "/makey/" + d.makey_id; })
+              .append("svg:text")
+              .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+              .attr("dy", function(d) { return d.children || d._children ? "-1em" : ".35em"; })
+              .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+              .text(function(d) { return d.name; })
+              .style("fill-opacity", 1e-6);
+
+          // Transition nodes to their new position.
+          var nodeUpdate = node.transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+          nodeUpdate.select("circle")
+              .attr("r", nodeRadius)
+              .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+          nodeUpdate.select("text")
+              .style("fill-opacity", 1)
+              .style("font-size", fontSize);
+
+          // Transition exiting nodes to the parent's new position.
+          var nodeExit = node.exit().transition()
+              .duration(duration)
+              .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+              .remove();
+
+          nodeExit.select("circle")
+              .attr("r", 1e-6);
+
+          nodeExit.select("text")
+              .style("fill-opacity", 1e-6);
+
+          // Update the links…
+          var link = svg2.selectAll("path.link")
+              .data(tree2.links(nodes), function(d) { return d.target.id; });
+
+          // Enter any new links at the parent's previous position.
+          link.enter().insert("svg:path", "g")
+              .attr("class", "link")
+              .attr("d", function(d) {
+                var o = {x: source.x0, y: source.y0};
+                return diagonal({source: o, target: o});
+              })
+            .transition()
+              .duration(duration)
+              .attr("d", diagonal);
+
+          // Transition links to their new position.
+          link.transition()
+              .duration(duration)
+              .attr("d", diagonal);
+
+          // Transition exiting nodes to the parent's new position.
+          link.exit().transition()
+              .duration(duration)
+              .attr("d", function(d) {
+                var o = {x: source.x, y: source.y};
+                return diagonal({source: o, target: o});
+              })
+              .remove();
+
+          // Stash the old positions for transition.
+          nodes.forEach(function(d) {
+            d.x0 = d.x;
+            d.y0 = d.y;
+          });
+        }
+
+        // Toggle children.
+        function toggle(d) {
+          if (d.children) {
+            d._children = d.children;
+            d.children = null;
+          } else {
+            d.children = d._children;
+            d._children = null;
+          }
+        }
+
+    </script>
+
+
+
+{% endblock %}

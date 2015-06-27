@@ -1,0 +1,104 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet{% endblock %}
+{% block contentmeta %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+
+  var numInsights = {{insights|length}};
+
+  var perInsightSpeed = 5000;
+  var scrollDownSpeed = perInsightSpeed*numInsights;
+  var scrollUpSpeed = 2000;
+  var cycleSpeed = scrollDownSpeed + scrollUpSpeed;
+
+  var scrollDown = function() {
+    $('html, body').animate({
+      scrollTop: $(document).height() - $(window).height()
+    }, scrollDownSpeed, "linear" ,scrollUp);
+  };
+
+  var scrollUp = function() {
+    $(this).animate({ scrollTop: 0 }, scrollUpSpeed, "linear");
+  };
+
+  $(document).ready(function(){
+    // setTimeout("location.reload(true);", 60000);
+
+    scrollDown();
+    setInterval(scrollDown, cycleSpeed);
+  });
+</script>
+<script src="{% static 'app/wall/collection_mit_all.js' %}"></script>
+<link rel="stylesheet" href="{% static 'app/wall/collection_mit_all.css' %}" type="text/css">
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="sixteen wide column" style="padding-top: 0.5em; padding-bottom: 0.5em">
+        <h1 class="ui header" style="font-size: 1em">Science and Technology Council 2015</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui grid footer-bar-container">
+  <div class="row">
+    <div class="ui page grid footer-bar">
+      <div class="sixteen wide column">
+        <h3 class="ui header makeystreet-branding">Makeystreet</h3>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui grid">
+        <div class="sixteen wide column">
+          <div class="ui basic segment items-segment">
+            <div class="ui divided items">
+              {% for insight in insights %}
+              <div class="item">
+                {% if insight.image %}
+                <a class="ui tiny image" href="#">
+                  <img src="{{insight.image.small_url}}">
+                </a>
+                {% endif %}
+                <div class="content">
+                  <a class="header" href="{% url 'catalog:makey_new_insight_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug insight.id %}">{{insight.title}}</a>
+                  <div class="meta">
+                    <span class="time">posted {{insight.added_time|timesince}} ago by</span>
+                    <a class="author author-link" href="{% url 'catalog:maker' insight.user.username %}">{{insight.user.first_name}} {{insight.user.last_name}}</a>
+                    <span>on</span>
+                    <a class="makey-link" href="{% url 'catalog:makey_new_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug %}">{{insight.makeynotes.all.0.name}}</a>
+                    {% comment %}
+                    <span>({{insight.collection.name}})</span>
+                    {% endcomment %}
+                  </div>
+                  <div class="description">
+                    {% load catalog_tags %}
+                    {{insight.body|linebreaks|urlize_target_blank:None}}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

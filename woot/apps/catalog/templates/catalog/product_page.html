@@ -1,0 +1,322 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | {{ product.name }}{% endblock %}
+{% block bootstrap %}
+    <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-responsive.css' %}" rel="stylesheet">
+    <script src="{% static 'js/bootstrap.js' %}"></script>
+{% endblock %}
+
+{% block extra_js %}
+    
+    <script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+    </script>
+
+    <!-- light box for showing images -->
+    <link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+    <script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+    <script>
+        function popover_card(){
+            $('.popovers').popover({
+                html: true,
+                trigger: 'manual',
+                container: $(this).attr('id'),
+                // placement: 'bottom',
+            }).on("mouseenter", function () {
+                var _this = this;
+                $(this).popover("show");
+                $(this).siblings(".popover").on("mouseleave", function () {
+                    $(_this).popover('hide');
+                });
+            }).on("mouseleave", function () {
+                var _this = this;
+                setTimeout(function () {
+                    if (!$(".popover:hover").length) {
+                        $(_this).popover("hide")
+                    }
+                }, 100);
+            });
+        };
+        $(document).ready(function(){
+            $('a.img').nivoLightbox();
+            // alert('test');
+            // how navigation works
+            $('#a_images').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_images").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Images"});
+            });
+            $('#a_makeys').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_makeys").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Makeys"});
+            });
+            $('#a_tutorials').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_tutorials").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Tutorials"});
+            });
+            $('#a_get_it_from').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_stores").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Get It From"});
+            });
+            $('#a_descriptions').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_descriptions").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Descriptions"});
+            });
+            $('#a_reviews').click(function(){
+                $('html, body').animate({
+                    'scrollTop' : $("#product_reviews").offset().top
+                });
+                mixpanel.track("Product Subnavbar clicked",{item:"Reviews"});
+            });
+            // mixpanel loading notification
+            mixpanel.track("Product Page Launched",{id:{{product_id}} });
+            // alert("{{product_id}}");
+            // alert("hello");
+            popover_card();
+        });
+    </script>
+    <!-- end of block extra_js -->
+
+{% endblock %}
+
+{% block templates %}
+    <!-- Template for project picture view -->
+    <script type="text/template" id="picture-template1">
+        <div class ="span2 well">
+        <a href="<%- pic_large %>" class ="img" title ="<%- caption %>" data-lightbox-gallery="gallery1">
+            <img src="<%- pic_large %>" alt = "<%- altname %>">
+        </a>
+        </div>
+    </script>
+
+    {% include "catalog/t/t_product_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+<!--     <center>
+        <div id="product_info">
+        </div>
+        <div id="product_like">
+        </div>
+        <br>
+        
+    </center> -->
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_product_page.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div class ="row">
+    <div class="col-xs-10 col-xs-offset-1">
+            <center>
+                <div id="product_info">
+                </div>
+                <div id="product_like">
+                </div>
+                <br>
+                
+            </center>
+        <div class="thumbnail">
+            <!-- <div class="collapse navbar-collapse" > -->
+            <div class="collapse navbar-collapse" >
+              <ul class="nav navbar-nav">
+              <!-- <ul class="nav navbar-nav"> -->
+                <li><a class ="preventDefault" id = "a_images" href="#">Images</a></li>
+                <li><a class ="preventDefault" id = "a_makeys" href="#">Makeys</a></li>
+                <li><a class ="preventDefault" id = "a_tutorials" href="#">Tutorials</a></li>
+                <li><a class ="preventDefault" id = "a_get_it_from" href="#">Get it from</a></li>
+                <li><a class ="preventDefault" id = "a_descriptions" href="#">Description</a></li>
+                <li><a class ="preventDefault" id = "a_reviews" href="#">Reviews</a></li>
+              </ul>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- <div class="row">
+    <div class="col-xs-10 col-xs-offset-1">
+        <nav class="navbar navbar-default navbar-inverse" role="navigation">
+          <div class="container-fluid">
+            
+
+            
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                <li><a href="#">Images</a></li>
+                <li><a href="#">Makeys</a></li>
+                <li><a href="#">Tutorials</a></li>
+                <li class="active"><a href="#">Get it from</a></li>
+                <li><a href="#">Description</a></li>
+                <li><a href="#">Reviews</a></li>
+                
+              </ul>
+            </div>
+          </div>
+        </nav>
+    </div>
+</div>
+ -->
+
+<div class="row">
+
+    <!-- LEFT COLUMN -->
+    <div class="column1 col-lg-offset-1 col-sm-5 col-md-5">
+
+        <!-- images -->
+        <div class="image" id="product_images">
+            <div class="row" id="mainimage">
+                <div class="col-sm-12 col-md-12">
+                    <div class="thumbnail">
+                        <img alt="ALTNAME" width="450">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <p>  </p>
+                <p>  </p>
+            </div>
+            
+            <div id="imagelist" class="">
+            </div>
+        </div>
+        <hr>
+  
+        <!-- Makeys I used to make a -->
+        <div class="makeys row" id="product_makeys">
+            <div class="col-sm-12 col-md-12">
+                <div class="well">
+                    <h3 class="tooltips" data-toggle="tooltip" title="Projects that uses this part"> Makeys <small><a href="/makey/create/">create</a></small></h3>
+                        <!-- <div class="input-append col-sm-12 col-md-12">
+                            <input id="makey_input" class="span4 tooltips form-control" maxlength="50" data-toggle="tooltip" title="What did you make?" type="text" placeholder="rocketship">
+                            <input id="makey_url_input" class="span4 tooltips middle_element form-control" data-toggle="tooltip" title="Link to what you made" type="text" placeholder="link">
+                            <a id="makeysubmit" class="btn btn-default"> Submit</a>
+                        </div> -->
+                        <div id="makeylist">
+                            <p class="text-muted">
+                                <small>We dont know any projects that use this part yet. <stong>Be the first to share a project that uses this part.</stong></small>
+                            </p>
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- tutorials -->
+        <div class="tutorials row" id="product_tutorials">
+            <div class="col-sm-12 col-md-12">
+                <div class="well">
+                    <h3 class="tooltips" data-toggle="tooltip" title="Tutorials related to this part">Tutorials</h3>
+                    <div id="tutoriallist">
+                        <!-- list of all the tutorials associated with this -->
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="input-append col-sm-12 col-md-12">
+                                <input id="tutorial_url_input" class="span8 tooltips form-control" data-toggle="tooltip" title="If you know a cool tutorial for this part, suggest the link here for others to find." type="text" placeholder="Did we miss a tutorial for this product? "> <!-- <small>Suggested by EchoAlex</small>-->
+                                <a id="tutorialsubmit" class="btn btn-default"> Submit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- END LEFT COLUMN -->
+
+    <!-- RIGHT COLUMN -->
+    <div class="column2 col-sm-5 col-md-5">
+        <!-- stores -->
+        <div class="stores row" id="product_stores">
+            <div class="col-sm-12 col-md-12">
+                <div class="well">
+                    <h3>Get it from</h3>
+                    <div id="shopurllist">
+                        <center><img src="{% static 'images/loading.gif' %}"></center>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- the product description -->
+        <div class="description row" id="product_descriptions">
+            <div class="col-sm-12 col-md-12">
+                <div class ="well">
+                    <h3>Product Description</h3>
+                    <!-- tabs -->
+                    <ul id="descriptiontablist" class="nav nav-tabs">
+                    </ul>
+
+                    <div id="descriptionlist" class="tab-content">
+                    </div> <!-- /tabbable -->
+              </div> 
+            </div>
+        </div>
+
+        <!-- Reviews for the product -->
+        <div class="reviews row" id="product_reviews">
+            <div class="col-sm-12 col-md-12" id="product_reviews">
+                <div class ="well">
+                    <h3 class="tooltips" data-toggle="tooltip" title="User Reviews">Reviews</h3>
+                    <div id="reviews_list">
+                        No one has reviewed this product so far. Be the first one to review it!
+                    </div>
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <a href="" id="create_review" class="preventDefault">
+                                <i class="icon-plus"></i>
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Add new review!
+                            </a>
+                        </div>
+                    </div>
+                    <div id="new_review" class="row" style="display:none">
+                        <input type="text" placeholder="Headline or summary for your review (required)" class="form-control">
+                        <br>
+                        <div class="row">
+                            <strong>Your Rating: </strong>
+                            <i class="icon-star-empty review_ratings rating_1"></i>
+                            <i class="icon-star-empty review_ratings rating_2"></i>
+                            <i class="icon-star-empty review_ratings rating_3"></i>
+                            <i class="icon-star-empty review_ratings rating_4"></i>
+                            <i class="icon-star-empty review_ratings rating_5"></i>
+                        </div>
+                        <br>
+                        <textarea class="" rows="3" name="review" placeholder="Write your review here (required)"></textarea>
+                        <a href="" class="preventDefault" id="submit_review">
+                            <i class="icon-plus"></i>
+                            Submit Review!
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--
+    <br>
+    <hr>
+
+    <div class="row">
+        <p> </p>
+    </div>
+    
+    <div class="middle_row_product row">
+    </div>
+    <hr>
+-->
+{% endblock %}
+                mixpanel.track("Product Subnavbar clicked",{item:"Images"});

@@ -1,0 +1,211 @@
+<script type="text/javascript">
+var app = {};
+app.TutorialPop = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/tutorial_p/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+});
+
+app.TutorialPopList = Backbone.Tastypie.Collection.extend({
+    model : app.TutorialPop,
+    urlRoot : "/api/v1/tutorial_p/",
+
+    url : function() {
+        return this.urlRoot + "?limit=1&" + this.filtering + "=" + this.filteringId;
+    },
+
+    initialize : function(options) {
+        options || (options = {});
+
+        if(options.filteringId) {
+            if(options.filtering == "collab")
+                this.filtering = "user";
+            else if (options.filtering = "part") 
+                this.filtering = "products__in"
+            this.filteringId = options.filteringId;
+            this.fetch();
+        }
+    },
+});
+
+app.MakeyPop = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/makey/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },  
+});
+
+app.MakeyPopList = Backbone.Tastypie.Collection.extend({
+    model : app.MakeyPop,
+    urlRoot : "/api/v1/makey/",
+
+    url : function() {
+        return this.urlRoot + "?limit=1&" + this.filtering + "=" + this.filteringId;
+    },
+
+    initialize : function(options) {
+        options || (options = {});
+
+        if(options.filteringId) {
+            if(options.filtering == "collab")
+                this.filtering = "collaborators__in";
+            else if(options.filtering == "part")
+                this.filtering = "parts__in";
+
+            this.filteringId = options.filteringId;
+            this.fetch();
+        }
+    },
+});
+
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.MakerPop = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            var options = {
+                filtering : "collab",
+                filteringId : this.get('id')
+            };
+            this.fetch();
+
+            this.makeys = new app.MakeyPopList(options);
+            this.tutorials = new app.TutorialPopList(options);
+        }
+
+        this.on('change', this.loadUserProfile);
+    },
+
+    loadUserProfile : function() {
+        this.profile = new app.UserProfile({'id' : this.get('profile_id')});
+    },
+});
+
+app.MakerPopList = Backbone.Tastypie.Collection.extend({
+    model : app.MakerPop,
+    urlRoot : "/api/v1/user/",
+});
+
+app.PartShopPop = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/shopurl_p/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    }, 
+});
+
+app.PartShopPopList = Backbone.Tastypie.Collection.extend({
+    model : app.PartShopPop,
+    urlRoot : '/api/v1/shopurl_p/',
+
+    url : function() {
+        return this.urlRoot + "?limit=1&" + this.filtering + "=" + this.filteringId;
+    },
+
+    initialize : function(options) {
+        options || (options = {});
+
+        if(options.filteringId) {
+            if(options.filtering == "part") {
+                this.filtering = "product"
+            }
+
+            this.filteringId = options.filteringId;
+            this.fetch();
+        }
+    },
+});
+
+app.PartPop = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/product_l/',
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            var options = {
+                filtering : "part",
+                filteringId : this.get('id')
+            };
+            this.fetch();
+
+            this.stores = new app.PartShopPopList(options);
+            this.makeys = new app.MakeyPopList(options);
+            this.tutorials = new app.TutorialPopList(options);
+        }
+    },
+});
+
+app.PartPopList = Backbone.Tastypie.Collection.extend({
+    model : app.PartPop,
+    urlRoot : "/api/v1/product_l",
+})
+</script>

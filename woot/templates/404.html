@@ -1,0 +1,22 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Um. Something went wrong!{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+{% endblock %}
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+       <h1>Missing Resource</h1>
+
+       <p>Are you sure you were looking for this? Seems like someone misled you! This resource does not exist.</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

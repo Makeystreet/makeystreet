@@ -1,0 +1,63 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet| {{ product.name }}{% endblock %}
+{% block extra_js %}
+
+    <!-- light box for showing images -->
+    <link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+    <script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+    <script>
+        
+        $(document).ready(function(){
+        });
+    </script>
+
+    <!-- end of block extra_js -->
+
+{% endblock %}
+
+
+
+{% block content_top %}
+    <center>
+        <h2>Vendor Signup</h2>
+        <!-- <h2>Most awesome people in the world</h2> -->
+        <p>Partner with Makeystreet</p>
+    </center>
+{% endblock %}
+
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-12 col-md-12">
+        <h4>Sign up to be a vendor on Makeystreet.</h4> 
+
+        <p>Early Bird - 5 vendors - <strong>$500</strong> a <strong>YEAR</strong>.</p>
+
+        <p>Regular price - <strong>$1000</strong> per <strong>month</strong>. </p>
+        <br>
+        <br>
+    </div>
+</div>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+<input type="hidden" name="cmd" value="_s-xclick" class="form-control">
+<input type="hidden" name="hosted_button_id" value="BSU3GZVL38YSU" class="form-control">
+<table>
+<tbody><tr><td><input type="hidden" name="on0" value="Payment options" class="form-control">Payment options</td></tr><tr><td><select name="os0">
+    <option value="Early 5">Early 5 : $500.00 USD - yearly</option>
+    <option value="Regular">Regular : $1,000.00 USD - monthly</option>
+</select> </td></tr>
+</tbody></table>
+<input type="hidden" name="currency_code" value="USD" class="form-control">
+<input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_subscribeCC_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online." class="form-control">
+<img alt="" border="0" src="https://www.paypalobjects.com/en_GB/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+
+
+
+    
+{% endblock %}

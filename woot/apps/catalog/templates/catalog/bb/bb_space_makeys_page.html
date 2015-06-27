@@ -1,0 +1,272 @@
+<script>
+
+var app = {};
+app.space_id = {{space.id}};
+app.defaultMakeyStatus = "Completed";
+// app.maker_profile_id={{maker.profile.id}};
+
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+    },
+
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+
+app.Space = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/space/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.MakeysView = Backbone.View.extend({
+    el : "#makey-container",
+    template : Handlebars.compile($("#makeys_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    events : {
+        'click #status-filter .btn-group' : 'makeyFilter'
+    },
+
+    initialize : function() {
+        this.listenTo(app.space, 'add', this.addAll);
+        this.listenTo(app.space, 'change', this.addAll);
+    },
+
+    makeyFilter: function() {
+        var that = this;
+        // workaround for btn-group class race condition
+        window.setTimeout(function(){that.addAll();}, 100);
+    },
+
+    getCurrentFilter: function() {
+        return this.$('#status-filter .btn-group .active input')[0].value;
+    },
+
+    showMakey: function(makey) {
+
+        if (this.getCurrentFilter() === "All")
+            return true;
+
+        var makeyStatus = makey.status || app.defaultMakeyStatus;
+
+        if(makeyStatus === this.getCurrentFilter())
+            return true;
+
+        return false;
+    },
+
+    addAll : function() {
+        this.$('#makeys').html('');
+        this.options.cur_item_count = 0;
+        var json = app.space.toJSON();
+        var makeys_displayed = 0;
+        for(var i=0;i<json.makeys.length;i++)
+        {
+            var makey = json.makeys[i];
+
+            if(!this.showMakey(makey))
+                continue;
+
+            if(makeys_displayed%app.row_count == 0) {
+                this.$('#makeys').append(this.new_row);
+            }
+
+            this.$('#makeys').find('.new_row').last().append(this.template(makey));
+            ++makeys_displayed;
+        }
+        if(makeys_displayed === 0) {
+            this.$('#makeys').html('<center>No makeys with "' + this.getCurrentFilter() + '" status</center>');
+        }
+    },
+});
+
+{% if is_space_admin %}
+app.SpaceMakeysSelectView = Backbone.View.extend({
+    el : $('#edit_makeys'),
+
+    events : {
+        'click #btn_refresh_list' : 'resetTagsInput',
+        'click #btn_submit_makeys' : 'saveMakeys'
+    },
+
+    initialize : function() {
+        var users = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '/api/v1/makey/search?q=%QUERY',
+                        filter: function(list) {
+                            return $.map(list.makeys, function(makey) {
+                                return { name: makey.name,
+                                         id: "/api/v1/makey/" + makey.id + "/",
+                                         user_name: makey.user.first_name + " " + makey.user.last_name };
+                            });
+                        }
+                }
+        });
+        users.initialize();
+
+        $('#val_makeys').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'makeys',
+                displayKey: 'name',
+                source: users.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-makey-suggestion-empty-template').html()),
+                    suggestion: Handlebars.compile($('#tt-makey-suggestion-template').html()),
+                }
+            }
+        });
+        this.listenTo(app.space, 'change', this.resetTagsInput);
+    },
+
+    resetTagsInput: function() {
+        $('#val_makeys').tagsinput('removeAll');
+        var space = app.space.toJSON();
+        for(var i=0;i<space.makeys.length;i++) {
+            $('#val_makeys').tagsinput( 'add',
+                { name: space.makeys[i].name,
+                    id: "/api/v1/makey/" + space.makeys[i].id + "/",
+                    user_name: space.makeys[i].user.first_name + " " + space.makeys[i].user.last_name });
+        }
+        $('#val_makeys').tagsinput('refresh');
+    },
+
+    preventEnter: function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    },
+
+    showSuccess: function(){
+        this.$('#btn_submit_makeys').button('reset');
+    },
+
+    showWaiting: function(){
+        this.$('#btn_submit_makeys').button('loading');
+    },
+
+    showError: function(){
+        this.$('#btn_submit_makeys').button('reset');
+    },
+
+    saveMakeys: function(){
+        new_makey_list = $("#val_makeys").tagsinput('items');
+        var patchReq = { makeys : [] };
+        for(var i=new_makey_list.length-1; i>=0; --i) {
+            patchReq.makeys.push(new_makey_list[i].id);
+        }
+        var that = this;
+        that.showWaiting();
+        $.ajax({
+            headers : {
+                'Accept' : 'application/json',
+                'Content-Type' : 'application/json'
+            },
+            url : "/api/v1/space/" + app.space.get('id') + "/",
+            type : 'PATCH',
+            data : JSON.stringify(patchReq),
+            error : function(jqXHR, textStatus, errorThrown) {
+                console.log("The following error occured: " + textStatus, errorThrown);
+            },
+            complete : function() {
+                app.space.fetch();
+                that.showSuccess();
+            }
+        });
+    }
+});
+{% endif %}
+
+
+/* INITIALIZE */
+app.initializeUser();
+// app.initializeMaker();
+app.space = new app.Space({'id' : app.space_id});
+app.space.fetch();
+
+
+// app.makeys = new app.MakeyList();
+// app.makeys.fetch();
+
+// app.spaces = new app.SpaceList();
+// app.spaces.fetch();
+
+// app.makeyView = new app.MakeyView();
+// app.spaceView = new app.SpaceView();
+app.membersView = new app.MakeysView();
+{% if is_space_admin %}
+app.MakeySelect = new app.SpaceMakeysSelectView();
+{% endif %}
+</script>

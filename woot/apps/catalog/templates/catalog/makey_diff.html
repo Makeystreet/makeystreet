@@ -1,0 +1,20 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Makey Diff - {{makey}}{% endblock %}
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+        <div class="row">
+            <h3>{{makey}}</h3>
+            <p>
+            {% for cur_version in versions %}
+                {{cur_version.version.revision.date_created}} - {{cur_version.version.revision.user.username}} - {{cur_version.changes}} <br/>
+            {% endfor %}
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

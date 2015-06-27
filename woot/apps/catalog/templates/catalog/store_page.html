@@ -1,0 +1,153 @@
+{% extends "catalog/base.html" %} 
+
+{% load static from staticfiles %} 
+
+{% block title %}MakeyStreet | {{shop.name}}{% endblock %}
+
+
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script>
+    function popover_card(){
+        $('.popovers').popover({
+            html: true,
+            trigger: 'manual',
+            container: $(this).attr('id'),
+        }).on("mouseenter", function () {
+            var _this = this;
+            $(this).popover("show");
+            $(this).siblings(".popover").on("mouseleave", function () {
+                $(_this).popover('hide');
+            });
+        }).on("mouseleave", function () {
+            var _this = this;
+            setTimeout(function () {
+                if (!$(".popover:hover").length) {
+                    $(_this).popover("hide")
+                }
+            }, 100);
+        });
+    };
+    $(document).ready(function(){
+        $('a.img').nivoLightbox();
+        popover_card();
+    });
+</script>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_store_page.html" %} 
+{% endblock %}
+
+{% block content_top %}
+<!--
+<div class="row-fluid">
+    <div class="offset1 span10">
+        <div id='store_info'><h3>{{shop.name}}</h3></div>
+        <p>Shop details here</p>
+    </div>
+</div>
+-->
+{% endblock %} 
+
+{% block backbone %} 
+    {% include "catalog/bb/bb_store_page.html" %}
+{% endblock %}
+
+{% block content_left %}
+    <!-- Reviews for the product -->
+    <div class="mini-layout-sidebar">
+        <ul class="nav nav-list well"> 
+            <li class="nav-header text_center">
+                <!--
+                <img width="70%" height="auto" src="http://graph.facebook.com/{{ user.profile_or_self.facebook_id }}/picture?width=300&height=300" title="facebook stored image" />
+                &nbsp;&nbsp;
+                -->
+                <h3>{{shop.name}}</h3>
+                <div id="shop_like">Like Button?</div>
+            </li>
+            <li class="divider"></li>
+            <li>
+                <p>Shop details here</p>
+            </li>
+            <li class="divider"></li>
+            <li id="store_reviews">
+                <div class="comments row">
+                    <div class="col-sm-12 col-md-12">
+                        <h3 class="tooltips" data-toggle="tooltip" title="User Reviews">Reviews</h3>
+                        <div id="reviews_list">
+                            No one has reviewed this store so far. Be the first one to review it!
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <a href="" id="create_review" class="preventDefault">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Add new review!
+                        </a>
+                    </div>
+                </div>
+                <div id="new_review" class="row" style="display:none">
+                    <div class="col-xs-12">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <input type="text" placeholder="Headline or summary for your review (required)" class="form-control">
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-xs-12">
+                            <strong>Your Rating: </strong>
+                                <span class="glyphicon glyphicon-star-empty review_ratings" id="rating_1"></span>
+                                <span class="glyphicon glyphicon-star-empty review_ratings" id="rating_2"></span>
+                                <span class="glyphicon glyphicon-star-empty review_ratings" id="rating_3"></span>
+                                <span class="glyphicon glyphicon-star-empty review_ratings" id="rating_4"></span>
+                                <span class="glyphicon glyphicon-star-empty review_ratings" id="rating_5"></span>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <textarea class="" rows="3" name="review" placeholder="Write your review here (required)"></textarea>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="" class="preventDefault" id="submit_review">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                    Submit Review!
+                                </a>
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </li>
+        </ul>
+  </div>
+{% endblock %}
+
+{% block content_right %}
+<div class="row">
+        <div id="results">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <center><img src="{% static 'images/loading.gif' %}"></center>
+        </div>
+        <div class="col-lg-offset-3 text_center row" id="pagination">
+        </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

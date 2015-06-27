@@ -1,0 +1,2425 @@
+<script type="text/javascript">
+var app = {};
+var False = false;
+var True = true;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+
+    initialize: function(){
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user === undefined) {
+        if(!cur_user_details.id) {
+            // $('#login_modal').modal('show');
+            return;
+        }
+        cur_fb_user = new app.User({'id': cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+    }
+};
+app.initializeUser();
+
+app.CommentLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/comment/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(){
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+    }
+});
+
+app.CommentLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.CommentLike,
+    urlRoot : '/api/v1/likes/comment/',
+
+    url : function() {
+        if(cur_user_details.id === undefined)
+            return;
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=1&comment=" + this.commentId + "&liker=" + cur_user_details.id;
+        }
+        return this.urlRoot + "?limit=2&comment=" + this.commentId;
+    },
+
+    initialize : function(options) {
+        if(cur_user_details.id === undefined) {
+            return;
+        }
+
+        options || (options = {});
+
+        if(options.commentId) {
+            this.commentId = options.commentId;
+        }
+
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+    },
+});
+
+app.Comment = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/comment/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+        'cur_user_likes' : false,
+        'like_id' : 0,
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+
+        if(this.get('resource_uri') !== undefined) {
+            var commentId = this.get('resource_uri').replace(this.urlRoot,'').replace('/','');
+            this.commentId = commentId;
+
+            if(cur_user_details.id !== undefined){
+                this.fetchCurUserLikes();
+            } else {
+                this.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            }
+        }
+    },
+
+    fetchCurUserLikes : function() {
+        this.curUserLikes = new app.CommentLikeList({commentId : this.commentId, curUserLikes : true});
+
+        var that = this;
+        this.curUserLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count > 0) {
+                    that.set({
+                        'cur_user_likes' : true,
+                        'like_id' : collection.models[0].get('id'),
+                    });
+                } else {
+                    that.set({
+                        'cur_user_likes' : false,
+                        'like_id' : 0,
+                    });
+                }
+                that.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            },
+        });
+    },
+});
+
+app.CommentList = Backbone.Tastypie.Collection.extend({
+    model : app.Comment,
+    urlRoot : '/api/v1/comment/',
+    comparator: 'id',
+
+    url : function() {
+        return this.urlRoot;
+    },
+});
+
+app.ImageLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/image/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(){
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+    },
+});
+
+app.ImageLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.ImageLike,
+    urlRoot : '/api/v1/likes/image/',
+
+    url : function() {
+        if(cur_user_details.id === undefined)
+            return;
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=1&image=" + this.imageId + "&liker=" + cur_user_details.id;
+        }
+        return this.urlRoot + "?limit=2&image=" + this.imageId;
+    },
+
+    initialize : function(options) {
+        if(cur_user_details.id === undefined) {
+            return;
+        }
+
+        options || (options = {});
+
+        if(options.imageId) {
+            this.imageId = options.imageId;
+        }
+
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+    },
+});
+
+app.Image = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/image/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+        'cur_user_likes' : false,
+        'like_id' : 0,
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        this.comments = new app.CommentList();
+
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+
+        if(this.get('resource_uri') !== undefined) {
+            var imageId = this.get('resource_uri').replace(this.urlRoot,'').replace('/','');
+            this.imageId = imageId;
+
+            if(cur_user_details.id !== undefined){
+                this.fetchCurUserLikes();
+            } else {
+                this.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            }
+        }
+
+        this.on('change:comments', function(model, response){
+            this.comments.reset();
+            for(var i=0; i<this.get('comments').length; i++) {
+                this.comments.add({'resource_uri' : this.get('comments')[i]});
+            }
+        });
+    },
+
+    fetchCurUserLikes : function() {
+        this.curUserLikes = new app.ImageLikeList({imageId : this.imageId, curUserLikes : true});
+
+        var that = this;
+        this.curUserLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count > 0) {
+                    that.set({
+                        'cur_user_likes' : true,
+                        'like_id' : collection.models[0].get('id'),
+                    });
+                } else {
+                    that.set({
+                        'cur_user_likes' : false,
+                        'like_id' : 0,
+                    });
+                }
+                that.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            },
+        });
+    },
+});
+
+app.ImageList = Backbone.Tastypie.Collection.extend({
+    model : app.Image,
+    urlRoot : '/api/v1/image/',
+
+    comparator : function(model) {
+        return model.get('order');
+    },
+
+    url : function() {
+        return this.urlRoot;
+    },
+});
+
+app.VideoLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/video/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(){
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+    }
+});
+
+app.VideoLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.VideoLike,
+    urlRoot : '/api/v1/likes/video/',
+
+    url : function() {
+        if(cur_user_details.id === undefined)
+            return;
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=1&video=" + this.videoId + "&liker=" + cur_user_details.id;
+        }
+        return this.urlRoot + "?limit=2&video=" + this.videoId;
+    },
+
+    initialize : function(options) {
+        if(cur_user_details.id === undefined) {
+            return;
+        }
+
+        options || (options = {});
+
+        if(options.videoId) {
+            this.videoId = options.videoId;
+        }
+
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+    },
+});
+
+app.Video = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/video/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+        'cur_user_likes' : false,
+        'like_id' : 0,
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        this.comments = new app.CommentList();
+
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+
+        if(this.get('resource_uri') !== undefined) {
+            var videoId = this.get('resource_uri').replace(this.urlRoot,'').replace('/','');
+            this.videoId = videoId;
+
+            if(cur_user_details.id !== undefined){
+                this.fetchCurUserLikes();
+            } else {
+                this.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            }
+        }
+
+        this.on('change:comments', function(model, response){
+            this.comments.reset();
+            for(var i=0; i<this.get('comments').length; i++) {
+                this.comments.add({'resource_uri' : this.get('comments')[i]});
+            }
+        });
+    },
+
+    fetchCurUserLikes : function() {
+        this.curUserLikes = new app.VideoLikeList({videoId : this.videoId, curUserLikes : true});
+
+        var that = this;
+        this.curUserLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count > 0) {
+                    that.set({
+                        'cur_user_likes' : true,
+                        'like_id' : collection.models[0].get('id'),
+                    });
+                } else {
+                    that.set({
+                        'cur_user_likes' : false,
+                        'like_id' : 0,
+                    });
+                }
+                that.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            },
+        });
+    },
+});
+
+app.VideoList = Backbone.Tastypie.Collection.extend({
+    model : app.Video,
+    urlRoot : '/api/v1/video/',
+
+    comparator : function(model) {
+        return model.get('order');
+    },
+
+    url : function() {
+        return this.urlRoot;
+    },
+});
+
+app.NoteLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/note/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function() {
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+    }
+});
+
+app.NoteLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.NoteLike,
+    urlRoot : '/api/v1/likes/note/',
+
+    url : function() {
+        if(cur_user_details.id === undefined)
+            return;
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=1&note=" + this.noteId + "&liker=" + cur_user_details.id;
+        }
+        return this.urlRoot + "?limit=2&note=" + this.noteId;
+    },
+
+    initialize : function(options) {
+        if(cur_user_details.id === undefined) {
+            return;
+        }
+
+        options || (options = {});
+
+        if(options.noteId) {
+            this.noteId = options.noteId;
+        }
+
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+    },
+});
+
+app.Note = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/note/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+        'cur_user_likes' : false,
+        'like_id' : 0,
+    },
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        this.comments = new app.CommentList();
+
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+
+        this.on('change:comments', function(model, response){
+            this.comments.reset();
+            for(var i=0; i<this.get('comments').length; i++) {
+                this.comments.add({'resource_uri' : this.get('comments')[i]});
+            }
+        });
+
+        if(this.get('id') !== undefined) {
+            this.set({'resource_uri': this.url()});
+        }
+
+        if(this.get('resource_uri') !== undefined) {
+            var noteId = this.get('resource_uri').replace(this.urlRoot,'').replace('/','');
+            this.noteId = noteId;
+
+            if(cur_user_details.id !== undefined){
+                this.fetchCurUserLikes();
+            } else {
+                this.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            }
+        }
+    },
+
+    fetchCurUserLikes : function() {
+        this.curUserLikes = new app.NoteLikeList({noteId : this.noteId, curUserLikes : true});
+
+        var that = this;
+        this.curUserLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count > 0) {
+                    that.set({
+                        'cur_user_likes' : true,
+                        'like_id' : collection.models[0].get('id'),
+                    });
+                } else {
+                    that.set({
+                        'cur_user_likes' : false,
+                        'like_id' : 0,
+                    });
+                }
+                that.fetch({
+                    success: function (model, response, options) {
+                        model.startTracking();
+                    }
+                });
+            },
+        });
+    },
+});
+
+app.NoteList = Backbone.Tastypie.Collection.extend({
+    model : app.Note,
+    urlRoot : '/api/v1/note/',
+
+    comparator : function(model) {
+        return model.get('order');
+    },
+
+    url : function() {
+        return this.urlRoot;
+    },
+});
+
+app.MakeyLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/makey/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    initialize: function(options) {
+        this.makey_id = this.makey_id || options.makey_id;
+        this.set('makey', '/api/v1/makey/'+ this.makey_id +'/');
+    }
+});
+
+app.MakeyLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.MakeyLike,
+    idAttribute : 'id',
+    urlRoot : '/api/v1/likes/makey/',
+
+    url : function() {
+        if(this.allLikes) {
+            return this.urlRoot + "?limit=0&makey=" + this.makey_id;
+        }
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=2&makey=" + this.makey_id + "&liker=" + cur_user_details.id;
+        } else {
+            return this.urlRoot + "?limit=2&makey=" + this.makey_id;
+        }
+    },
+
+    initialize : function(options) {
+        options || (options = {});
+
+        this.curUserLikes = false;
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+        if(options.allLikes) {
+            this.allLikes = options.allLikes;
+        }
+        if(options.makey_id) {
+            this.makey_id = options.makey_id;
+        }
+    },
+});
+
+app.MakeyLikesView = Backbone.View.extend({
+    template : Handlebars.compile($('#like_template').html()),
+    liker_template : Handlebars.compile($('#liker_template').html()),
+
+    options : {
+        'likes_string' : "Be the first one to like this!",
+        'all_likes_loaded' : false,
+    },
+
+    events : {
+        'click .like_makey' : 'clickLike',
+        'click .likes_string' : 'showAllLikers',
+    },
+
+    initialize : function(options) {
+        this.setElement("#makey-" + options.makey_id + "-likes");
+        this.makey_id = options.makey_id;
+
+        this.likes = new app.MakeyLikeList({
+            makey_id: this.makey_id
+        });
+
+        this.allLikes = new app.MakeyLikeList({
+            makey_id: this.makey_id,
+            allLikes: true,
+        });
+
+        this.listenTo(this.likes, 'reset', this.refreshLikeStatus);
+        this.likes.fetch({reset: true});
+    },
+
+    checkUserLikes: function() {
+        this.userLike = undefined;
+
+        if(cur_user_details.id === undefined) {
+            this.options.curUserLikes = false;
+            this.options.like_id = 0;
+            this.updateLikesString();
+            return;
+        }
+
+        var userLikes = new app.MakeyLikeList({
+            'curUserLikes' : true,
+            'makey_id': this.makey_id,
+        });
+
+        var that = this;
+        userLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count !== 0) {
+                    that.options.curUserLikes = true;
+                    that.userLike = collection.models[0];
+                    that.options.userLike = collection.models[0];
+                    that.options.like_id = collection.models[0].id;
+                } else {
+                    that.options.curUserLikes = false;
+                    that.options.like_id = 0;
+                }
+                that.updateLikesString();
+            },
+        });
+    },
+
+    refreshLikeStatus : function() {
+        this.checkUserLikes();
+        this.updateLikesString();
+        this.add();
+    },
+
+    add: function(){
+        this.$('.likes').html('');
+
+        var like_btn_cls = "btn-info";
+        var like_status = "Like";
+        if(this.userLike) {
+            like_btn_cls = "btn-success";
+            like_status = "Liked";
+        }
+
+        this.$('.likes').append(
+            this.template({
+                'like_btn_cls' : like_btn_cls,
+                'like_status' : like_status,
+                'likes_string' : this.likesString,
+            })
+        );
+    },
+
+    updateLikesString : function() {
+        this.likesString = "Be the first one to like this!";
+
+        var totalLikes = parseInt(this.likes.meta.total_count);
+        if(totalLikes === 0)
+            return;
+
+        if(this.userLike) {
+            tempLikeString = "You ";
+
+            if(totalLikes === 1) {
+            }
+            else if(totalLikes === 2) {
+                tempLikeString += "and ";
+                if(this.likes.models[0].get('liker').id == cur_user_details.id) {
+                    tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                } else {
+                    tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                }
+            } else {
+                tempLikeString += ", ";
+                if(this.likes.models[0].get('liker').id == cur_user_details.id) {
+                    tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                } else {
+                    tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                }
+                tempLikeString += "and " + (totalLikes-2) + " others ";
+            }
+
+            tempLikeString +=  "like this!";
+        } else {
+            tempLikeString = "";
+
+            if(totalLikes === 1) {
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString += "likes this!";
+            } else if(totalLikes === 2) {
+                tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                tempLikeString += "and ";
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString +=  "like this!";
+            } else {
+                tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                tempLikeString += ", ";
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString += "and " + (totalLikes-2) + " others ";
+                tempLikeString +=  "like this!";
+            }
+        }
+        this.likesString = tempLikeString;
+        this.add();
+    },
+
+    clickLike : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        this.$('.btn').attr("disabled", true);
+
+        var that = this;
+        if(this.userLike !== undefined) {
+            var fb_like_id = this.userLike.get('fb_like_id');
+            this.userLike.destroy({
+                success : function() {
+                    that.likes.fetch({reset:true});
+
+                    FB.api(fb_like_id, 'delete', function(response) {
+                        // console.log(response);
+                    });
+
+                    mixpanel.track("MakeyP: Event", {
+                        event_type: "makey_unliked",
+                        user_id: cur_user_details.id,
+                        makey_id:{{makey.id}},
+                    });
+                },
+            });
+
+        } else {
+            var newLike = new app.MakeyLike({
+                'liker' : app.cur_fb_user,
+                'makey_id': this.makey_id
+            });
+
+            newLike.save(null, {
+                success : function(model, response) {
+                    that.userLike = model;
+                    that.likes.fetch({reset:true});
+
+                    mixpanel.track("MakeyP: Event", {
+                        event_type: "makey_liked",
+                        user_id: cur_user_details.id,
+                        makey_id:{{makey.id}},
+                    });
+
+                    FB.api('me/og.likes', 'post', {
+                        object: "http://www.makeystreet.com/makey/{{makey.id}}/"
+                    }, function(response) {
+                        if(response.error === undefined) {
+                            newLike.save({'fb_like_id': response.id}, {
+                                patch: true,
+                                success: function(model, response) {
+                                    that.userLike = model;
+                                }
+                            });
+                        }
+                    });
+                },
+            });
+        }
+    },
+
+    showAllLikers : function() {
+        var that = this;
+        this.allLikes.fetch({
+            reset: true,
+            success: function(collection, response){
+                if(collection.models.length === 0)
+                    return;
+
+                var json = {'likes' : collection.toJSON()};
+                that.$('.modal-body')[0].innerHTML = that.liker_template(json);
+                that.$('#all_likes_modal').modal('show');
+
+                mixpanel.track("MakeyP: Event", {
+                    event_type: "makey_likers_viewed",
+                    user_id: cur_user_details.id,
+                    makey_id:{{makey.id}},
+                });
+            }
+        });
+    },
+});
+
+app.GalleryView = Backbone.View.extend({
+    el: $('#images'),
+
+    //Templates
+    gallery_comments: Handlebars.compile($('#gallery_comments_template').html()),
+    gallery_like: Handlebars.compile($('#gallery_like_template').html()),
+    gallery_note: Handlebars.compile($('#gallery_note_template').html()),
+    gallery_description: Handlebars.compile($('#gallery_description_template').html()),
+    new_img_comment: Handlebars.compile($('#new_img_comment_template').html()),
+    new_vid_comment: Handlebars.compile($('#new_vid_comment_template').html()),
+
+    options : {
+        images_per_row : 4,
+        cur_image_counter : 0,
+        edit_image_counter : 0,
+        edit_video_counter : 0,
+        upload_retries: 0,
+    },
+
+    events: {
+        'click .makey_image': 'clickImage',
+        'click .makey_video': 'clickVideo',
+
+        'click .like_image' : 'likeImage',
+        'click .like_video' : 'likeVideo',
+
+        "click .add-image-tab-btn": "showAddImageTab",
+        "click .add-video-tab-btn": "showAddVideoTab",
+
+        'click #save_image_v2' : 'createNewImage',
+        'click #save_video_v2' : 'createNewVideo',
+
+        "change #up_images_v2" : "uploadImagesPreview",
+
+        // 'click .new_comment_img' : 'newImgComment',
+        // 'click .new_comment_vid' : 'newVidComment',
+
+        // "click .submit_comment_img" : "saveImgComment",
+        // "click .submit_comment_vid" : "saveVidComment",
+
+        // "click .cancel_comment_img" : "cancelImgComment",
+        // "click .cancel_comment_vid" : "cancelVidComment",
+
+    },
+
+    clickImage: function(event){
+        var image_id = parseInt(event.target.id);
+        this.showImage(image_id);
+        this.$('#images_modal').modal('show');
+
+        mixpanel.track("MakeyP: Event", {
+            event_type: "makey_image_viewed",
+            source: "gallery",
+            user_id: cur_user_details.id,
+            makey_id:{{makey.id}},
+            image_id: image_id,
+        });
+    },
+
+    clickVideo: function(){
+        var video_id = parseInt(event.target.id);
+        this.showVideo(video_id);
+        this.$('#images_modal').modal('show');
+
+        this.$('#images_modal').on('hidden.bs.modal', function (e) {
+            $('#main_video').find('iframe').attr('src', '');
+        });
+
+        mixpanel.track("MakeyP: Event", {
+            event_type: "makey_video_viewed",
+            source: "gallery",
+            user_id: cur_user_details.id,
+            makey_id:{{makey.id}},
+            video_id: video_id,
+        });
+    },
+
+    showImage: function(id){
+        var curImage = app.makey.images.get(id);
+
+        if(curImage === undefined) {
+            curImage = new app.Image({id: id});
+
+            var that = this;
+            curImage.fetch({
+                success: function(model, response){
+                    app.makey.images.push(model);
+                    that.showImage(model.get('id'));
+                },
+                error: function(model, response){
+                    // console.log(response);
+                }
+            });
+            return;
+        }
+
+        this.$("#main_image").find('img').attr('src', curImage.get('large_url'));
+        this.$('#main_video').find('iframe').attr('src', "");
+
+        var json = {'id': id, 'comments': curImage.comments.toJSON(), 'type': 'img'};
+        this.$('#gallery_comments_list').html(this.gallery_comments(json));
+
+        json = curImage.toJSON();
+        json.likes_string = this.getLikesString(json, "image");
+        json.type = "image";
+
+        this.$('#gallery_like').html(this.gallery_like(json));
+        this.$('#gallery_description').html(this.gallery_description(json));
+
+        this.$('#image_note_row').hide();
+        if(json.note.length > 0) {
+            var noteId = parseInt(json.note[0].replace('/api/v1/note/','').replace('/',''));
+            var curNote = app.makey.notes.get(noteId);
+            if(curNote === undefined){
+                curNote = new app.Note({id: noteId});
+
+                var that = this;
+                curNote.fetch({
+                    success: function(model, response){
+                        app.makey.notes.push(model);
+                        that.showImage(id);
+                    },
+                    error: function(model, response){
+                        // console.log(response);
+                    }
+                });
+                return;
+            }
+
+            json.note_body = curNote.get('body');
+            this.$('#image_note_body').html(this.gallery_note(json));
+            this.$('#image_note_row').show();
+        }
+
+        this.$('#main_video').hide();
+        this.$('#main_image').show();
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+
+        // this.renderPager("image", id);
+        // delete(app.cur_image_id);
+        this.$('#images_modal').modal('show');
+        // app.makey.images.remove(curImage);
+        this.$el.find('.tooltips').tooltip();
+    },
+
+    showVideo : function(id) {
+        var curVideo = app.makey.videos.get(id);
+        if(curVideo === undefined) {
+            curVideo = new app.Video({id: id});
+
+            var that = this;
+            curVideo.fetch({
+                success: function(model, response){
+                    app.makey.videos.push(model);
+                    that.showVideo(model.get('id'));
+                },
+                error: function(model, response){
+                    // console.log(response);
+                }
+            });
+            return;
+        }
+
+        this.$('#main_video').find('iframe').attr('src', curVideo.get('embed_url'));
+        this.$("#main_image").find('img').attr('src', '');
+
+        var json = {'id' : id, 'comments' : curVideo.comments.toJSON(), 'type' : 'vid'};
+        this.$('#gallery_comments_list').html(this.gallery_comments(json));
+
+        json = curVideo.toJSON();
+        json.likes_string = this.getLikesString(json, "video");
+        json.type = "video"
+
+        this.$('#gallery_like').html(this.gallery_like(json));
+        this.$('#gallery_description').html(this.gallery_description(json));
+
+        this.$('#main_video').show();
+        this.$('#main_image').hide();
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+
+        // this.renderPager("video", id);
+        this.$('#images_modal').modal('show');
+        // app.makey.videos.remove(curVideo);
+        this.$el.find('.tooltips').tooltip();
+        // delete(app.cur_video_id);
+    },
+
+    getLikesString : function(json, type) {
+        var likes_string = "Be the first one to like this " + type + "!";
+
+        if(json.likes_count == 0) {
+            return likes_string;
+        }
+
+        if(json.cur_user_likes) {
+            likes_string = "You ";
+            if(json.likes_count == 2) {
+                likes_string += " and 1 other person ";
+            } else if(json.likes_count > 2) {
+                likes_string += " and " + (json.likes_count -1 ) + " others "
+            }
+            likes_string += "like this " + type + "!";
+        } else {
+            if(json.likes_count == 1) {
+                likes_string = "1 person likes ";
+            } else {
+                likes_string = (json.likes_count) + " people like ";
+            }
+            likes_string += "this " + type + "!";
+        }
+        return likes_string;
+    },
+
+    likeImage : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        var btn_details = event.target.id.split('_');
+        var imageId = parseInt(btn_details[1]);
+        var likeId = parseInt(btn_details[2]);
+
+        var curImage = app.makey.images.get(imageId);
+
+        if(likeId == 0) {
+            var newLike = new app.ImageLike({
+                'image' : curImage.get('resource_uri'),
+                'liker' : app.cur_fb_user,
+            });
+            var that = this;
+            newLike.save(null, {
+                success : function(model, response) {
+                    app.cur_image_id = imageId;
+                    curImage.set({
+                        'cur_user_likes' : true,
+                        'like_id' : model.get('id'),
+                        'likes_count' : parseInt(curImage.get('likes_count'))+1,
+                    });
+                    _cio.track("imageLikes",{makey_id:'{{makey.id}}',image_id:imageId});
+
+                    that.showImage(imageId);
+
+                    mixpanel.track("MakeyP: Event", {
+                        event_type: "makey_image_liked",
+                        user_id: cur_user_details.id,
+                        makey_id:{{makey.id}},
+                        image_id: imageId,
+                    });
+                },
+            });
+        } else {
+            var newLike = new app.ImageLike({
+                'id' : likeId,
+            });
+            newLike.destroy();
+            app.cur_image_id = imageId;
+            curImage.set({
+                'cur_user_likes' : false,
+                'like_id' : 0,
+                'likes_count' : parseInt(curImage.get('likes_count'))-1,
+            });
+            this.showImage(imageId);
+
+            mixpanel.track("MakeyP: Event", {
+                event_type: "makey_image_unliked",
+                user_id: cur_user_details.id,
+                makey_id:{{makey.id}},
+                image_id: imageId,
+            });
+        }
+    },
+
+    likeVideo : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        var btn_details = event.target.id.split('_');
+        var videoId = parseInt(btn_details[1]);
+        var likeId = parseInt(btn_details[2]);
+
+        var curVideo = app.makey.videos.get(videoId);
+
+        if(likeId == 0) {
+            var newLike = new app.VideoLike({
+                'video' : curVideo.get('resource_uri'),
+                'liker' : app.cur_fb_user,
+            });
+
+            var that = this;
+            newLike.save(null, {
+                success : function(model, response) {
+                    app.cur_video_id = videoId;
+                    curVideo.set({
+                        'cur_user_likes' : true,
+                        'like_id' : model.get('id'),
+                        'likes_count' : parseInt(curVideo.get('likes_count'))+1,
+                    });
+                    _cio.track("videoLikes",{makey_id:'{{makey.id}}',video_id:videoId});
+
+                    that.showVideo(videoId);
+
+                    mixpanel.track("MakeyP: Event", {
+                        event_type: "makey_video_liked",
+                        user_id: cur_user_details.id,
+                        makey_id:{{makey.id}},
+                        video_id: videoId,
+                    });
+                },
+            });
+        } else {
+            var newLike = new app.VideoLike({
+                'id' : likeId,
+            });
+            newLike.destroy();
+            app.cur_video_id = videoId;
+            curVideo.set({
+                'cur_user_likes' : false,
+                'like_id' : 0,
+                'likes_count' : parseInt(curVideo.get('likes_count'))-1,
+            });
+            this.showVideo(videoId);
+
+            mixpanel.track("MakeyP: Event", {
+                event_type: "makey_video_unliked",
+                user_id: cur_user_details.id,
+                makey_id:{{makey.id}},
+                video_id: videoId,
+            });
+        }
+    },
+
+    newImgComment : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return false;
+        }
+
+        var imgId = parseInt(event.target.id.substring(16));
+
+        var json = app.cur_fb_user;
+        json.imgId = imgId;
+
+        $(event.target).before(this.new_img_comment(json));
+    },
+
+    saveImgComment : function(event) {
+        var body = this.$('#new_comment_body')[0].value;
+        var imgId = this.$('#new_comment_body')[0].getAttribute('imgId');
+        var comment = new app.Comment({
+            'body' : body,
+        });
+
+        var that = this;
+        this.$('#success_new_comment').hide();
+        this.$('#waiting_new_comment').show();
+        comment.save(null, {
+            success : function(model, response) {
+                that.$('#waiting_new_comment').hide();
+                that.$('#success_new_comment').show();
+
+                var curImage = new app.Image({id: imgId});
+                curImage.fetch({
+                    success: function(img_model, img_response){
+                        img_model.get('comments').push(response.resource_uri);
+                        img_model.save({
+                            'comments': img_model.get('comments'),
+                        }, {
+                            patch: true,
+                            success: function(){
+                                that.showImage(imgId);
+                            },
+                            error: function(){
+                                // console.log(response);
+                                return;
+                            }
+                        });
+                    },
+                    error: function(model, response){
+                        // console.log(response);
+                        return;
+                    }
+                });
+
+                // var curImage = app.makey.images.get(imgId);
+                // curImage.get('comments').push(response.resource_uri);
+                // curImage.save({
+                //     'comments': curImage.get('comments'),
+                // }, {
+                //     patch : true,
+                // TODO: SendMail
+                // });
+                // app.cur_image_id = imgId;
+
+                // curImage.comments.push(model);
+
+                that.$('#new_comment_body').val('');
+                _cio.track("imageComments",{makey_id:'{{makey.id}}',image_id:imgId});
+
+                // mixpanel.track("MakeyP: Event", {event_type: "makey_image_comment_added", user_id:cur_user_details.id, makey_id:{{makey.id}}, image_id: imgId, comment_id: model.get('id')});
+            },
+        });
+    },
+
+    cancelImgComment : function(event) {
+        $(event.target).parent().parent().remove();
+    },
+
+    newVidComment : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return false;
+        }
+
+        var vidId = parseInt(event.target.id.substring(16));
+
+        var json = app.cur_fb_user;
+        json.vidId = vidId;
+
+        $(event.target).before(this.new_vid_comment(json));
+    },
+
+    saveVidComment : function(event) {
+        var body = this.$('#new_comment_body')[0].value;
+        var vidId = this.$('#new_comment_body')[0].getAttribute('vidId');
+        var comment = new app.Comment({
+            'body' : body,
+        });
+
+        var that = this;
+        this.$('#success_new_comment').hide();
+        this.$('#waiting_new_comment').show();
+        comment.save(null, {
+            success : function(model, response) {
+                that.$('#waiting_new_comment').hide();
+                that.$('#success_new_comment').show();
+
+                var curVideo = new app.Video({id: vidId});
+                curVideo.fetch({
+                    success: function(vid_model, vid_response){
+                        vid_model.get('comments').push(response.resource_uri);
+                        vid_model.save({
+                            'comments': vid_model.get('comments'),
+                        }, {
+                            patch: true,
+                            success: function(){
+                                that.showVideo(vidId);
+                            },
+                            error: function(){
+                                // console.log(response);
+                                return;
+                            }
+                        });
+                    },
+                    error: function(model, response){
+                        // console.log(response);
+                        return;
+                    }
+                });
+
+                // var curVideo = app.makey.videos.get(vidId);
+                // curVideo.get('comments').push(response.resource_uri);
+                // curVideo.save({
+                //     'comments': curVideo.get('comments'),
+                // }, {
+                //     patch : true,
+                //     success: function() {
+                //      TODO: SendMail
+                //     },
+                // });
+                // app.cur_video_id = vidId;
+
+                curVideo.comments.push(model);
+
+                that.$('#new_comment_body').val('');
+                _cio.track("videoComments",{makey_id:'{{makey.id}}',video_id:vidId});
+
+                // mixpanel.track("MakeyP: Event", {event_type: "makey_video_comment_added", user_id:cur_user_details.id, makey_id:{{makey.id}}, video_id: vidId, comment_id: model.get('id')});
+            },
+        });
+    },
+
+    cancelVidComment : function(event) {
+        $(event.target).parent().parent().remove();
+    },
+
+    showAddImageTab: function() {
+        this.$(".add-image-tab-btn").addClass("active");
+        this.$(".add-video-tab-btn").removeClass("active");
+        this.$("#add_images_form").show();
+        this.$("#add_videos_form").hide();
+        this.$('#img_url_v2').focus();
+    },
+
+    showAddVideoTab: function() {
+        this.$(".add-image-tab-btn").removeClass("active");
+        this.$(".add-video-tab-btn").addClass("active");
+        this.$("#add_images_form").hide();
+        this.$("#add_videos_form").show();
+        this.$('#vid_url_v2').focus();
+    },
+
+    createNewImage : function() {
+        var url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
+        var url = this.$('#img_url_v2').val();
+
+        if(!url) {
+            this.$('#img_url_v2').notify(
+                "URL is mandatory!",
+                { position:"left" }
+            );
+            return;
+        }
+
+        if(!url_regex.test(url)) {
+            this.$('#img_url_v2').notify(
+                "Invalid URL!",
+                { position:"left" }
+            );
+            return;
+        }
+
+        if(url.substring(4,0) != "http") {
+            url = "http://" + url;
+        }
+
+        this.saveNewImage(url, 'link');
+    },
+
+    createNewVideo : function() {
+        var youtube_url_regex = /^(http|https):\/\/(?:www\.)?youtube.com\/watch\?(?=[^?]*v=[-\w+])(?:[^\s?]+)?$/;
+        var vimeo_url_regex = /^(http\:\/\/|https\:\/\/)?(www\.)?(vimeo\.com\/)([0-9]+)$/;
+
+        var url = this.$('#vid_url_v2').val();
+
+        var cur_site = 0;
+        if(youtube_url_regex.test(url)) {
+            cur_site = 6;
+        } else if(vimeo_url_regex.test(url)) {
+            cur_site = 4;
+        } else {
+            this.$('#vid_url_v2').notify(
+                "Invalid URL!",
+                { position:"left" }
+            );
+            return;
+        }
+
+        if(url.substring(4,0) != "http") {
+            url = "http://" + url;
+        }
+
+        var vid = new app.Video({'url' : url, 'site' : cur_site});
+
+        var that = this;
+        this.$('#success_add_vid_v2').hide();
+        this.$('#waiting_add_vid_v2').show();
+        vid.save(null, {
+            success : function(model, response) {
+                // that.$('#waiting_add_vid_v2').hide();
+                // that.$('#success_add_vid_v2').show();
+                app.makey.videos.add(model);
+                app.makey.get('videos').push(model.get('resource_uri'));
+                app.makey.save({
+                    'videos': app.makey.get('videos'),
+                }, {
+                    patch : true,
+                    success: function() {
+                        document.location.reload(false);
+                    }
+                });
+
+                // that.$('#vid_url_v2').val('');
+
+                // mixpanel.track("MakeyP: Event", {event_type: "makey_video_added", user_id:cur_user_details.id, makey_id:{{makey_id}},
+                //                                  video_id: model.get('id')});
+
+                // that.hideAddModal();
+            },
+            error : function(model, response) {
+                that.$('#waiting_add_vid_v2').hide();
+                that.$('#error_add_vid_v2').show();
+
+                that.$('#vid_url_v2').val('');
+            },
+        });
+    },
+
+    saveNewImage: function(url, processType) {
+        var img = new app.Image({'large_url' : url});
+
+        var that = this;
+        this.$('#success_add_v2').hide();
+        this.$('#waiting_add_v2').show();
+        img.save(null, {
+            success : function(model, response) {
+                // that.$('#waiting_add_v2').hide();
+                // that.$('#success_add_v2').show();
+                app.makey.images.add(model);
+                app.makey.get('images').push(model.get('resource_uri'));
+                app.makey.save({
+                    'images': app.makey.get('images'),
+                },{
+                    patch : true,
+                    success: function() {
+                        document.location.reload(false);
+                    }
+                });
+            },
+            error : function(model, response) {
+                that.$('#waiting_add_v2').hide();
+                that.$('#error_add_v2').show();
+
+                that.$('#img_url_v2').val('');
+            },
+        });
+    },
+
+    clearImageUpload: function(){
+        this.$('#up_images_v2').wrap('<form>').closest('form').get(0).reset();
+        this.$('#up_images_v2').unwrap();
+    },
+
+    uploadImagesPreview : function(event) {
+        var that = this;
+        var s3upload = new S3Upload({
+            file_dom_selector: 'up_images_v2',
+            s3_sign_put_url: "{% url 'catalog:sign_image_s3' %}",
+            onProgress: function(percent, message) {
+                var progress = percent + '%';
+                that.$('#progress_bar_v2').show();
+                that.$('#progress_bar_v2 .progress-bar').css('width', progress).html(progress);
+                // status_elem.innerHTML = 'Upload progress: ' + percent + '% ' + message;
+            },
+            onFinishS3Put: function(url) {
+                that.options.upload_retries = 0;
+
+                that.$('#upload_error_v2_retry').hide();
+                that.$('#upload_error_v2').hide();
+                that.$('#upload_img_url_v2').val(url);
+                var json = {
+                    source: url,
+                    title: 'temp_image',
+                }
+                that.uploadImages();
+            },
+            onError: function(status) {
+                that.$('#out_images').html('');
+                that.$('#progress_bar_v2').hide();
+
+
+                that.options.upload_retries++;
+                if(that.options.upload_retries <= 3) {
+                    that.uploadImagesPreview(event);
+                    that.$('#upload_error_v2_retry').show();
+                } else {
+                    that.options.upload_retries = 0;
+                    that.$('#upload_error_v2_retry').hide();
+                    that.$('#upload_error_v2').show();
+                    that.clearImageUpload();
+                }
+            }
+        });
+    },
+
+    uploadImages : function() {
+        var url = this.$('#upload_img_url_v2').val();
+        this.saveNewImage(url, 'upload');
+        this.$('#progress_bar_v2').hide();
+    }
+});
+
+app.NotesView = Backbone.View.extend({
+    el: $("#notes"),
+
+    //Templates
+    note_template: Handlebars.compile($("#note_template").html()),
+    comment_template: Handlebars.compile($("#insight_comment_template").html()),
+    comment_waiting_template: Handlebars.compile($("#insight_comment_waiting_template").html()),
+    comment_empty_template: Handlebars.compile($("#insight_comment_empty_template").html()),
+
+
+    //Events
+    events: {
+        "click .like_note" : "likeNote",
+        "click .show_image" : "handleShowImage",
+        "click .insights-comments-btn" : "handleShowComments",
+        "click #add-insight-comment-save" : "postComment",
+    },
+
+    likeNote : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        var btn_details = event.target.id.split('_');
+        var noteId = parseInt(btn_details[1]);
+        var likeId = 0;
+        if(btn_details[2])
+            likeId = parseInt(btn_details[2]);
+
+        var curNote = app.makey.notes.get(noteId);
+        if(curNote === undefined) {
+            curNote = new app.Note({id: noteId})
+
+            var that = this;
+            curNote.fetch({
+                success: function(model, response){
+                    app.makey.notes.push(model);
+                    that.likeNote(event);
+                },
+                error: function(model, response){
+                    // console.log(response);
+                },
+            });
+            return;
+        }
+
+        if(likeId == 0) {
+            var newLike = new app.NoteLike({
+                'note' : curNote.get('resource_uri'),
+                'liker' : app.cur_fb_user,
+            });
+
+            var that = this;
+            newLike.save(null, {
+                success : function(model, response) {
+                    curNote.set({
+                        'cur_user_likes' : true,
+                        'like_id' : model.get('id'),
+                        'likes_count' : parseInt(curNote.get('likes_count'))+1,
+                    });
+                    _cio.track("noteLikes",{makey_id:'{{makey.id}}',note_id:noteId});
+
+                    that.$('#note_' + noteId).html(that.note_template(curNote.toJSON()));
+
+                    mixpanel.track("MakeyP: Event", {
+                        event_type: "makey_note_liked",
+                        user_id: cur_user_details.id,
+                        makey_id: {{makey.id}},
+                        note_id: noteId
+                    });
+                },
+            });
+        } else {
+            var newLike = new app.NoteLike({
+                'id' : likeId,
+            });
+            newLike.destroy();
+            curNote.set({
+                'cur_user_likes' : false,
+                'like_id' : 0,
+                'likes_count' : parseInt(curNote.get('likes_count'))-1,
+            });
+
+            this.$('#note_' + noteId).html(this.note_template(curNote.toJSON()));
+            mixpanel.track("MakeyP: Event", {
+                event_type: "makey_note_unliked",
+                user_id: cur_user_details.id,
+                makey_id: {{makey.id}},
+                note_id: noteId
+            });
+        }
+    },
+
+    renderImageModal: function(id){
+        var curImage = app.makey.images.get(id);
+
+        if(curImage === undefined) {
+            curImage = new app.Image({id: id});
+
+            var that = this;
+            curImage.fetch({
+                success: function(model, response){
+                    app.makey.images.push(model);
+                    that.showImage(model.get('id'));
+                },
+                error: function(model, response){
+                    // console.log(response);
+                }
+            });
+            return;
+        }
+
+        this.$("#images_modal_insight #main_image").find('img').attr('src', curImage.get('large_url'));
+        this.$('#images_modal_insight #main_video').find('iframe').attr('src', "");
+
+        this.$('#images_modal_insight #main_video').hide();
+        this.$('#images_modal_insight #main_image').show();
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+
+        this.$el.find('.tooltips').tooltip();
+
+    },
+
+    handleShowImage: function(e) {
+        var imageId = parseInt(e.target.id.substring(11));
+        this.showImage(imageId);
+    },
+
+    showImage: function(imageId) {
+        this.renderImageModal(imageId);
+        this.$('#images_modal_insight').modal('show');
+
+        mixpanel.track("MakeyP: Event", {
+            event_type: "makey_image_viewed",
+            source: "note",
+            user_id: cur_user_details.id,
+            makey_id:{{makey.id}},
+            image_id: imageId,
+        });
+    },
+
+    handleShowComments: function(e) {
+        var noteId = $(e.target).data('id');
+
+        this.showCommentBlock(noteId);
+        this.showWaiting();
+        this.hidePostBlock();
+
+        this.showComments(noteId);
+    },
+
+    showComments: function(noteId) {
+        this.currNote = new app.Note({
+            id: noteId
+        });
+
+        this.comments = new app.CommentList();
+
+        this.comments.on('all', this.renderComments, this);
+
+        var that = this;
+        this.currNote.on("change:comments", function(model, options) {
+            that.comments.reset();
+            for(var i=0; i<that.currNote.get('comments').length; i++) {
+                that.comments.add({'resource_uri' : that.currNote.get('comments')[i]});
+            }
+        });
+
+        this.currNote.fetch();
+    },
+
+    showCommentBlock: function(noteId) {
+        this.$('#insights-comments-wrapper').show();
+
+        var $noteItemEl = this.$(".note_item[data-id='"+noteId+"']");
+        var $noteWrapperEl = this.$('#insights-wrapper');
+        var $commentWrapperEl = this.$('#insights-comments-wrapper');
+
+        $commentWrapperEl.offset({
+            top: $noteItemEl.offset().top
+        });
+
+    },
+
+    hideCommentBlock: function() {
+        this.$('#insights-comments-wrapper').hide();
+    },
+
+    showPostBlock: function() {
+        this.$('#insights-comments-add').show();
+    },
+
+    hidePostBlock: function() {
+        this.$('#insights-comments-add').hide();
+    },
+
+    showWaiting: function() {
+        this.$("#insights-comments-container").html(this.comment_waiting_template());
+    },
+
+    renderComments: function() {
+        this.$("#insights-comments-container").empty();
+        for (var i = 0; i < this.comments.length; i++) {
+            this.$("#insights-comments-container").append(
+                this.comment_template(this.comments.models[i].toJSON())
+            );
+        }
+        if(this.comments.length == 0)
+            this.$("#insights-comments-container").html(this.comment_empty_template());
+        this.showPostBlock();
+        this.updateCommentCount();
+    },
+
+    updateCommentCount: function() {
+        this.$(".insight-comments-count[data-id='"+ this.currNote.get('id') +"']").html(this.comments.length);
+    },
+
+    postComment: function() {
+        var commentBody = this.$('#add-insight-comment-input').val();
+        if(!commentBody)
+            return;
+
+        commentBody = commentBody.replace('\n','<br />');
+
+        var comment = new app.Comment({
+            'body' : commentBody,
+        });
+
+        var that = this;
+        NProgress.start();
+        comment.save(null, {
+            success : function(model, response) {
+                NProgress.set(0.5);
+                that.resetInput();
+                that.addToNote(model);
+            },
+        });
+    },
+
+    resetInput: function() {
+        this.$('#add-insight-comment-input').val('');
+    },
+
+    addToNote: function(model) {
+        var that = this;
+        this.currNote.get('comments').push(model.get('resource_uri'));
+        this.currNote.save({
+            'comments': this.currNote.get('comments'),
+        }, {
+            patch : true,
+            success: function() {
+                NProgress.done();
+                that.showComments(that.currNote.get('id'));
+            }
+        });
+    },
+
+});
+
+app.MakeyCommentsView = Backbone.View.extend({
+    el : '#comments',
+    template : Handlebars.compile($('#comment_template').html()),
+    empty_comments_template : Handlebars.compile($('#comments_empty_template').html()),
+    login_template : Handlebars.compile($('#comments_login_template').html()),
+
+    events : {
+        'click .like_comment' : 'likeComment',
+        'click #add-comment-save' : 'createNewComment',
+        'click #add-comment-nologin' : 'showLoginPrompt',
+    },
+
+    initialize : function() {
+        this.listenTo(app.makey.comments, 'destroy', this.addAll);
+        this.listenTo(app.makey.comments, 'change', this.addAll);
+        this.listenTo(app.makey.comments, 'add', this.addAll);
+
+        this.listenTo(app.makey.comments, 'reset', this.resetView);
+
+        this.$('#add-comment-input').autogrow({
+            animate: false
+        });
+    },
+
+    resetView : function() {
+        this.$('#makey_comments').html('');
+        this.$('#makey_comments').append(this.empty_comments_template());
+    },
+
+    addAll : function() {
+        this.$('#makey_comments').html('');
+        app.makey.comments.sort();
+        if(app.makey.comments.models.length != 0) {
+            app.makey.comments.each(this.add, this);
+        } else {
+            if(cur_user_details.id !== undefined) {
+                this.$('#makey_comments').append(this.empty_comments_template());
+            }
+        }
+
+        if(cur_user_details.id === undefined) {
+            this.$('#makey_comments').append(this.login_template());
+        }
+        this.$('#makey_comments').find('.tooltips').tooltip();
+        $('.comments_no').html(app.makey.comments.models.length);
+    },
+
+    add : function(model) {
+        this.$('#makey_comments').append(this.template(model.toJSON()));
+        if(app.cur_comment_id) {
+            if(model.get('id') == app.cur_comment_id) {
+                $('html, body').animate({
+                    scrollTop: $("#comment_"+app.cur_comment_id).offset().top
+                }, 1500);
+            }
+        }
+    },
+
+    createNewComment : function() {
+        var body = this.$('#add-comment-input').val();
+        if(!body)
+            return;
+
+        body = body.replace('\n','<br />');
+
+        var comment = new app.Comment({
+            'body' : body,
+        });
+
+        var that = this;
+        NProgress.start();
+        comment.save(null, {
+            success : function(model, response) {
+                NProgress.set(0.5);
+                app.makey.comments.add(model);
+                app.makey.get('comments').push(model.get('resource_uri'));
+                app.makey.save({
+                    'comments': app.makey.get('comments'),
+                }, {
+                    patch : true,
+                    success: function() {
+                        NProgress.done();
+                    }
+                });
+
+                that.$('#add-comment-input').val('');
+                _cio.track("makeyComments",{makey_id:'{{makey.id}}'});
+
+                mixpanel.track("MakeyP: Event", {event_type: "makey_comment_added", user_id:cur_user_details.id, makey_id:{{makey.id}},
+                                                 comment_id: model.get('id')});
+            },
+        });
+    },
+
+    showLoginPrompt : function() {
+        $('#login_modal').modal('show');
+    },
+
+    likeComment : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        var $btnEl = $(event.target);
+        var commentId = $btnEl.data('id');
+        var likeId = $btnEl.data('like-id');
+
+        var curComment = app.makey.comments.get(commentId);
+
+        if(likeId == 0) {
+            var newLike = new app.CommentLike({
+                'comment' : curComment.get('resource_uri'),
+                'liker' : app.cur_fb_user,
+            });
+            newLike.save(null, {
+                success : function(model, response) {
+                    curComment.set({
+                        'cur_user_likes' : true,
+                        'like_id' : model.get('id'),
+                        'likes_count' : parseInt(curComment.get('likes_count'))+1,
+                    });
+                    _cio.track("commentLikes",{makey_id:'{{makey.id}}',comment_id:commentId});
+
+                    mixpanel.track("MakeyP: Event", {event_type: "makey_comment_liked", user_id:cur_user_details.id, makey_id:{{makey.id}},
+                                                     comment_id: commentId});
+                },
+            });
+        } else {
+            var newLike = new app.CommentLike({
+                'id' : likeId,
+            });
+            newLike.destroy();
+            curComment.set({
+                'cur_user_likes' : false,
+                'like_id' : 0,
+                'likes_count' : parseInt(curComment.get('likes_count'))-1,
+            });
+
+            mixpanel.track("MakeyP: Event", {event_type: "makey_comment_unliked", user_id:cur_user_details.id, makey_id:{{makey.id}},
+                                             comment_id: commentId});
+        }
+    },
+
+});
+
+app.DocumentationView = Backbone.View.extend({
+    el: '#text-docs',
+
+    events: {
+        'click .doc-item-title': 'openModal'
+    },
+
+    initialize: function() {
+        // this.$("#doc-modal-sidebar").sticky({topSpacing:0});
+        this.$('#doc-modal').on('shown.bs.modal', function (e) {
+            $("#textdoc-scroll-container").scrollspy('refresh');
+        });
+    },
+
+    openModal: function() {
+        this.$('#doc-modal').modal('show');
+    }
+});
+
+app.MakeyView = Backbone.View.extend({
+    initialize: function(options) {
+        this.makey_id = options.makey_id;
+
+        this.likesView = new app.MakeyLikesView({makey_id: this.makey_id});
+        this.galleryView = new app.GalleryView();
+        this.notesView = new app.NotesView();
+        this.commentsView = new app.MakeyCommentsView();
+        // this.documentationView = new app.DocumentationView();
+
+        $(document).ready(this.hideEmptyElements());
+    },
+
+    hideEmptyElements: function(){
+        // {% if not makey.why %}
+        //     $('.show_why').hide();
+        // {% endif %}
+
+        // {% if not gallery|length > 0 %}
+        //     $('.show_gallery').hide();
+        // {% endif %}
+
+        // {% if not makey.instructablestep_set.count > 0 %}
+        //     $('.show_steps').hide();
+        // {% endif %}
+
+        // {% if not makey.documentations.count > 0 %}
+        //     $('.show_how').hide();
+        // {% endif %}
+
+        // {% if not makey.notes.count > 0 %}
+        //     $('.show_notes').hide();
+        // {% endif %}
+
+        // {% if not makey.derived_from %}
+        //     $('.show_derived').hide();
+        // {% endif %}
+
+        // {% if not makey.modules_used.count|add:makey.partsused.count|add:makey.new_parts.count > 0 %}
+        //     $('.show_parts').hide();
+        // {% endif %}
+
+        // {% if not makey.as_part and not makey.as_part_new %}
+        //     $('.show_as_a_part').hide();
+        // {% endif %}
+
+        // {% if not makey.text_documentations.count > 0 %}
+        //     $('.show_textdoc').hide();
+        // {% endif %}
+
+        // {% if not makey.tools_used.count|add:makey.new_tools.count > 0 %}
+        //     $('.show_tools').hide();
+        // {% endif %}
+
+        {% if not makey.status %}
+            $('.show_status').hide();
+        {% endif %}
+
+        // {% if not makey.mentors %}
+        //     $('.show_mentors').hide();
+        // {% endif %}
+
+        // {% if not makey.credits %}
+        //     $('.show_credits').hide();
+        // {% endif %}
+    }
+});
+
+app.Makey = Backbone.Model.extend({
+    urlRoot : '/api/v1/makey/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') !== undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') !== undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize: function(options){
+        this.videos = new app.VideoList();
+
+        options || (options = {});
+
+        if(options.makey_id) {
+            this.makey_id = options.makey_id;
+        }
+
+        this.notes = new app.NoteList();
+        this.on("change:notes", function(model, options) {
+            this.notes.reset();
+            for(var i=0; i<this.get('notes').length; i++) {
+                this.notes.add({'resource_uri' : this.get('notes')[i]});
+            }
+        });
+
+        this.comments = new app.CommentList();
+        this.on("change:comments", function(model, options) {
+            this.comments.reset();
+            for(var i=0; i<this.get('comments').length; i++) {
+                this.comments.add({'resource_uri' : this.get('comments')[i]});
+            }
+        });
+
+        this.images = new app.ImageList();
+        this.on("change:images", function(model, options) {
+            this.images.reset();
+            for(var i=0; i<this.get('images').length; i++) {
+                this.images.add({'resource_uri' : this.get('images')[i]});
+            }
+        });
+
+        this.fetch({
+            success: function (model, response, options) {
+                model.startTracking();
+            }
+        });
+    }
+});
+
+app.MakeyNoteAddView = Backbone.View.extend({
+    el: "#notes",
+    template: Handlebars.compile($("#makey-notes-v2-add-template").html()),
+    insight_template: Handlebars.compile($("#note-django-template").html()),
+    default_image: 'http://placehold.it/150x100&text=Add+Image',
+
+    events: {
+        'click .add-insight-btn': 'showAddForm',
+        'click #insight-add-cancel-btn': 'hideAddForm',
+        'click #insight-save-btn': 'createNote',
+        'click #makey-notes-v2-add-image-select': 'selectNoteImage',
+    },
+
+    initialize: function(options) {
+        this.imageSelectView = new app.imageSelectView();
+        this.imageSelectView.on("imageSelected", this.handleImageSelected, this);
+
+        this.$('#insight-add-input-container').on('shown.bs.modal',function(){
+            $('#makey-notes-v2-add-input-title').focus();
+        });
+
+        this.render();
+    },
+
+    render: function() {
+        this.$('#makey-notes-v2-add').html(this.template());
+        return this;
+    },
+
+    clear: function() {
+        this.$('#makey-notes-v2-add').empty();
+    },
+
+    resetForm: function() {
+        this.$("#makey-notes-v2-add-input-title").val("");
+        this.$("#makey-notes-v2-add-input-body").val("");
+        this.$('#makey-notes-v2-add-image-select').attr("src", this.default_image);
+        this.selectedImage = undefined;
+    },
+
+    showAddForm: function() {
+        {% if user.is_authenticated %}
+        this.$("#insight-add-btn-container").hide();
+        this.$("#insight-add-input-container").show();
+        {% else %}
+        $("#login-modal").modal("show");
+        {% endif %}
+    },
+
+    hideAddForm: function() {
+        this.$("#insight-add-input-container").hide();
+        this.$("#insight-add-btn-container").show();
+    },
+
+    createNote: function() {
+        var title = this.$("#makey-notes-v2-add-input-title").val();
+        var body = this.$("#makey-notes-v2-add-input-body").val();
+        var image = '';
+        if(this.selectedImage)
+            image = this.selectedImage.get('resource_uri');
+
+        if(!title || !body) {
+            return;
+        }
+        {% if can_edit %}
+            var newNote = new app.Note({
+                'title' : title,
+                'body' : body,
+                'image' : image,
+                'order': app.makey.notes.length
+            });
+        {% else %}
+            var newNote = new app.Note({
+                'title' : title,
+                'body' : body,
+                'image' : image,
+                'order': app.makey.notes.length,
+                'is_pending_approval': true
+            });
+        {% endif %}
+
+        var that = this;
+        newNote.save(null, {
+            success : function(model, response) {
+                that.addNote(model);
+                that.resetForm();
+            },
+        });
+    },
+
+    addNote: function(model) {
+        var that = this;
+        this.$('#makey_notes').append(this.insight_template(model.toJSON()));
+        app.makey.notes.add(model);
+        app.makey.get('notes').push(model.get('resource_uri'));
+        app.makey.save({
+            'notes': app.makey.get('notes'),
+        }, {
+            patch : true,
+            success: function() {
+                that.hideAddForm();
+            }
+        });
+    },
+
+    selectNoteImage: function() {
+        this.imageSelectView.show();
+    },
+
+    handleImageSelected: function(imgId) {
+        var image = app.makey.images.get(imgId);
+        this.$('#makey-notes-v2-add-image-select').attr("src", image.get('large_url'));
+        this.selectedImage = image;
+        this.imageSelectView.hide();
+    }
+});
+
+app.imageSelectView = Backbone.View.extend({
+
+    className: 'modal fade',
+    template: Handlebars.compile($("#makey-notes-v2-image-select-template").html()),
+
+    events: {
+        'click .img-select': 'selectImage'
+    },
+
+    initialize: function() {
+        this.render();
+    },
+
+    render: function() {
+        this.$el.html(this.template({
+            images: app.makey.images.toJSON()
+        }));
+    },
+
+    show: function() {
+        this.render();
+        this.$el.modal('show');
+    },
+
+    hide: function() {
+        this.$el.modal('hide');
+    },
+
+    selectImage: function(e) {
+        $imgEl = $(e.target);
+        var imgId = $imgEl.data('image-id')
+        this.trigger("imageSelected", imgId);
+    }
+
+});
+
+app.MakeySearchView = Backbone.View.extend({
+    el: $('#search-container'),
+
+    events: {
+        'keypress .makey-search-input': 'checkSubmit',
+    },
+
+    checkSubmit: function(event) {
+        var url = "{% url 'catalog:search_in_makey' makey.user.username makey.slug %}";
+        url += "?q=" + this.$('.makey-search-input').val();
+        if(event.which == 13) {
+            $(location).attr('href', url);
+        }
+    },
+});
+
+app.makey = new app.Makey({id: {{makey.id}}, makey_id: {{makey.id}}});
+app.makeyView = new app.MakeyView({makey_id: {{makey.id}}});
+app.makeyNoteAddView = new app.MakeyNoteAddView();
+
+app.searchView = new app.MakeySearchView();
+/* ----- */
+var notLocked = true;
+$.fn.animateHighlight = function(highlightColor, duration) {
+    var highlightBg = highlightColor || "#FFFF9C";
+    var animateMs = duration || 1500;
+    var originalBg = this.css("backgroundColor");
+    if (notLocked) {
+        notLocked = false;
+        this.stop().css("background-color", highlightBg)
+            .animate({backgroundColor: originalBg}, animateMs);
+        setTimeout( function() { notLocked = true; }, animateMs);
+    }
+};
+
+app.Router = Backbone.Router.extend({
+    routes: {
+        "(/)" : "defaultRoute",
+        "overview(/)" : "overview",
+        "documentation(/)" : "documentation",
+        "files(/)" : "files",
+        "gallery(/)" : "gallery",
+        "insights(/)" : "insights",
+        "insights/:id" : "insightsByID",
+        "discussions(/)" : "discussions",
+    },
+
+    initialize: function() {
+        var that = this;
+        $('#overview-tab-pill').click(function() {
+            that.navigate('overview', {trigger: true});
+        });
+        $('#documentation-tab-pill').click(function() {
+            that.navigate('documentation', {trigger: true});
+        });
+        $('#files-tab-pill').click(function() {
+            that.navigate('files', {trigger: true});
+        });
+        $('#gallery-tab-pill').click(function() {
+            that.navigate('gallery', {trigger: true});
+        });
+        $('#insights-tab-pill').click(function() {
+            that.navigate('insights', {trigger: true});
+        });
+        $('#discussions-tab-pill').click(function() {
+            that.navigate('discussions', {trigger: true});
+        });
+    },
+
+    defaultRoute: function() {
+        this.navigate('overview', {trigger: true});
+    },
+
+    overview: function() {
+        this.toggleTab('overview');
+    },
+
+    documentation: function() {
+        this.toggleTab('documentation');
+    },
+
+    files: function() {
+        this.toggleTab('files');
+    },
+
+    gallery: function() {
+        this.toggleTab('gallery');
+    },
+
+    insights: function() {
+        this.toggleTab('insights');
+    },
+
+    discussions: function() {
+        this.toggleTab('discussions');
+    },
+
+    insightsByID: function(id) {
+        this.insights();
+
+        var $el = $('#makey_notes .note_item[data-id="'+id+'"]');
+        var that = this;
+        window.setTimeout(function() {
+            that.scrollToElement($el);
+            that.flashElement($el);
+        }, 1500);
+    },
+
+    hideAllTabs: function() {
+        $('.tab-content .tab-pane').removeClass('active');
+    },
+
+    showTab: function(id) {
+        $('.tab-content #'+id+'-tab').addClass('active');
+    },
+
+    highlightTabPill: function(id) {
+        $('#content-tabs li').removeClass('active');
+        $('#'+id+"-tab-pill").parent('li').addClass('active');
+    },
+
+    toggleTab: function(id) {
+        this.hideAllTabs();
+        this.highlightTabPill(id);
+        this.showTab(id);
+    },
+
+    scrollToElement: function(el) {
+        $('html, body').scrollTop($(el).offset().top);
+    },
+
+    flashElement: function(el) {
+        $(el).animateHighlight("cyan", 1500);
+    }
+});
+
+app.router = new app.Router();
+
+Backbone.history.start({
+    root: '{{makey.get_absolute_url}}'
+});
+</script>

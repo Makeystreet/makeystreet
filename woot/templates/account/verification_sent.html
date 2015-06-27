@@ -1,0 +1,17 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Verify Your E-mail Address{% endblock %}
+
+{% load account %}
+{% load url from future %}
+
+{% block content_full %}
+
+    <h1>Verify Your E-mail Address</h1>
+
+    <p>We have sent an e-mail to you for verification. Follow the link provided to finalize the signup process. Please contact us if you do not receive it within a few minutes.</p>
+
+    <p>Please contact us at alex@makeystreet.com if you have any trouble.</p>
+{% endblock %}

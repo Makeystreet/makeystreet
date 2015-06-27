@@ -1,0 +1,298 @@
+<script>
+
+var app = {};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user === undefined) {
+        if(!cur_user_details.id) {
+            // $('#login_modal').modal('show');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+        // mixpanel.track("Article: Event", {event_type: "listing_page_opened", user_id:user_id, listing:{{listing.id}} });
+    }
+};
+app.initializeUser();
+
+app.ListingLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/listing/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    initialize: function(options) {
+        this.listing_id = this.listing_id || options.listing_id;
+        this.set('listing', '/api/v1/listing/'+ this.listing_id +'/');
+    }
+});
+
+app.ListingLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.ListingLike,
+    idAttribute : 'id',
+    urlRoot : '/api/v1/likes/listing/',
+
+    url : function() {
+        if(this.allLikes) {
+            return this.urlRoot + "?limit=0&listing=" + this.listing_id;
+        }
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=2&listing=" + this.listing_id + "&liker=" + cur_user_details.id;
+        } else {
+            return this.urlRoot + "?limit=2&listing=" + this.listing_id;
+        }
+    },
+
+    initialize : function(options) {
+        options || (options = {});
+
+        this.curUserLikes = false;
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+        if(options.allLikes) {
+            this.allLikes = options.allLikes;
+        }
+        if(options.listing_id) {
+            this.listing_id = options.listing_id;
+        }
+    },
+});
+
+app.ListingLikesView = Backbone.View.extend({
+    template : Handlebars.compile($('#like_template').html()),
+    liker_template : Handlebars.compile($('#liker_template').html()),
+
+    options : {
+        'likes_string' : "Be the first one to like this!",
+        'all_likes_loaded' : false,
+    },
+
+    events : {
+        'click .like_listing' : 'clickLike',
+        'click .likes_string' : 'showAllLikers',
+    },
+
+    initialize : function(options) {
+        this.setElement("#listing-" + options.listing_id + "-likes");
+        this.listing_id = options.listing_id;
+
+        this.likes = new app.ListingLikeList({
+            listing_id: this.listing_id
+        });
+
+        this.allLikes = new app.ListingLikeList({
+            listing_id: this.listing_id,
+            allLikes: true,
+        });
+
+        this.listenTo(this.likes, 'reset', this.refreshLikeStatus);
+        this.likes.fetch({reset: true});
+    },
+
+    checkUserLikes: function() {
+
+        this.userLike = undefined;
+
+        // for(var i=0; i<this.allLikes.models.length; ++i) {
+        //     if(this.allLikes.models[i].get('liker') !== undefined &&
+        //             this.allLikes.models[i].get('liker').id === cur_user_details.id) {
+        //         this.userLike = this.allLikes.models[i];
+        //     }
+        // }
+
+        if(cur_user_details.id === undefined) {
+            this.options.curUserLikes = false;
+            this.options.like_id = 0;
+            this.updateLikesString();
+            return;
+        }
+
+        var userLikes = new app.ListingLikeList({
+            'curUserLikes' : true,
+            'listing_id': this.listing_id,
+        });
+
+        var that = this;
+        userLikes.fetch({
+            success : function(collection, response) {
+                if(collection.meta.total_count != 0) {
+                    that.options.curUserLikes = true;
+                    that.userLike = collection.models[0];
+                    that.options.userLike = collection.models[0];
+                    // app.likes.push(collection.models[0]);
+                    that.options.like_id = collection.models[0].id;
+                } else {
+                    that.options.curUserLikes = false;
+                    that.options.like_id = 0;
+                }
+                that.updateLikesString();
+            },
+        });
+    },
+
+    refreshLikeStatus : function() {
+        this.checkUserLikes();
+        this.updateLikesString();
+        this.add();
+    },
+
+    add: function(){
+        this.$('.likes').html('');
+
+        var like_btn_cls = "btn-info";
+        var like_status = "Like";
+        if(this.userLike) {
+            like_btn_cls = "btn-success";
+            like_status = "Liked";
+        }
+
+        this.$('.likes').append(
+            this.template({
+                'like_btn_cls' : like_btn_cls,
+                'like_status' : like_status,
+                'likes_string' : this.likesString,
+            })
+        );
+    },
+
+    updateLikesString : function() {
+
+        this.likesString = "Be the first one to like this!";
+
+        var totalLikes = parseInt(this.likes.meta.total_count);
+        if(totalLikes === 0)
+            return;
+
+        if(this.userLike) {
+            tempLikeString = "You ";
+
+            if(totalLikes === 1) {
+            }
+            else if(totalLikes === 2) {
+                tempLikeString += "and ";
+                if(this.likes.models[0].get('liker').id == cur_user_details.id) {
+                    tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                } else {
+                    tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                }
+            } else {
+                tempLikeString += ", ";
+                if(this.likes.models[0].get('liker').id == cur_user_details.id) {
+                    tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                } else {
+                    tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                }
+                tempLikeString += "and " + (totalLikes-2) + " others ";
+            }
+
+            tempLikeString +=  "like this!";
+        } else {
+            tempLikeString = "";
+
+            if(totalLikes === 1) {
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString += "likes this!";
+            } else if(totalLikes === 2) {
+                tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                tempLikeString += "and ";
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString +=  "like this!";
+            } else {
+                tempLikeString += this.likes.models[1].get('liker').first_name + " ";
+                tempLikeString += ", ";
+                tempLikeString += this.likes.models[0].get('liker').first_name + " ";
+                tempLikeString += "and " + (totalLikes-2) + " others ";
+                tempLikeString +=  "like this!";
+            }
+        }
+        this.likesString = tempLikeString;
+        this.add();
+    },
+
+    clickLike : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+        this.$('.btn').attr("disabled", true);
+
+        if(this.userLike !== undefined) {
+            var that = this;
+            this.userLike.destroy({
+                success : function() {
+                    that.likes.fetch({reset:true});
+                },
+            });
+
+        } else {
+            var newLike = new app.ListingLike({
+                'liker' : app.cur_fb_user,
+                'listing_id': this.listing_id
+            });
+
+            var that = this;
+            newLike.save(null, {
+                success : function(model, response) {
+                    that.userLike = model;
+                    that.likes.fetch({reset:true});
+                },
+            });
+        }
+    },
+
+    showAllLikers : function() {
+        var that = this;
+        this.allLikes.fetch({
+            reset: true,
+            success: function(collection, response){
+                if(collection.models.length === 0)
+                    return;
+
+                var json = {'likes' : collection.toJSON()};
+                that.$('.modal-body')[0].innerHTML = that.liker_template(json);
+                that.$('#all_likes_modal').modal('show');
+            }
+        });
+    },
+});
+
+app.ListingView = Backbone.View.extend({
+    initialize: function(options) {
+        this.listing_id = options.listing_id;
+        this.setElement("#listing-" + this.listing_id);
+        this.likesView = new app.ListingLikesView({
+            listing_id: this.listing_id
+        });
+    }
+});
+
+app.listingView = new app.ListingView({'listing_id': {{listing.id}}});
+
+</script>

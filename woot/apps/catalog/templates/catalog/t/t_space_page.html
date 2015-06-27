@@ -1,0 +1,286 @@
+{% verbatim %}
+<script type="text/template" id="user_activity_template">
+    <div class="well row col-xs-12">
+        {{maker_name}}{{event_string}}<a href="{{event_url}}">{{event_name}}</>
+    </div>
+    <br>
+</script>
+
+<script type="text/template" id="user_tutorial_heading">
+    <h3 class="tooltips" data-toggle="tooltip" title="Tutorials are projects that you do with the specific intention of teaching someone something new :)">My Tutorials</h3>
+</script>
+
+<script type="text/template" id="user_tutorial_empty">
+    You have not written a tutorial.
+</script>
+
+<script type="text/template" id="user_tutorial_template">
+    <a href="{{url}}">{{url}}</a>
+</script>
+
+<script type="text/template" id="makey_heading">
+    <h3 class="tooltips" data-toggle="tooltip" title="Stuff that I worked on">My Projects</h3>
+</script>
+
+<script type="text/template" id="makey_empty">
+    No projects listed so far
+</script>
+<!--
+<script type="text/template" id="makey_template">
+    <a href="/makey/{{id}}/">{{name}}</a>
+</script>
+-->
+<script type="text/template" id="makey_template">
+    <div class="col-sm-4 col-md-4">
+        <div class="widget themed-background-dark">
+            <a href="/makey/{{id}}">
+                    <img src="{{images.0.large_url}}" alt="avatar" class="img-responsive">
+                </a>
+            <div class="widget-extra">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h3 style="margin:10px;"><a href="/makey/{{id}}" style="color:#ffffff;">{{name}}</a></h3>
+                    </div>
+                </div> 
+                <hr style="margin:0px;">
+                <!-- showing makey stats-->
+                <div class="row text-center">
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>10</strong><br>
+                            <small>Images</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>9</strong><br>
+                            <small>Insights</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>15</strong><br>
+                            <small>Parts</small>
+                        </h3>
+                    </div>
+                </div>
+                <!-- showing user images-->
+                <div class="row">
+                    <div class="col-xs-12"  >
+                        <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                        <div class="table-responsive">
+                            <table class="table" style="margin:0px; padding:0px; border:none;">
+                            <tbody>
+                            <tr>
+                            {{#each collaborators}}
+                                <td style="padding:2px">
+                                <a href="/maker/{{username}}">
+                                <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{profile_url}}" border="0"></a>
+                                </td>
+                            {{/each}}
+                            </tr
+                            </tbody>
+                            </table>
+                        </div>
+                        </br>
+                    </div>  
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="space_template">
+    <div class="col-sm-4 col-md-4">
+        <div class="widget themed-background-dark">
+            <div class="widget-extra">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h3 style="margin:10px;"><a href="/space/{{id}}" style="color:#ffffff;">{{name}}</a></h3>
+                    </div>
+                </div> 
+                <hr style="margin:0px;">
+                <!-- showing makey stats-->
+                <div class="row text-center">
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{members.length}}</strong><br>
+                            <small>Members</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{makeys.length}}</strong><br>
+                            <small>Makeys</small>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script type="text/template" id="user_follow_template">
+{{#if is_cur_user}}
+{{else}}
+    {{#if cur_user_follows}}
+        <button class="btn btn-info unfollow_user" id="unfollow_{{id}}"><i class="fa fa-check"></i> Following</button>
+    {{else}}
+        <button class="btn btn-default follow_user" id="follow_{{id}}"><i class="fa fa-users"></i> Follow</button>
+    {{/if}}
+{{/if}}
+</script>
+
+<script type="text/template" id="maker_template">
+<div class="col-xs-4">
+    <div class="widget">
+        <div class="widget-simple">
+            <a href="/maker/{{user.username}}/">
+                <img src="{{user.profile_url}}" alt="avatar" class="widget-image img-circle pull-left">
+            </a>
+            <h4 class="widget-content">
+                <a href="/maker/{{user.username}}/" class="themed-color">
+                    <strong>{{user.first_name}} {{user.last_name}}</strong>
+                </a>
+                {{#if is_cur_user}}
+                {{else}}
+                    {{#if cur_user_follows}}
+                        <button class="btn btn-info unfollow_user" id="unfollow_{{id}}"><i class="fa fa-check"></i> Following</button>
+                    {{else}}
+                        <button class="btn btn-default follow_user" id="follow_{{id}}"><i class="fa fa-users"></i> Follow</button>
+                    {{/if}}
+                {{/if}}
+            </h4>
+        </div>
+
+        <div class="widget-extra">
+            <div class="row text-center themed-background-dark">
+                <div class="col-xs-4">
+                    <h3 class="widget-content-light">
+                        <strong>{{makeys_count}}</strong><br>
+                        <small>Makeys</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 class="widget-content-light">
+                        <strong>{{followers.length}}</strong><br>
+                        <small>Followers</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 class="widget-content-light">
+                        <strong>{{following.length}}</strong><br>
+                        <small>Following</small>
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<!-- New row -->
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+
+<!-- Instructables template -->
+<script type="text/template" id="weburl_template">
+    Instructables: <a href="{{instructables_url}}" class="hide_when_editing" target="_blank">{{instructables_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{instructables_url}}" value="{{instructables_url}}" style="display:none">
+</script>
+
+<!-- Github template -->
+<script type="text/template" id="github_template">
+    Github: <a href="{{github_url}}" class="hide_when_editing" target="_blank">{{github_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{github_url}}" value="{{github_url}}" style="display:none">
+</script>
+
+<!-- Linkedin template -->
+<script type="text/template" id="linkedin_template">
+    Linkedin: <a href="{{linkedin_url}}" class="hide_when_editing" target="_blank">{{linkedin_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{linkedin_url}}" value="{{linkedin_url}}" style="display:none">
+</script>
+
+<!-- Facebook template -->
+<script type="text/template" id="facebook_template">
+    Facebook: <a href="{{facebook_url}}" class="hide_when_editing" target="_blank">{{facebook_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{facebook_url}}" value="{{facebook_url}}" style="display:none">
+</script>
+
+<!-- Twitter template -->
+<script type="text/template" id="twitter_template">
+    Twitter: <a href="{{twitter_url}}" class="hide_when_editing" target="_blank">{{twitter_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{twitter_url}}" value="{{twitter_url}}" style="display:none">
+</script>
+
+<!-- Youtube Channel template -->
+<script type="text/template" id="yt_channel_template">
+    Youtube Channel: <a href="{{yt_channel_url}}" class="hide_when_editing" target="_blank">{{yt_channel_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{yt_channel_url}}" value="{{yt_channel_url}}" style="display:none">
+</script>
+
+<!-- Stackoverflow template -->
+<script type="text/template" id="stackoverflow_template">
+    Stackoverflow: <a href="{{stackoverflow_url}}" class="hide_when_editing" target="_blank">{{stackoverflow_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{stackoverflow_url}}" value="{{stackoverflow_url}}" style="display:none">
+</script>
+
+<!-- Blog template -->
+<script type="text/template" id="blog_template">
+    Blog: <a href="{{blog_url}}" class="hide_when_editing" target="_blank">{{blog_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{blog_url}}" value="{{blog_url}}" style="display:none">
+</script>
+
+<!-- Website template -->
+<script type="text/template" id="website_template">
+    Website: <a href="{{website_url}}" class="hide_when_editing" target="_blank">{{website_url}}</a><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{website_url}}" value="{{website_url}}" style="display:none">
+</script>
+
+<!-- Location template -->
+<script type="text/template" id="location_template">
+    <small class="hide_when_editing" ><i class="gi gi-pin"></i> {{location}}</small><input type="url" name="example-text-input" class="form-control edit_url show_when_editing" placeholder="{{location}}" value="{{location}}" style="display:none">
+</script>
+
+<!-- About Me template -->
+<script type="text/template" id="aboutme_template">
+    <p class="hide_when_editing" >{{{aboutme_html}}}</p>
+    <textarea class="form-control edit_content show_when_editing" rows="20" style="display:none">{{aboutme}}</textarea>
+</script>
+<!-- Membership template -->
+<script type="text/template" id="membership_template">
+    <p class="hide_when_editing" >{{{membership_html}}}</p>
+    <textarea class="form-control edit_content show_when_editing" rows="7" style="display:none">{{membership}}</textarea>
+</script>
+
+<!-- College template -->
+<script type="text/template" id="college_template">
+    <p class="hide_when_editing" >{{{college_html}}}</p>
+    <textarea class="form-control edit_content show_when_editing" rows="7" style="display:none">{{college}}</textarea>
+</script>
+
+<!-- Patent template -->
+<script type="text/template" id="patent_template">
+    <p class="hide_when_editing" >{{{patent_html}}}</p>
+    <textarea class="form-control edit_content show_when_editing" rows="7" style="display:none">{{patent}}</textarea>
+</script>
+
+<!-- pagination template -->
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+
+{% endverbatim %}

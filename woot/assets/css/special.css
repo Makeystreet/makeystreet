@@ -1,0 +1,19 @@
+#rmp{
+	 -webkit-border-radius:5px;
+	   	-moz-border-radius:5px;
+			border-radius: 5px;
+
+		margin: 5px 2px;
+		padding: 3px 3px;
+		height: inherit;
+}
+#wrapper{
+	margin:0 auto;
+	box-shadow:5px 5px 5px #ccc;
+    -moz-box-shadow:5px 5px 5px #ccc;
+    -webkit-box-shadow:5px 5px 5px #ccc;
+}
+#centered{
+	margin:20px auto
+	
+}

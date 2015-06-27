@@ -1,0 +1,258 @@
+<script>
+
+var app = {};
+app.space_id = {{space.id}};
+// app.maker_profile_id={{maker.profile.id}};
+
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+    },
+
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+
+app.Space = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/space/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.Makey = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/makey_m/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.MakeyList = Backbone.Tastypie.Collection.extend({
+    model : app.Makey,
+    urlRoot : "/api/v1/makey_m/",
+
+    url : function() {
+        return this.urlRoot + "?made_in=" + app.space_id;
+    },
+    initialize : function() {
+    },
+});
+
+app.MakeyView = Backbone.View.extend({
+    el : "#my_makeys",
+    template : Handlebars.compile($("#makey_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        // this.listenTo(app.makeys, 'add', this.addAll);
+        // this.listenTo(app.makeys, 'chage', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        $('#no_makeys').html(app.makeys.length);
+        this.options.cur_item_count = 0;
+        app.makeys.each(this.render, this);
+
+        $('#no_makeys').html(app.makeys.length);
+    },
+
+    render : function(model) {
+        if(this.options.cur_item_count%app.row_count == 0) {
+            this.$el.append(this.new_row);
+        }
+
+        var json = model.toJSON();
+        if(json.user == null) {
+            json.has_user = false;
+        } else {
+            json.has_user = true;
+        }
+
+        this.$el.find('.new_row').last().append(this.template(json));
+        this.options.cur_item_count++;
+        return this;
+    },
+});
+
+
+
+
+
+// app.SpaceView = Backbone.View.extend({
+//     el : "#makerspace_membership",
+//     template : Handlebars.compile($("#space_template").html()),
+//     new_row : Handlebars.compile($("#new_row").html()),
+
+//     options : {
+//         cur_item_count : 0,
+//     },
+
+//     initialize : function() {
+//         this.listenTo(app.spaces, 'add', this.addAll);
+//         this.listenTo(app.spaces, 'chage', this.addAll);
+//     },
+
+//     addAll : function() {
+//         this.$el.html('');
+//         // $('#no_makeys').html(app.makeys.length);
+//         this.options.cur_item_count = 0;
+//         app.spaces.each(this.render, this);
+
+//         // $('#no_makeys').html(app.makeys.length);
+//     },
+
+//     render : function(model) {
+//         if(this.options.cur_item_count%app.row_count == 0) {
+//             this.$el.append(this.new_row);
+//         }
+
+//         var json = model.toJSON();
+//         if(json.user == null) {
+//             json.has_user = false;
+//         } else {
+//             json.has_user = true;
+//         }
+
+//         this.$el.find('.new_row').last().append(this.template(json));
+//         this.options.cur_item_count++;
+//         return this;
+//     },
+// });
+
+
+// app.MakerView = Backbone.View.extend({
+//     el : '#cur_maker_follow',
+//     template : Handlebars.compile($('#user_follow_template').html()),
+
+//     events : {
+//         'click .follow_user' : 'followUser',
+//         'click .unfollow_user' : 'unfollowUser',
+//     },
+
+//     initialize : function() {
+//         if (app.cur_fb_user)
+//         {
+//             this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+//             this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+//             this.listenTo(app.cur_fb_user.following, 'reset', this.addAll);
+//             this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+//         }
+
+//         this.listenTo(app.cur_maker, 'change', this.addAll);
+
+//         this.addAll();
+//     },
+
+//     addAll : function() {
+//         var json = {};
+
+//         if(app.cur_fb_user)
+//         {
+//             if(app.cur_maker.get('id') == app.cur_fb_user.get('id')) {
+//                 json.is_cur_user = true;
+//             } else if(app.cur_fb_user.following.get(app.cur_maker.get('profile_id')) == undefined) {
+//                 json.cur_user_follows = false
+//                 json.id = app.cur_maker.get('profile_id');
+//             } else {
+//                 json.cur_user_follows = true;
+//                 json.id = app.cur_maker.get('profile_id');
+//             }
+//         }
+
+
+//         this.$el.html(this.template(json));
+//     },
+
+
+
+
+// });
+
+
+
+/* INITIALIZE */
+app.initializeUser();
+// console.log("user init");
+// app.initializeMaker();
+app.space = new app.Space({'id' : app.space_id});
+app.space.fetch();
+
+
+app.makeys = new app.MakeyList();
+app.makeys.fetch();
+
+// app.spaces = new app.SpaceList();
+// app.spaces.fetch();
+
+app.makeyView = new app.MakeyView();
+// app.spaceView = new app.SpaceView();
+</script>

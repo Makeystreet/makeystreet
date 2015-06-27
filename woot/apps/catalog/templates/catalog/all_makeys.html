@@ -1,0 +1,243 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Makey{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+    $(document).ready(function(){
+        $("#sticker_leftcolumn").sticky({topSpacing:0});
+    });
+</script>
+<style type="text/css">
+    .fav-container {
+        position: absolute;
+        right: 7px;
+        top: 7px;
+    }
+    .cover-img-container {
+        position: relative;
+    }
+</style>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_all_makeys.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_all_makeys.html" %}
+{% endblock %}
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' next=request.get_full_path %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' next=request.get_full_path %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+        <div class="input-group">
+            <input type="text" id="makey_name" name="q" class="form-control" placeholder="Search for makey based on name or tags" />
+            <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" id="makey-search-btn"><i class="fa fa-search"></i> Search</button>
+            </span>
+        </div>
+    </div>
+</div>
+<br/>
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+        <div id="results">
+            {% for makey in makeys %}
+                {% cycle '<div class="row">' '' ''%}
+                    <div class="col-sm-4 col-md-4 makey" id="makey-{{makey.id}}">
+                        <div class="widget themed-background-dark">
+                        <span class="makey-data" data-makey-id="{{makey.id}}" style="display: none;"></span>
+                            <a>
+                                {% if makey.cover_pic %}
+                                    <div style="background-image: url('{{makey.cover_pic.large_url}}');" class="landscape-img cover-img-container">
+                                        <span id="makey-{{makey.id}}-fav" class="fav-container">
+                                    </div>
+                                {% elif makey.images.first.large_url %}
+                                    <div style="background-image: url('{{makey.images.first.large_url}}');" class="landscape-img cover-img-container">
+                                        <span id="makey-{{makey.id}}-fav" class="fav-container">
+                                    </div>
+                                {% else %}
+                                    <div style="background-image: url('{% static 'images/tools.jpg' %}');" class="landscape-img cover-img-container">
+                                        <span id="makey-{{makey.id}}-fav" class="fav-container">
+                                    </div>
+                                {% endif %}
+                                <div class="clearfix"></div>
+                            </a>
+                            <div class="widget-extra">
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <h3 style="margin:10px;"><a href="{{makey.get_absolute_url}}" style="color:#ffffff;">{{makey.name}}</a></h3>
+                                    </div>
+                                </div>
+                                <hr style="margin:0px;">
+                                <!-- showing makey stats-->
+                                <div class="row text-center">
+                                    <div class="col-xs-4">
+                                        <h3 style="margin:10px;" class="widget-content-light">
+                                            <strong>{{makey.images.count}}</strong><br>
+                                            <small>Images</small>
+                                        </h3>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <h3 style="margin:10px;" class="widget-content-light">
+                                            <strong>{{makey.notes.count}}</strong><br>
+                                            <small>Insights</small>
+                                        </h3>
+                                    </div>
+                                    <div class="col-xs-4">
+                                        <h3 style="margin:10px;" class="widget-content-light">
+                                            <strong>{{makey.partsused.count|add:makey.new_parts.count}}</strong><br>
+                                            <small>Parts</small>
+                                        </h3>
+                                    </div>
+                                </div>
+                                <!-- showing user images-->
+                                <div class="row">
+                                    <div class="col-xs-12"  >
+                                        <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                                        <div class="table-responsive">
+                                            <table class="table" style="margin:0px; padding:0px; border:none;">
+                                            <tbody>
+                                            <tr>
+                                            {% for collab in makey.collaborators.all %}
+                                                <td style="padding:2px">
+                                                <a href="/maker/{{collab.username}}">
+                                                <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{collab.profile.profile_img_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{collab.first_name}} {{collab.last_name}}"></a>
+                                                </td>
+                                            {% endfor %}
+                                            </tr>
+                                            </tbody>
+                                            </table>
+                                        </div>
+                                        </br>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% cycle '' '' '</div><br>' %}
+            {% endfor %}
+            {% if not makeys %}
+            No Makeys found!
+            {% endif %}
+            {% if not makeys|length|divisibleby:"3" %}
+            </div><br/>
+            {% endif %}
+        </div>
+        <div class="col-lg-offset-3 text_center row" id="pagination">
+        {% if list_pages|length > 1 %}
+            <div class="col-lg-offset-3 text_center row">
+                <ul class="pagination">
+                    <li class="{% if not makeys.has_previous %} disabled {% endif %}">
+                        <a href="{% if makeys.has_previous %}?page={{ list_pages|first }}{% endif %}">
+                            <i class="icon-backward"></i> First
+                        </a>
+                    </li>
+                    <li class="{% if not makeys.has_previous %} disabled {% endif %}">
+                        <a href="{% if makeys.has_previous %}?page={{ makeys.previous_page_number }}{% endif %}">
+                            <i class="icon-chevron-left"></i>Prev
+                        </a>
+                    </li>
+                    {% for page_i in list_pages %}
+
+                        <li class="{% if makeys.number == page_i %} active {% elif '. . .' == page_i %} disabled{% endif %}">
+                            {% if '. . .' != page_i %}
+                                <a href="?page={{ page_i }}">{{ page_i }}</a>
+                            {% else %}
+                                <a>{{ page_i }}</a>
+                            {% endif %}
+
+                        </li>
+                    {% endfor %}
+
+                    <li class="{% if not makeys.has_next %} disabled {% endif %}">
+                        <a href="{% if makeys.has_next %}?page={{ makeys.next_page_number }}{% endif %}">
+                            Next<i class="icon-chevron-right "></i>
+                        </a>
+                    </li>
+                    <li class="{% if not makeys.has_next %} disabled {% endif %}">
+                        <a href="{% if makeys.has_next %}?page={{ list_pages|last }}{% endif %}">
+                            Last <i class="icon-forward"></i>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+    <div class="col-sm-3 col-md-3" >
+        <div id="sticker_leftcolumn">
+            <div class="mini-layout-sidebar" style="width:250px;">
+                <ul class="nav nav-list well">
+                    <li class="nav-header text_center">
+                        <h3>All Makeys<small> (Projects)</small></h3>
+                    </li>
+                    <hr/>
+                    <li>
+                        <p>This is a complete listing of all the projects on Makeystreet. Click on any one and find out more details.</p>
+                    </li>
+                    <a class="btn btn-lg btn-success btn-group-justified" href = "{% url 'catalog:create_makey' %}">
+                        Create a Makey now!
+                    </a>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+$(function(){
+    $('#makey-search-btn').on("click", function(){
+        var searchQuery = $('#makey_name').val();
+        if(!searchQuery)
+            return;
+
+        var encodedQuery = encodeURIComponent(searchQuery);
+        var searchURL = "/makey/search/#q/"+encodedQuery;
+        window.location = searchURL;
+    });
+});
+</script>
+{% endblock %}

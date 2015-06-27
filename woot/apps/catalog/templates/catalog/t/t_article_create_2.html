@@ -1,0 +1,202 @@
+{% verbatim %}
+<style type="text/css">
+#article-title-input {
+    width: 100%;
+    display: none;
+}
+
+#article-title-editable.edit #article-title-input {
+    display: block;
+}
+
+#article-title-editable.edit #article-title-preview {
+    display: none;
+}
+
+#article-desc-input {
+    width: 100%;
+    display: none;
+}
+
+#article-desc-editable.edit #article-desc-input {
+    display: block;
+}
+
+#article-desc-editable.edit #article-desc-preview {
+    display: none;
+}
+
+#article-reco-input {
+    width: 100%;
+    display: none;
+}
+
+#article-reco-editable.edit #article-reco-input {
+    display: block;
+}
+
+#article-reco-editable.edit #article-reco-preview {
+    display: none;
+}
+
+.bootstrap-tagsinput {
+    display: none;
+}
+
+.article-tags-input {
+    display: none;
+}
+
+#article-tags-editable.edit .article-tags-input {
+    display: block;
+}
+
+#article-tags-editable.edit .bootstrap-tagsinput {
+    display: block;
+}
+
+#article-tags-editable.edit #article-tags-preview {
+    display: none;
+}
+
+#article-user-editable .twitter-typeahead {
+    display: none;
+}
+
+#article-user-editable.edit .twitter-typeahead {
+    display: inline-block;
+}
+
+#article-user-editable.edit #article-user-preview {
+    display: none;
+}
+
+.edit #article-title-add {
+    display: none;
+}
+
+.edit #article-desc-add {
+    display: none;
+}
+
+.edit #article-reco-add {
+    display: none;
+}
+
+.edit #article-tags-add {
+    display: none;
+}
+
+.edit #article-user-change {
+    display: none;
+}
+
+</style>
+
+<script type="text/template" id="article-preview-template">
+    <div class="row">
+        <div class="col-xs-3">
+        {{#if article.image_url}}
+            <img src="{{article.image_url}}" class="img-thumbnail">
+        {{/if}}
+        </div>
+        <div class="col-xs-9">
+            <div id="article-title-editable">
+                <a><h4 style="margin-top: 0;" id="article-title-preview">{{article.title}}</h4></a>
+                {{#unless article.title}}
+                    <a id="article-title-add">
+                        <h4 style="margin-top: 0;" id="article-title-preview">
+                            <i class="fa fa-plus"></i>
+                            &nbsp;Add Title
+                        </h4>
+                    </a>
+                {{/unless}}
+                <input type="text" id="article-title-input" />
+            </div>
+            <div id="article-desc-editable">
+                <p style="margin-bottom: 10px;" id="article-desc-preview">{{article.description}}</p>
+                {{#unless article.description}}
+                    <a id="article-desc-add"><i class="fa fa-plus"></i>&nbsp;Add description</a>
+                {{/unless}}
+                <textarea id="article-desc-input" rows="3" /></textarea>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div style="padding: 0 15px;">
+            <blockquote style="padding: 0; margin: 10px 0; font-size: 15px;">
+                <div id="article-reco-editable">
+                    <p style="padding: 0 0 0 10px; margin-bottom: 0;" id="article-reco-preview">{{article.recommendation}}</p>
+                    {{#unless article.recommendation}}
+                        <a id="article-reco-add" style="padding: 0 0 0 10px;"><i class="fa fa-plus"></i>&nbsp;Add recommendation</a>
+                    {{/unless}}
+                    <textarea style="margin: 0 0 0 10px;" id="article-reco-input" rows="2" /></textarea>
+                </div>
+            {{#if user}}
+                <footer style="padding: 0 0 0 10px;" id="article-user-editable">
+                    <a id="article-user-preview">{{user}}</a>
+                {{#if admin}}
+                    <span><a id="article-user-change">(Change user)</a></span>
+                    <input id="article-user-input" class="form-control typeahead" placeholder="Enter name" />
+                {{/if}}
+                </footer>
+            {{/if}}
+            </blockquote>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12" style="padding-bottom: 10px;" id="article-tags-editable">
+            <span class="pull-left" id="article-tags-preview" style="font-size: 13px; padding-top: 2px;">
+                Tags:
+                {{#if tags}}
+                    {{#each tags}}
+                        {{name}},
+                    {{/each}}
+                {{else}}
+                    No tags
+                {{/if}}
+            </span>
+            <span style="font-size: 13px;"><a id="article-tags-add">&nbsp;<i class="fa fa-plus"></i>&nbsp;Add/Edit tags</a></span>
+            <div class="row article-tags-input">
+                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                    <span>Add tags: </span>
+                </div>
+                <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+                    <input id="article-tags-input" class="form-control" placeholder="Enter tags" data-role="tagsinput" />
+                </div>
+                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                    <button type="button" id="tag-save-btn" style="width: 100%"class="btn btn-primary">Save</button>
+                </div>
+            </div>
+
+            <div id="tag-create-form" class="row" style="display: none;">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <div class="input-group">
+                        <span class="input-group-addon">New tag</span>
+                        <input type="email" id="tag-create-input" class="form-control" placeholder="Tag Name">
+                        <span class="input-group-btn">
+                            <button type="button" id="tag-create-cancel" class="btn btn-default">Cancel</button>
+                            <button type="button" id="tag-create-btn" class="btn btn-primary">Create</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="tt-tags-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+<script type="text/template" id="tt-tags-suggestion-footer-template">
+    <div class="tt-suggestion-empty">
+        <hr align="center" color="#000000" size="2" width="70%">
+        <span>Cant find your tag?</span>
+        <button id="btn_add_new_tag" type="button" class="btn btn-sm btn-primary pull-right" style="display: inline">
+            Create new tag
+        </button>
+    </div>
+</script>
+{% endverbatim %}

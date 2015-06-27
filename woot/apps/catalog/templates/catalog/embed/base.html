@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" xmlns:fb="http://ogp.me/ns/fb#">
+<head>
+    {% load static from staticfiles %}
+
+    <title> {% block title %} {% endblock %} </title>
+
+    <!-- Meta Info -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block contentmeta%}
+    <meta name="description" content="Engage with makers around you!">
+    <meta name="author" content="Siddardha G, Alex VJ">
+    {% endblock%}
+    <!-- Open Graph Values -->
+    {% block opengraph %} {% endblock %}
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- CSS Styles -->
+    <link href="{% static 'css/facebook.css' %}" type="text/css" rel="stylesheet" media="all">
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'css/font-awesome.css' %}" rel="stylesheet">
+    <!-- <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"> -->
+
+    <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js">
+        </script>
+    <![endif]-->
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'css/image-picker.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-tagsinput.css' %}" rel="stylesheet">
+
+    <!-- ProUI related css -->
+    <link href="{% static 'proui/css/main.css' %}" rel="stylesheet">
+    <!-- <link href="{% static 'proui/css/themes/amethyst.css' %}" rel="stylesheet"> -->
+    <link href="{% static 'proui/css/themes.css' %}" rel="stylesheet">
+    <link href="{% static 'proui/css/plugins.css' %}" rel="stylesheet">
+
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+
+    <!-- JQUERY -->
+    <script src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
+    <script src="{% static 'js/jquery-migrate-1.2.1.min.js' %}"></script>
+    <script src="{% static 'js/jquery.cookie.js' %}"></script>
+
+    <!-- Bootstrap and rest -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-tagsinput.js' %}"></script>
+    <script src="{% static 'js/underscore.js' %}"></script>
+    <script src="{% static 'js/backbone-min.js' %}"></script>
+    <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+    <script src="{% static 'js/handlebars.min.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+    <script src="{% static 'js/Autolinker.min.js' %}"></script>
+    <script src-"{% static 'js/image-picker.js' %}"></script>
+
+    <!-- ProUI related js -->
+    <script src="{% static 'proui/js/custom_app.js' %}"></script>
+    <script src="{% static 'proui/js/plugins.js' %}"></script>
+
+    {% include "catalog/components/simple_js_functions.html" %}
+    {% include "catalog/components/csrf_js.html" %}
+
+    {% block templates %} {% endblock %}
+    {% block extra_js %} {% endblock %}
+    {% block extra_css %}
+    <style type="text/css">
+    #page-content {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+    },
+    </style>
+    {% endblock %}
+    {% block fb_meta %} {% endblock %}
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $(document).on("click",".preventDefault",function(event){
+            event.preventDefault();
+        });
+        // $('#nav_create_makey').click(function(event) {
+        //     {% if not user.is_authenticated %}
+        //         alert('Please Login to Create a Makey');
+        //     {% endif %}
+        // });
+    });
+    </script>
+
+    <meta name="csrf-token" content="{{csrf_token}}" />
+</head>
+
+<body>
+    <div id="page-content" style="padding-top:0px; padding-left: 15px; padding-right: 15px">
+        <div class="row" style="height:100%;">
+        {% block content_full %}
+        {% endblock %}
+        </div>
+    </div>
+    {% block extra_js_end %} {% endblock %}
+</body>
+</html>

@@ -1,0 +1,108 @@
+{% verbatim %}
+<!-- Makey - Updates -->
+<script type="text/x-handlebars-template" id="update-activity-item-template">
+<div class="event">
+ <div class="content">
+  <div class="date">{{added_time}} ago</div>
+   <div class="summary">
+    <a href="{{user_name}}">{{user_firstname}} {{user_last_name}} </a>{{action}} <a href="{{absolute_url}}{{action_value}}">{{verb}} </a>in <a href="{{absolute_url}}"> {{makey_name}}</a>
+   </div>
+  </div>
+ </div>
+</div>
+</script>
+<!-- Activity - Insights -->
+<script type="text/x-handlebars-template" id="insight-activity-item-template">
+  <div class="item">
+    <div class="content">
+      <a class="header" href="{{insight_url}}">{{title}}</a>
+      <div class="meta">
+        <span class="time">posted {{timeago added_time}} by</span>
+        <a class="author" href="/maker/{{username}}/">{{username}}</a>
+      </div>
+      <div class="description">
+        {{description}}
+      </div>
+      <div class="extra">
+        {{#if comments}}
+        <a class="comments" href="{{insight_url}}">{{comments}} comments</a>
+        {{else}}
+        <a class="comments" href="{{insight_url}}">Leave a comment</a>
+        {{/if}}
+        <a href="{{makey_url}}">Go to {{makey_name}}</a>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars-template" id="discussion-activity-item-template">
+  <div class="item">
+    <div class="content">
+      <a class="header" href="{{discussion_url}}">{{title}}</a>
+      <div class="meta">
+        <span class="time">asked {{timeago added_time}} by</span>
+        <a class="author" href="/maker/{{username}}/">{{username}}</a>
+      </div>
+      <div class="description">
+        <p>{{description}}</p>
+      </div>
+      <div class="extra">
+        {{#if answers}}
+        <a class="answers" href="{{discussion_url}}">{{answers}} answers</a>
+        {{else}}
+        <a class="answers" href="{{discussion_url}}">Answer this question</a>
+        {{/if}}
+        <a href="{{makey_url}}">Go to {{makey_name}}</a>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars-template" id="insight-activity-item-empty-template">
+  <div class="item">
+    <div class="content">
+      <div class="description">
+        <p>No insights yet</p>
+      </div>
+      <div class="extra">
+        <a href="{{makey_url}}">Go to {{makey_name}}</a>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars-template" id="discussion-activity-item-empty-template">
+  <div class="item">
+    <div class="content">
+      <div class="description">
+        <p>No discussions yet</p>
+      </div>
+      <div class="extra">
+        <a href="{{makey_url}}">Go to {{makey_name}}</a>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars-template" id="assembly-link-template">
+  &nbsp;-&nbsp;<a href="{{makey_url}}" class="assembly-link">Go to {{makey_name}}</a>
+</script>
+
+<script type="text/x-handlebars-template" id="file-progress-template">
+  <div class="row">
+    <div class="six wide column file-progress-name"><b>{{name}}</b></div>
+    <div class="ten wide column">
+      <div class="ui progress file-progress-bar file-{{index}}">
+        <div class="bar">
+          <div class="progress"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/x-handlebars-template" id="file-progress-input-item-template">
+  <input type="hidden" name="image_url" value="{{url}}">
+</script>
+
+{% endverbatim %}

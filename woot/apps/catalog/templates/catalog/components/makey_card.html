@@ -1,0 +1,61 @@
+<div class="col-sm-3 col-md-3">
+    <div class="widget themed-background-dark">
+        <a href="{% url 'catalog:makey' makey.id %}">
+            {% if makey.cover_pic %}
+                <div style="background-image: url('{{makey.cover_pic.large_url}}');" class="landscape-img"></div>
+            {% else %}
+                <div style="background-image: url('{{makey.images.all.first.large_url}}');" class="landscape-img"></div>
+            {% endif %}
+        </a>
+        <div class="widget-extra">
+            <div class="row">
+                <div class="col-xs-12">
+                    <h3 style="margin:10px;"><a href="{{makey.get_absolute_url}}" style="color:#ffffff;">{{makey.name}}</a></h3>
+                </div>
+            </div>
+            <hr style="margin:0px;">
+            <!-- showing makey stats-->
+            <div class="row text-center">
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{ makey.images.all|length }}</strong><br>
+                        <small>Images</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{ makey.notes.all|length }}</strong><br>
+                        <small>Insights</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{makey.partsused.count|add:makey.new_parts.count}}</strong><br>
+                        <small>Parts</small>
+                    </h3>
+                </div>
+            </div>
+            <!-- showing user images-->
+            <div class="row">
+                <div class="col-xs-12"  >
+                    <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                    <div class="table-responsive">
+                        <table class="table" style="margin:0px; padding:0px; border:none;">
+                        <tbody>
+                        <tr>
+                        {% for collaborator in makey.collaborators.all %}
+                            <td style="padding:2px">
+                            <a href="{% url 'catalog:maker' collaborator.username %}">
+                            <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{collaborator.profile.profile_img_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{collaborator.first_name}} {{collaborator.last_name}}"></a>
+                            </td>
+                        {% endfor %}
+                        </tr
+                        </tbody>
+                        </table>
+                    </div>
+                    </br>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

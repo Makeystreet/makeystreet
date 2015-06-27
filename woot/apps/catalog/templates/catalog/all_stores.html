@@ -1,0 +1,129 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet| {{ product.name }}{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock%}
+
+{% block underscore %}
+    <script id="productImagesTemplate" type="text/template">
+        this is where the underscore template is shown.
+    </script>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_all_stores.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_all_stores.html" %}
+{% endblock %}
+
+{% block content_full %}
+
+    <h2>Stores indexed on makeystreet</h2>
+
+    <div>
+        {% if stores %}
+            <div class="row">
+                <div class="col-sm-1 col-md-1">
+                    <h5>Sl.no</h5>
+                </div>
+
+                <div class="col-sm-3 col-md-3">
+                    <h5>Store name </h5>
+                </div>
+                <div class="col-sm-2 col-md-2">
+                    <h5>Store Location</h5>
+                </div>
+                <div class="col-sm-2 col-md-2">
+                    <h5>Store likes</h5>
+                </div>
+
+                <div class="col-sm-2 col-md-2">
+                    <h5>Store Products</h5>
+                </div>
+            </div>
+            <div id="all_stores">
+                <center><img src="{% static 'images/loading.gif' %}"/></center>
+            <!--
+            {% for store in stores %}
+                <div class="row">
+                    
+                    <div class="col-sm-1 col-md-1">
+                        {{forloop.counter}}
+                    </div>
+                    <!-- <div class ="span1">
+
+                        
+                    <!-- </div>
+
+                    <div class="col-sm-3 col-md-3">
+                        <div id="like_{{ id }}" class="btn like_product btn-default btn-sm" data-toggle="tooltip" data-container="body" rel="tooltip" data-title="{{likes_string}}" array-index="{{arrayIndex}}">
+                                Like!
+                        </div>
+                        <a href="/store/{{store.name}}">{{store.name}}</a>
+                    </div>
+                    <div class="col-sm-2 col-md-2">
+                        {{store.location}}
+                    </div>
+                    <div class="col-sm-2 col-md-2">
+                        {{store.all_likes|length}}
+                    </div>
+
+                    <div class="col-sm-2 col-md-2">
+                        <a href="{{store.url}}">{{store.products}}</a>
+                    </div>
+                    
+
+                </div>
+            {% endfor %}
+            -->
+            </div>
+        {% endif %}
+    </div>
+
+    <h2>To be indexed stores</h2>
+        {% if login %}
+            {% if toindexstores %}
+                <div class="row">
+                    <div class="col-sm-1 col-md-1">
+                        <h5>Sl.no</h5>
+                    </div>
+
+                    <div class="col-sm-2 col-md-2">
+                        <h5>Store Name</h5>
+                    </div>
+                    <div class="col-sm-2 col-md-2">
+                        <h5>Store Location</h5>
+                    </div>
+                </div>
+                {% for store in toindexstores %}
+                    <div class="row">
+                        <div class="col-sm-1 col-md-1">
+                            {{forloop.counter}}
+                        </div>
+
+                        <div class="col-sm-2 col-md-2">
+                            <a href="{{store.url}}">{{store.name}}</a>
+                        </div>
+                        <div class="col-sm-2 col-md-2">
+                            {{store.location}}
+                        </div>
+                        
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% else %}
+            <p>You need to login to see this content (top-right)</p>
+        {% endif %}
+
+    <div>
+
+    </div>
+
+{% endblock %}

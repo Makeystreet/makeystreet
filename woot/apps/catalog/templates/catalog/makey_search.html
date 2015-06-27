@@ -1,0 +1,98 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Makey Search{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="{% static 'css/nprogress.css' %}" type="text/css">
+<script src="{% static 'js/nprogress.js' %}"></script>
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+    // $(document).ready(function(){
+//     $("#sticker_leftcolumn").sticky({topSpacing:0});
+    // });
+</script>
+<style type="text/css">
+    .block {
+        padding-bottom: 20px;
+    }
+
+    .filter-item {
+        display: inline-block;
+        color: #1bbae1;
+        background-color: white;
+        border: 1px solid #1bbae1;
+        padding: 7px;
+    }
+    .filter-item.active {
+        color: white;
+        background-color: #1bbae1;
+    }
+    .search-overview-tag {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_makey_search.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_makey_search.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div id="top-container">
+    <div class="row">
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+
+        </div>
+        <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+            <div class="block" id="search-container">
+                <div class="row">
+                    <div class="input-group">
+                        <input type="text" id="makey_search_box" class="form-control" placeholder="Search...">
+                        <span class="input-group-btn">
+                            <button type="button" class="btn btn-primary" id="search-btn"><i class="fa fa-search"></i> Search</button>
+                        </span>
+                    </div>
+                </div>
+                <div class="row" id="filter-wrapper" style="display: none;">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        <span class="pull-left">Filter by</span>
+                        <button type="button" class="btn btn-warning pull-right btn-sm btn-alt" id="clear-filter-btn">Clear all filters</button>
+                        <div class="clearfix"></div>
+                        <hr />
+                    </div>
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        <div id="filter-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            <div class="row block" id="search-overview" style="display:none">
+            </div>
+        </div>
+        <div class="col-xs-8 col-sm-8 col-md-8 col-lg-8">
+            <div class="row" id="search-results">
+                <center><i class="fa fa-search"></i> Search for something. Try "sensor".</center>
+            </div>
+        </div>
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Ask a Question {% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-10 col-md-10 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Ask a Question about <b>{{makey.name}}</b></h2>
+        </div>
+
+        <form action="" method="post" class="form-horizontal form-bordered">
+            <div class="form-group">
+                <label class="col-md-2 control-label" for="val_name">Question<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-10">
+                    <input type="text" id="val_name" name="name" class="form-control" placeholder="What is your question? Be specific." required="" autofocus>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label" for="val_description">Details<span class="text-danger">&nbsp;*</span></label><br/>
+                <div class="col-md-10">
+                    <textarea id="val_description" name="description" rows="10" class="form-control textarea-editor" placeholder="Explain your question here."></textarea>
+                </div>
+            </div>
+            <div class="form-group form-actions">
+                <div class="col-xs-10 col-xs-offset-2">
+                    <button type="submit" class="btn btn-sm btn-primary" onclick="return checkLogin();"><i class="fa fa-angle-right"></i> Submit</button>
+                    <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-repeat"></i> Reset</button>
+                </div>
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+    $('.textarea-editor').wysihtml5();
+
+    function checkLogin() {
+        {% if user.is_authenticated %}
+        return true;
+        {% else %}
+        $('#login-modal').modal('toggle');
+        return false;
+        {% endif %}
+    }
+</script>
+{% endblock %}

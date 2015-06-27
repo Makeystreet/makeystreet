@@ -1,0 +1,6 @@
+runtime "python"
+exec "resize_image.py"
+
+pip "boto"
+
+full_remote_build true

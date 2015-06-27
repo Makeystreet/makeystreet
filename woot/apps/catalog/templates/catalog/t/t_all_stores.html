@@ -1,0 +1,36 @@
+{% verbatim %}
+
+<script type="text/template" id="store_template">
+<div class="row">
+	<div class ="col-sm-1 col-md-1">
+        {{id}}
+    </div>
+
+    <div class ="col-sm-3 col-md-3">
+        <div id="like_{{ id }}" class="btn btn-xs tooltips like_store {{#if cur_user_likes}}btn-success{{else}}btn-default{{/if}}" data-toggle='tooltip' data-container='body' rel='tooltip'
+            data-title="{{likes_string}}">
+            {{#if cur_user_likes}}
+                Liked!
+            {{else}}
+                Like!
+            {{/if}}
+        </div>
+        
+        <a href= "/store/{{name}}">{{name}}</a>
+    </div>
+
+    <div class ="col-sm-2 col-md-2">
+        {{location.name}}
+    </div>
+
+    <div class ="col-sm-2 col-md-2">
+        {{likes.length}}
+    </div>
+
+    <div class ="col-sm-2 col-md-2">
+        <a href="{{url}}">{{products}}</a>
+	</div>
+</div>
+</script>
+
+{% endverbatim %}

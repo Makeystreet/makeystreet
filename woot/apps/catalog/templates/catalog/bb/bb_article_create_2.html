@@ -1,0 +1,482 @@
+<script type="text/javascript">
+var app = {};
+{% if is_admin_user %}
+app.admin_user = true;
+{% endif %}
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_user = app.cur_user;
+    if(cur_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        cur_user = new app.User({'id' : cur_user_details.id});
+        cur_user = cur_user.fetch({
+            success : function(model, response) {
+                app.cur_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+        mixpanel.track("UserOnboard: Event", {event_type: "user_onboard_started", user_id: user_id});
+    }
+};
+app.initializeUser();
+
+app.Article = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/article/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('id') === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+
+    initialize : function() {
+    },
+});
+
+app.Tag = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/tags/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('id') === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+
+    initialize : function() {
+    },
+});
+
+app.CreateArticleView = Backbone.View.extend({
+    el: '#article-create',
+    preview_template: Handlebars.compile($('#article-preview-template').html()),
+    events: {
+        'click #step-1-next': 'handleClickStep1Next',
+        'click #step-2-prev': 'handleClickStep2Prev',
+        'click #step-2-finish': 'handleClickStep2Finish',
+        'keypress #article-url' : 'handleURLKeypress',
+        'click #article-title-preview': 'editTitle',
+        'click #article-title-add': 'editTitle',
+        'focusout #article-title-input': 'updateTitle',
+        // 'keypress #article-title-input': 'handleTitleEditKeypress',
+        'click #article-desc-preview': 'editDesc',
+        'click #article-desc-add': 'editDesc',
+        'focusout #article-desc-input': 'updateDesc',
+        // 'keypress #article-desc-input': 'handleDescEditKeypress',
+        'click #article-reco-preview': 'editReco',
+        'click #article-reco-add': 'editReco',
+        'focusout #article-reco-input': 'updateReco',
+        // 'keypress #article-reco-input': 'handleRecoEditKeypress',
+        // 'click #article-tags-preview': 'editTags',
+        'click #article-tags-add': 'editTags',
+        'click #tag-save-btn': 'updateTags',
+        // 'keypress .tt-input': 'handleTagsEditKeypress',
+        'click #article-user-change': 'editUser',
+        'click #btn_add_new_tag': 'showNewTagForm',
+        'click #tag-create-btn': 'createNewTag',
+        // 'focusout #tag-create-input': 'hideNewTagForm',
+        'click #tag-create-cancel': 'hideNewTagForm',
+        'keypress #tag-create-input': 'handleNewTagKeypress',
+
+    },
+    initialize: function(options) {
+        this.article = new app.Article();
+        var that = this;
+        this.$("#article-desc").on("keyup", _.debounce(
+            function () {
+                var newValue = that.$("#article-desc").val();
+                if(!newValue)
+                    newValue = 'Sample description';
+                that.$('#article-desc-preview').html(newValue);
+            }
+        , 300));
+        this.$("#article-title").on("keyup", _.debounce(
+            function () {
+                var newValue = that.$("#article-title").val();
+                if(!newValue)
+                    newValue = 'Sample title';
+                that.$('#article-title-preview').html(newValue);
+            }
+        , 300));
+        this.$("#article-reco").on("keyup", _.debounce(
+            function () {
+                var newValue = that.$("#article-reco").val();
+                if(!newValue)
+                    newValue = 'Sample recommendation';
+                that.$('#article-reco-preview').html(newValue);
+            }
+        , 300));
+
+        // Tag selection init
+        this.tagsEngine = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: {
+                url: '../../api/v1/tags/search/?q=%QUERY',
+                filter: function(list) {
+                    return $.map(list.tags, function(tag) {
+                        return { name: tag.name, id: tag.id };
+                    });
+                }
+            },
+            limit: 10
+        });
+        this.tagsEngine.initialize();
+
+        this.user_name = cur_user_details.facebook_name;
+        this.user_id = cur_user_details.id;
+
+        this.usersEngine = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            remote: {
+                url: '../../api/v1/user/search/?q=%QUERY',
+                filter: function(list) {
+                    return $.map(list.users, function(user) {
+                        return { name: user.first_name + " " + user.last_name, id: user.id };
+                    });
+                }
+            },
+            limit: 10
+        });
+        this.usersEngine.initialize();
+        this.showPage(1);
+    },
+    showPage: function(page) {
+        if(page === 1) {
+            this.$('#step-2').hide();
+            this.showStep1Error("");
+            this.showStep2Error("");
+            this.$('#step-1').show();
+        } else if(page === 2) {
+            this.$('#step-1').hide();
+            this.showStep1Error("");
+            this.showStep2Error("");
+            this.$('#step-1-next').button('reset');
+            this.$('#step-2').show();
+        }
+        $("html, body").animate({
+            scrollTop: 0
+        }, 500);
+    },
+    editTitle: function() {
+        this.$('#article-title-input').val(this.article.get('title'));
+        this.$('#article-title-editable').addClass("edit");
+        this.$('#article-title-input').focus();
+    },
+    updateTitle: function() {
+        this.article.set('title', this.$('#article-title-input').val());
+        this.$('#article-title-editable').removeClass("edit");
+        this.updatePreview();
+    },
+    editDesc: function() {
+        this.$('#article-desc-input').val(this.article.get('description'));
+        this.$('#article-desc-editable').addClass("edit");
+        this.$('#article-desc-input').focus();
+    },
+    updateDesc: function() {
+        this.article.set('description', this.$('#article-desc-input').val());
+        this.$('#article-desc-editable').removeClass("edit");
+        this.updatePreview();
+    },
+    editReco: function() {
+        this.$('#article-reco-input').val(this.article.get('recommendation'));
+        this.$('#article-reco-editable').addClass("edit");
+        this.$('#article-reco-input').focus();
+    },
+    updateReco: function() {
+        this.article.set('recommendation', this.$('#article-reco-input').val());
+        this.$('#article-reco-editable').removeClass("edit");
+        this.updatePreview();
+    },
+    editTags: function() {
+        this.$('#article-tags-input').tagsinput('removeAll');
+        if(this.currentTags) {
+            for(var i=0; i<this.currentTags.length; ++i)
+                this.$('#article-tags-input').tagsinput('add', this.currentTags[i]);
+
+            this.$('#article-tags-input').tagsinput('refresh');
+        }
+        this.$('#article-tags-editable').addClass("edit");
+        $(this.$('#article-tags-input').tagsinput('input')).focus();
+    },
+    updateTags: function() {
+        this.$('#article-tags-editable').removeClass("edit");
+        this.currentTags = this.$('#article-tags-input').tagsinput('items');
+        this.updatePreview();
+    },
+    addNewTag: function(newTag) {
+        this.$('#article-tags-input').tagsinput('add', {
+            name: newTag.get('name'),
+            id: newTag.get('id')
+        });
+    },
+    editUser: function() {
+        this.$('#article-user-input.typeahead').typeahead('val', this.user_name);
+        this.$("#article-user-editable .twitter-typeahead").show();
+        this.$('#article-user-editable').addClass("edit");
+        this.$('#article-user-input').focus();
+    },
+    handleURLKeypress: function(e) {
+        if(e.which === 13){
+            this.handleClickStep1Next();
+        }
+    },
+    handleTitleEditKeypress: function(e) {
+        if(e.which === 13){
+            this.updateTitle();
+        }
+    },
+    handleDescEditKeypress: function(e) {
+        if(e.which === 13){
+            this.updateDesc();
+        }
+    },
+    handleRecoEditKeypress: function(e) {
+        if(e.which === 13){
+            this.updateReco();
+        }
+    },
+    handleTagsEditKeypress: function(e) {
+        if(e.which === 13){
+            this.updateTags();
+        }
+    },
+    handleNewTagKeypress: function(e) {
+        if(e.which === 13){
+            this.createNewTag();
+        }
+    },
+    showNewTagForm: function() {
+        $(this.$('#article-tags-input').tagsinput('input')).typeahead('close');
+        $(this.$('#article-tags-input').tagsinput('input')).typeahead('val', '');
+        this.$("#tag-create-form").slideDown();
+        this.$('#tag-create-input').focus();
+    },
+    hideNewTagForm: function() {
+        this.$("#tag-create-form").slideUp();
+        this.$("#tag-create-input").val('');
+        this.$('#article-tags-input').tagsinput('input').focus();
+    },
+    createNewTag: function() {
+        var newTagName = this.$('#tag-create-input').val();
+        if(!newTagName)
+            return;
+
+        var newTagSnippet = newTagName.toLowerCase().replace(/\s+/g, '-');
+
+        var newTag = new app.Tag({
+            'name': newTagName,
+            'url_snippet': newTagSnippet
+        });
+
+        var that = this;
+
+        newTag.save(null, {
+            success : function(model, response) {
+                that.addNewTag(model);
+                that.hideNewTagForm();
+                that.$('#article-tags-input').tagsinput('focus');
+            }
+        });
+
+        this.tagsEngine.clearRemoteCache();
+
+    },
+    handleClickStep1Next: function() {
+
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return false;
+        }
+
+        if(!this.isArticleURLValid()) {
+            this.showArticleURLError("Invalid URL");
+        }
+    },
+    handleClickStep2Prev: function() {
+        this.article = new app.Article();
+        this.currentTags = undefined;
+        this.user_name = cur_user_details.facebook_name;
+        this.user_id = cur_user_details.id;
+        this.showPage(1);
+    },
+    isArticleURLValid: function() {
+        var articleURL = this.$('#article-url').val();
+        if(articleURL) {
+            this.$('#step-1-next').button('loading');
+            this.fetchOpenGraph(articleURL, this.populateOpenGraph);
+            return true;
+        }
+        return false;
+    },
+    fetchOpenGraph: function(url, cb) {
+
+        var cleanedURL = url;
+        if (!/^https?:\/\//i.test(url)) {
+            cleanedURL = 'http://' + url;
+        }
+
+        var ogAPIURL = "/api/v1/article/open_graph/?url=" + cleanedURL;
+        $.ajax({
+            url: ogAPIURL,
+            context : this
+        }).done(cb);
+    },
+    populateOpenGraph: function(data) {
+
+        this.openGraphData = data.open_graph;
+
+        this.article.set({
+            'title': this.openGraphData.title,
+            'description': this.openGraphData.description,
+            'image_url': this.openGraphData.image_url,
+            'url': this.openGraphData.url
+        });
+        this.updatePreview();
+        this.showPage(2);
+    },
+    showStep1Error: function(msg) {
+        this.$('#step-1-msg').html(msg);
+    },
+    showStep2Error: function(msg) {
+        this.$('#step-2-msg').html(msg);
+    },
+    handleClickStep2Finish: function() {
+
+        var title = this.article.get('title');
+        var desc = this.article.get('description');
+        var reco = this.article.get('recommendation');
+
+        if(!title && !reco) {
+            this.showStep2Error("Title and recommendation is required");
+            return;
+        } else if(!title) {
+            this.showStep2Error("Title is required");
+            return;
+        } else if(!reco) {
+            this.showStep2Error("Recommendation is required");
+            return;
+        }
+
+        this.article.set({
+            'title': title,
+            'description': desc,
+            'recommendation': reco
+        });
+
+        // console.log(this.article.attributes);
+        // console.log(this.currentTags);
+        // console.log(this.user_id);
+
+        // return;
+
+        this.$("#article-create-form input[name=title]")
+            .val(this.article.get('title'));
+        this.$("#article-create-form input[name=desc]")
+            .val(this.article.get('description'));
+        this.$("#article-create-form input[name=reco]")
+            .val(this.article.get('recommendation'));
+        this.$("#article-create-form input[name=image_url]")
+            .val(this.article.get('image_url'));
+        this.$("#article-create-form input[name=url]")
+            .val(this.article.get('url'));
+        this.$("#article-create-form input[name=tags]")
+            .val(_.pluck(this.currentTags, 'id').join(","));
+        this.$("#article-create-form input[name=user]")
+            .val(this.user_id);
+        this.$("#article-create-form").submit();
+    },
+    updatePreview: function() {
+        this.$('#article-preview').html(this.preview_template({
+            'article': this.article.toJSON(),
+            'tags': this.currentTags,
+            'user': this.user_name,
+            'admin': app.admin_user
+        }));
+
+        //Attach tags
+        this.$('#article-tags-input').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'tags',
+                displayKey: 'name',
+                source: this.tagsEngine.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-tags-suggestion-empty-template').html()),
+                    footer: Handlebars.compile($('#tt-tags-suggestion-footer-template').html()),
+                }
+            }
+        });
+
+        if(app.admin_user) {
+            this.$('#article-user-input.typeahead').typeahead({
+                hint: true,
+                highlight: true,
+                minLength: 1
+            },
+            {
+                name: 'users',
+                displayKey: 'name',
+                source: this.usersEngine.ttAdapter(),
+                // templates: {
+                //     empty: Handlebars.compile($('#tt-users-suggestion-empty-template').html()),
+                //     suggestion: Handlebars.compile($('#tt-users-suggestion-template').html())
+                // }
+            });
+            this.$('#article-user-input.typeahead').typeahead('val', this.user_name);
+
+            this.$("#article-user-editable .twitter-typeahead").hide();
+
+            var that = this;
+            this.$('#article-user-input.typeahead').on("typeahead:selected", function(event, selected, dataset){
+                that.user_id = selected.id;
+                that.user_name = selected.name;
+                that.updatePreview();
+
+                that.$("#article-user-editable .twitter-typeahead").hide();
+                that.$('#article-user-editable').removeClass("edit");
+            });
+            this.$('#article-user-input').on("focusout", function(){
+                that.$("#article-user-editable .twitter-typeahead").hide();
+                that.$('#article-user-editable').removeClass("edit");
+            });
+        }
+    }
+});
+
+app.createArticleView = new app.CreateArticleView();
+</script>

@@ -1,0 +1,91 @@
+{% extends "catalog/base.html" %}
+{% block title %}MakeyStreet| {{ query }}{% endblock %}
+
+{% block content_top %}    
+    {% include "catalog/components/search.html" %}
+    <div class="row">
+        <div class="col-lg-offset-2 col-sm-3 col-md-3">
+            <!-- <a href=" {{ request.build_absolute_uri}}&l=india"> show available in india</a> -->
+        </div>
+    </div>
+{% endblock %}
+
+{% block content_left %}
+{% endblock %}
+
+{% block content_right %}
+{% endblock %}
+
+
+
+{% block content_full %}
+    <div class="row">
+        <div class="col-lg-offset-1 col-sm-10 col-md-10">
+            {% if products %}
+                <div class="container-fluid results">
+                    {% for product in products %}
+                        {% cycle '<div class="row">' '' '' '' '' '' %}
+                            <div class="col-sm-2 col-md-2">
+                                <div class="thumbnail">
+                                    <a href="{% url 'catalog:product' product.id %}"><img src="{{ product.image_p }}" alt="Image for {{ product.name }}">
+                                    <h5>{{product.name}}</h5></a>
+                                </div>
+                            </div>
+                        {% cycle '' '' '' '' '' '</div><br>' %}
+                    {% endfor %}
+                    {% if not products|length|divisibleby:6 %}
+                        </div><br>
+                    {% endif %}
+                    {% if list_pages|length > 1 %} 
+                        <div class="col-lg-offset-3 text_center row">
+                            <ul class="pagination">
+                                <li class="{% if not products.has_previous %} disabled {% endif %}">
+                                    <a href="{% if products.has_previous %}?q={{ query }}&amp;page={{ list_pages|first }}{% endif %}">
+                                        <i class="icon-backward"></i> First
+                                    </a>
+                                </li>
+                                <li class="{% if not products.has_previous %} disabled {% endif %}">
+                                    <a href="{% if products.has_previous %}?q={{query}}&amp;page={{ products.previous_page_number }}{% endif %}">
+                                        <i class="icon-chevron-left"></i>Prev
+                                    </a>
+                                </li>
+                                {% for page_i in list_pages %}
+                                    
+                                    <li class="{% if products.number == page_i %} active {% elif '. . .' == page_i %} disabled{% endif %}">
+                                        {% if '. . .' != page_i %}
+                                            <a href="?q={{ query }}&amp;page={{ page_i }}">{{ page_i }}</a>
+                                        {% else %}
+                                            <a>{{ page_i }}</a>
+                                        {% endif %}
+                                        
+                                    </li>
+                                {% endfor %}
+                                
+                                <li class="{% if not products.has_next %} disabled {% endif %}">
+                                    <a href="{% if products.has_next %}?q={{ query }}&amp;page={{ products.next_page_number }}{% endif %}">
+                                        Next<i class="icon-chevron-right "></i>
+                                    </a>
+                                </li>
+                                <li class="{% if not products.has_next %} disabled {% endif %}">
+                                    <a href="{% if products.has_next %}?q={{ query }}&amp;page={{ list_pages|last }}{% endif %}">
+                                        Last <i class="icon-forward"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p>
+                    Your search - <b>{{ query }}</b> - did not match any product. <br><br>
+                    Suggestions :
+                    </p><ul>
+                        <li>Make sure you have typed the name correctly</li>
+                        <li>Try a different keyword</li>
+                        <li>Try more general keywords</li>
+                    </ul>
+                <p></p>
+            {% endif %}
+        </div>
+    
+{% endblock %}

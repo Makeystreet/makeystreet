@@ -1,0 +1,86 @@
+{% verbatim %}
+<script type="text/template" id="comments_empty_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-info">There are no comments right now. Click below to add a comment about the Article.</p>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="comments_login_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-danger">Please login to add a comment about the Article.</p>
+    </div>
+</div>
+</script>
+
+<!-- Comment template -->
+<script type="text/template" id="comment_template">
+<div id="comment_{{id}}"class ="row comment_item">
+    <div class="col-xs-2">
+        <center>
+        <a href="/maker/{{user.username}}"><img class="img-circle" height="auto" style="max-width:50px; max-height:50px;" src="{{user.profile_url}}" altname="{{user.name}}" /></a>
+        </center>
+    </div>
+    <div class ="col-xs-10">
+        <p>
+        <span><a href="/maker/{{user.username}}">{{user.first_name}}</a>:&nbsp;</span>
+        <span>{{body}}</span>
+        </p>
+        <p class="pull-left"> Likes:&nbsp;
+            {{likes_count}}
+            {{#if cur_user_likes}}
+                <a href="" class="preventDefault"><img class="like_comment" id="like_{{id}}_{{like_id}}" width="24" src="/static/images/greenlike.png" /></a>
+            {{else}}
+                <a href="" class="preventDefault"><img class="like_comment" id="like_{{id}}_{{like_id}}" src="/static/images/like.png" /></a>
+            {{/if}}
+        </p>
+    </div>
+</div>
+<hr>
+</script>
+
+<script type="text/template" id="like_template">
+    <button rel="like_button" type="button" class="btn btn-sm like_article {{like_btn_cls}}">
+        <span class="glyphicon glyphicon-heart"></span> {{like_status}}
+    </button>
+    <small class="likes_string"><a href="" class="preventDefault">{{likes_string}}</a></small>
+</script>
+
+<script type="text/template" id="liker_template">
+{{#each likes}}
+<div class ="row">
+    <div class="col-xs-3">
+        <div class = "thumbnail tooltips" data-toggle="tooltip" data-placement="bottom">
+            <a href="/maker/{{liker.username}}"><img height="auto" style="max-width:75px; max-height:75px;" src="{{liker.profile_url}}" altname="{{liker.first_name}}" /></a>
+        </div>
+    </div>
+    <div class ="col-xs-9">
+        <h3><a href="/maker/{{liker.username}}">{{liker.first_name}} {{liker.last_name}}</a></h3>
+    </div>
+</div>
+{{/each}}
+</script>
+
+<script type="text/template" id="tt-tag-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+
+<script type="text/template" id="tt-tag-suggestion-template">
+    <p>{{name}}</p>
+</script>
+
+<script type="text/template" id="tt-user-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+
+<script type="text/template" id="tt-user-suggestion-template">
+    <p>{{name}}</p>
+</script>
+
+{% endverbatim %}

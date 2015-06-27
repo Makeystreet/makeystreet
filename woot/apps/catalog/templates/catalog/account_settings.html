@@ -1,0 +1,37 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Account Settings {% endblock %}
+
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% comment %}
+{% block templates %}
+     {% include "catalog/t/t_maker_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_maker_page.html" %}
+{% endblock %}
+{% endcomment %}
+
+
+{% block content_full %}
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/maker_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+        Settings
+        </div>
+    </div>
+</div>
+{% endblock %}

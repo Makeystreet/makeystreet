@@ -1,0 +1,64 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | All Spaces{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+    $(document).ready(function(){
+        $("#sticker_leftcolumn").sticky({topSpacing:0});
+    });
+</script>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_all_spaces.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_all_spaces.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-9 col-md-9">
+        <div id="results">
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <center><img src="{% static 'images/loading.gif' %}"></center>
+        </div>
+        <div class="col-lg-offset-3 text_center row" id="pagination">
+        </div>
+    </div>
+    <div class="col-sm-3 col-md-3" >
+        <div id="sticker_leftcolumn">
+            <div class="mini-layout-sidebar" style="width:250px;">
+                <ul class="nav nav-list well">
+                    <li class="nav-header text_center">
+                        <h3>All Makerspaces</h3>
+                    </li>
+                    <hr/>
+                    <li>
+                        <p>All Makerspaces on Makeystreet</p>
+                    </li>
+                    <!-- <a class="btn btn-lg btn-success btn-group-justified" href = "{% url 'catalog:create_makey' %}"> -->
+                        <!-- Create a Makey now! -->
+                    </a>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

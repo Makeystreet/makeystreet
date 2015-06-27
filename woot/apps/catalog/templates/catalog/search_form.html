@@ -1,0 +1,218 @@
+{% extends "catalog/base.html" %} 
+
+{% block title %}Makeystreet| Find maker parts{% endblock %}
+{% block extra_js %}
+    <script>
+        $('document').ready(function(){
+            // $('#loginModal').modal();
+            // alert("hello");
+        });
+    </script>
+{% endblock %}
+{% block templates %}
+    {% include "catalog/t/t_search_form.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_search_form.html" %}
+{% endblock %}
+
+{% block content_full %}
+    
+    {% if errors %}
+        <div class="row">
+            <div class="text_center col-lg-offset-2 col-sm-8 col-md-8">
+                {% for error in errors %}
+                    <div class="alert alert-danger alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <center> <strong>Error!</strong> {{ error }} </center>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+    
+    <div class="row">
+        <div class="col-sm-12 col-xs-12">
+            <div class="jumbotron">
+                <center>
+                    <h1>Makeystreet</h1>
+                    <p>Search for maker parts!</p>
+                    <form action="{% url 'catalog:search' %}" method="get">
+                        <div class="input-group">
+                              <input type="text" class="form-control" name="q" placeholder="Try search for Arduino" value="{{ query }}" id="search_autocomplete">
+                              <span class="input-group-btn">
+                              <button class="btn btn-default" type="button" onclick="submit();">
+                              <span class="glyphicon glyphicon-search"></span> Search !
+                              </button>
+                              </span>
+                        </div>
+                    </form>
+                    <!-- search results turn up here -->
+                    <div id="search_results"></div>
+
+                </center>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class ="col-sm-3 col-md-3">
+            <div class="well">
+                <!-- <p>hello</p> -->
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3>Top Products</h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="top_products" class="">
+                        </div>
+                    </div>
+                </div>
+                <!-- <p>hello</p> -->
+            </div>
+            <div class="well">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3>Top Stores</h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="top_stores" class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="well">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3>Top Users</h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="top_users" class="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class ="col-sm-6 col-md-6">
+            <div class="well">
+                <center><h3>Recent activity</h3></center>
+                <div id="user_activity">
+                    <div class="wellcol-xs-12">
+                       No recent activity.
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class ="col-sm-3 col-md-3">
+            <div class="well">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3><a href="{% url 'catalog:create_makey' %}">Create New Makey</a></h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <p>Something interesting? Something crazy? Something whacky? Something creative?</p>
+                        <p>Share it with your friends.  <a href="{% url 'catalog:create_makey' %}">Click Here</a></p>
+                    </div>
+                </div>
+            </div>
+            <div class="well">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3>Recent Store Reviews</h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="recent_store_reviews">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="well">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <center><h3>Recent Product Reviews</h3></center>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12">
+                        <div id="recent_product_reviews">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-offset-1 col-sm-10 col-xs-10">
+            
+            <!-- Top Projects -->
+            <!-- <div class="row">
+                <div class="text_center col-sm-12 col-md-12">
+                    <h3>Top Projects</h3>
+                </div>
+            </div>
+            <div id="top_projects" class="text_center jumbotron">
+                <div class="row">
+                    <div class="col-sm-12 col-md-12">
+                        Top projects !! 
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- Top Tutorials -->
+            <!-- <div class="row">
+                <div class="text_center col-sm-12 col-md-12">
+                    <h3>Top Tutorials </h3>
+                </div>
+            </div>
+            <div id="top_tutorials" class="text_center jumbotron">
+                <div class="row">
+                    <div class="col-sm-12 col-md-12">
+                        Top Tutorials !! 
+                    </div>
+                </div>
+            </div> -->
+
+            
+
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+{% block extra_js_end %}
+    <script>
+    // $("#search_autocomplete").keyup(function() {
+    //     var query = $("#search_autocomplete").val();
+    //     $.ajax({
+    //         url: {% url 'catalog:search_autocomplete' %},
+    //         type: "GET",
+    //         data: {'q':query},
+    //     }).done(function(msg) {
+    //         var html = "";
+    //         if(query == "") {
+    //             $("#search_results").html("");
+    //         } else {
+    //             var products = msg.split("##");
+    //             for(i in products) {
+    //                 var cur_product = products[i].split("~~~");
+    //                 html += "<a href='/product/" + cur_product[1] + "'>" +
+    //                     cur_product[0] + "</a><br/>";
+    //             }
+    //             $("#search_results").html(html);
+    //         }
+    //     });
+    // });
+    </script>
+{% endblock %}

@@ -1,0 +1,742 @@
+<script>
+
+var app = {};
+app.maker_id = {{maker.id}};
+app.maker_profile_id={{maker.profile.id}};
+
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+        
+        this.following = new app.FollowingList(options);
+        this.followers = new app.FollowersList(options);
+        
+        this.on('change', this.loadProfile);
+    },
+
+    loadProfile : function() {
+        this.profile = new app.UserProfile({'id' : this.get('profile_id')});
+    },
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.FollowersList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/followers/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.FollowingList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/following/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+app.initializeMaker = function() {
+    app.cur_maker = new app.User({'id' : app.maker_id});
+    app.cur_maker.fetch();
+    // console.log('\n\n');
+    // console.log(app.maker_profile_id);
+    app.cur_maker_profile = new app.UserProfile({'id' : app.maker_profile_id});
+    app.cur_maker_profile.fetch();
+
+};
+
+app.NoteLike = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/note2/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+});
+
+app.NoteLikeList = Backbone.Tastypie.Collection.extend({
+    model : app.NoteLike,
+    urlRoot : '/api/v1/likes/note2/',
+
+    url : function() {
+        if(cur_user_details.id == undefined)
+            return;
+
+        if(this.curUserLikes) {
+            return this.urlRoot + "?limit=1&note=" + this.noteId + "&liker=" + cur_user_details.id;
+        }
+        return this.urlRoot + "?limit=2&note=" + this.noteId;
+    },
+
+    initialize : function(options) {
+        if(cur_user_details.id == undefined) {
+            return;
+        }
+
+        options || (options = {});
+
+        if(options.noteId) {
+            this.noteId = options.noteId;
+        }
+
+        if(options.curUserLikes) {
+            this.curUserLikes = options.curUserLikes;
+        }
+    },
+});
+
+app.Note = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/note2/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+        'cur_user_likes' : false,
+        'like_id' : 0,
+    },
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        // this.comments = new app.CommentList();
+
+        // this.on('change:comments', function(model, response){
+        //     this.comments.reset();
+        //     for(var i=0; i<this.get('comments').length; i++) {
+        //         this.comments.add({'resource_uri' : this.get('comments')[i]});
+        //     }
+        // });
+
+        // if(this.get('resource_uri') != undefined) {
+        //     var noteId = this.get('resource_uri').replace(this.urlRoot,'').replace('/','');
+        //     this.noteId = noteId;
+
+        //     if(cur_user_details.id != undefined){
+        //         this.fetchCurUserLikes();
+        //     } else {
+        //         this.fetch();
+        //     }
+        // }
+    },
+
+    // fetchCurUserLikes : function() {
+    //     this.curUserLikes = new app.NoteLikeList({noteId : this.noteId, curUserLikes : true});
+
+    //     var that = this;
+    //     this.curUserLikes.fetch({
+    //         success : function(collection, response) {
+    //             if(collection.meta.total_count > 0) {
+    //                 that.set({
+    //                     'cur_user_likes' : true,
+    //                     'like_id' : collection.models[0].get('id'),
+    //                 });
+    //             } else {
+    //                 that.set({
+    //                     'cur_user_likes' : false,
+    //                     'like_id' : 0,
+    //                 });
+    //             }
+    //             that.fetch();
+    //         },
+    //     });
+    // },
+});
+
+app.NotesList = Backbone.Tastypie.Collection.extend({
+    model : app.Note,
+    urlRoot : '/api/v1/note2/',
+
+    comparator : function(model) {
+        return model.get('order');
+    },
+
+    // url : function() {
+    //     return this.urlRoot;
+    // },
+
+    url : function() {
+        // return this.urlRoot + "?user=1" ;
+        return this.urlRoot + "?user=" + app.maker_id;
+    },
+});
+
+app.NotesView = Backbone.View.extend({
+    el : $('#notes'),
+    template : Handlebars.compile($('#notes_template').html()),
+    // login_template : Handlebars.compile($('#notes_login_template').html()),
+    // comment_popover_template : Handlebars.compile($('#comment_popover_template').html()),
+    // comments_close_template : Handlebars.compile($('#comments_close_template').html()),
+    // new_comment_template : Handlebars.compile($('#new_comment_template').html()),
+
+    // note_image_template : Handlebars.compile($('#note_image_template').html()),
+    // note_reorder_template : Handlebars.compile($('#reorder_note_template').html()),
+
+    events : {
+        "click #save_new_note" : "createNewNote",
+        "click .close_note_modal" : "removeSavedMessage",
+        "click .edit_delete_note" : "loadEditNoteDetails",
+        "click #save_edit_note" : "editNote",
+        "click #delete_note" : "deleteNote",
+
+        "click .like_note" : "likeNotify",
+        // "click .like_note" : "likeNote",
+        "click .comment_note" : "commentNotify",
+        // "click .comment_note" : "commentsNoteOpen",
+        "click .close_comment" : "commentsNoteClose",
+        "click .new_comment" : "newComment",
+        "click .submit_comment" : "saveComment",
+        "click .cancel_comment" : "cancelComment",
+
+        'click #save_notes_reorder' : 'saveReorderNotes',
+
+        "click .show_image" : "showImage",
+        "click #selectNoteImage" : "showSelectNoteImage",
+        "click #selectNewNoteImage" : "showSelectNewNoteImage",
+        "click #save_note_image" : "saveNoteImage",
+    },
+
+    options : {
+        new_comment_shown : false,
+    },
+
+    popoverSettings : {
+        trigger : 'manual',
+        html : true,
+        placement : "left",
+        template : '<div class="popover notePopover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title"></h3><div class="popover-content"><p></p></div></div></div>',
+    },
+
+    initialize : function() {
+        // this.listenTo(app.notesList, 'destroy', this.addAll);
+        this.listenTo(app.notesList, 'change', this.addAll);
+        this.listenTo(app.notesList, 'add', this.addAll);
+        // this.listenTo(app.notesList, 'remove', this.addAll);
+        // this.listenTo(app.notesList, 'reset', this.addAll);
+
+        this.addAll();
+    },
+
+    // resetView : function() {
+    //     this.$('#makey_notes').html('');
+    // },
+
+    addAll : function() {
+        this.$('#makey_notes').html('');
+        this.$('#reorder_notes_list').html('');
+        this.$('#select_note_image_list').html('');
+
+        if (app.notesList.length>0 )
+            $('.show_notes').show();
+
+        app.notesList.sort();
+        app.notesList.each(this.add, this);
+
+        // app.makey.images.each(this.loadImageSelector, this);
+        // this.$('#select_note_image_list').append('<input type="hidden" class="form-control" name="note_id" value="">');
+
+        this.$('#makey_notes').find('.tooltips').tooltip();
+        $('.notes_no').html(app.notesList.models.length);
+    },
+
+    likeNotify : function(event) {
+        var btn_details = event.target.id.split('_');
+        var noteId = parseInt(btn_details[1]);
+        $('#note_comment_notify_makey').html(app.notesList.get(id=noteId).get('makey')[0].name);
+        $('#note_comment_notify_makey').attr('href','/makey/'+app.notesList.get(id=noteId).get('makey')[0].id);
+        $('#like_comment_notify').modal();
+    },
+
+    commentNotify : function(event) {
+        var noteId = parseInt(event.target.id.substring(14));
+        $('#note_comment_notify_makey').html(app.notesList.get(id=noteId).get('makey')[0].name);
+        $('#note_comment_notify_makey').attr('href','/makey/'+app.notesList.get(id=noteId).get('makey')[0].id);
+        $('#like_comment_notify').modal();
+    },
+
+    // loadImageSelector : function(model) {
+    //     this.$('#select_note_image_list').append(this.note_image_template(model.toJSON()));
+    // },
+
+    // showSelectNoteImage : function() {
+    //     this.$('#note_image_modal').modal('show');
+    // },
+
+    // showSelectNewNoteImage : function() {
+    //     this.$('input[name="note_id"]').val(-1);
+    //     this.$('#note_image_modal').modal('show');
+    // },
+
+    // saveNoteImage : function() {
+    //     var imageId = parseInt(this.$('input[name="note_image_id"]:checked').val());
+    //     var noteId = parseInt(this.$('input[name="note_id"]').val());
+
+    //     if(noteId != -1) {
+    //         var curNote = app.notesList.get(noteId);
+
+    //         curNote.set({
+    //             'image' : '/api/v1/image/' + imageId + "/",
+    //         });
+    //         curNote.save(null, {
+    //             success : function(model, response) {
+    //                 app.makey.images.get(imageId).fetch();
+    //             },
+    //         });
+    //     } else {
+    //         this.$('#new_note_image').val('/api/v1/image/' + imageId + "/");
+    //         this.$("#new_note_image_preview").find('img').attr('src', app.makey.images.get(imageId).get('large_url'));
+    //         this.$('#note_image_modal').modal('hide');
+    //     }
+    // },
+
+    add : function(model) {
+        if(model.get('id') == undefined) {
+            return;
+        }
+
+        var json = model.toJSON();
+        if(json.body!=undefined) {
+            json.body = json.body.replace(/\n/g, "<br/>");
+            json.body = Autolinker.link(json.body);
+        }
+        json.can_edit = app.can_edit;
+
+        if(json.image) {
+            json.image_id = json.image.replace('/api/v1/image/','').replace('/','');
+        }
+        // if(json.makey[0])
+        //     console.log(json.makey[0].name);
+        // haha=this.$('#makey_notes');
+        // console.log(haha);
+        this.$('#makey_notes').append(this.template(json));
+
+        // Reorder Notes
+        // this.reorderNotesView(model);
+
+        // this.initPopover(model);
+    },
+
+    // reorderNotesView : function(model) {
+    //     this.$('#reorder_notes_list').append(this.note_reorder_template(model.toJSON()));
+    // },
+
+    // saveReorderNotes : function() {
+    //     var notes_list = this.$('#reorder_notes_list :input');
+
+    //     for(var i=0; i<notes_list.length; i++) {
+    //         var note_id = parseInt(notes_list[i].id.substring(11));
+    //         var order = parseInt(notes_list[i].value);
+
+    //         var curNote = app.notesList.get(note_id);
+    //         curNote.set({'order' : order});
+    //         curNote.save();
+    //     }
+    // },
+
+    // initPopover : function(model) {
+    //     var noteId = model.get('id');
+    //     var popoverSettings = this.popoverSettings;
+    //     popoverSettings.title = this.comments_close_template(model.toJSON());
+    //     popoverSettings.content = function() {
+    //         return $('#note_comments_'+noteId).html();
+    //     };
+        
+    //     this.$('#note_'+noteId).popover(popoverSettings);
+    //     var that = this;
+    //     this.$('#note_'+noteId).on('hidden.bs.modal', function(e){
+    //         if(that.$('#cancel_comment_'+noteId)) {
+    //             that.$('#cancel_comment_'+noteId).parent().parent().remove();
+    //         }
+    //         that.options.new_comment_shown = false;
+    //     });
+    // },
+
+    // createNewNote : function() {
+    //     var title = this.$('#new_note_title')[0].value;
+    //     var body = this.$('#new_note_body')[0].value;
+    //     var image = this.$('#new_note_image').val();
+    //     var note = new app.Note({
+    //         'title' : title,
+    //         'body' : body,
+    //         'image' : image,
+    //     });
+
+    //     var that = this;
+    //     this.$('#success_new_note').hide();
+    //     this.$('#waiting_new_note').show();
+    //     note.save(null, {
+    //         success : function(model, response) {
+    //             that.$('#waiting_new_note').hide();
+    //             that.$('#success_new_note').show();
+    //             app.notesList.add(model);
+    //             app.makey.get('notes').push(model.get('resource_uri'));
+    //             app.makey.save();
+
+    //             that.$('#new_note_title').val('');
+    //             that.$('#new_note_body').val('');
+    //         },
+    //     });
+    // },
+
+    // removeSavedMessage: function() {
+    //     this.$('#success_new_note').hide();
+    //     this.$('#success_edit_note').hide();
+    // },
+
+    // loadEditNoteDetails : function(event) {
+    //     var note_id = parseInt(event.target.id.substring(10));
+    //     var note = app.notesList.get(note_id);
+
+    //     this.$('#edit_note_title')[0].value = note.get('title');
+    //     this.$('#edit_note_body')[0].value = note.get('body');
+    //     this.$('#edit_note_id')[0].value = note_id;
+
+
+    //     this.$('input[name="note_id"]').val(note_id);
+
+    //     this.$('#edit_note_modal').modal();
+    // },
+
+    // editNote : function() {
+    //     var title = this.$('#edit_note_title')[0].value;
+    //     var body = this.$('#edit_note_body')[0].value;
+    //     var note_id = this.$('#edit_note_id')[0].value;
+        
+    //     var note = app.notesList.get(note_id);
+    //     note.set({
+    //         'title' : title,
+    //         'body' : body,
+    //     });
+
+    //     var that = this;
+    //     this.$('success_edit_note').hide();
+    //     this.$('waiting_edit_note').show();
+    //     note.save(null, {
+    //         success : function(model, response) {
+    //             that.$('#waiting_edit_note').hide();
+    //             that.$('#success_edit_note').show();
+    //         },
+    //     });
+    // },
+
+    // deleteNote : function() {
+    //     if(!confirm("Are you sure you want to delete this?")) {
+    //         return;
+    //     }
+    //     var note_id = this.$('#edit_note_id')[0].value;
+    //     var note = app.notesList.get(note_id);
+
+    //     app.notesList.remove(note);
+
+    //     var index = app.makey.get('notes').indexOf(note.get('resource_uri'));
+    //     app.makey.get('notes').splice(index, 1);
+
+    //     var that = this;
+    //     this.$('#success_tool_change').hide();
+    //     this.$('#waiting_tool_change').show();
+    //     app.makey.save(null, {
+    //         success : function(model, response) {
+    //             that.$('#waiting_tool_change').hide();
+    //             that.$('#success_tool_change').show();
+    //         },
+    //     });
+    //     this.$('#note_'+note_id).remove();
+
+    //     this.$('#edit_note_modal').modal('toggle');
+    // },
+
+    likeNote : function(event) {
+        if(cur_user_details.id == undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        var btn_details = event.target.id.split('_');
+        var noteId = parseInt(btn_details[1]);
+        var likeId = parseInt(btn_details[2]);
+
+        var curNote = app.notesList.get(noteId);
+
+        if(likeId == 0) {
+            var newLike = new app.NoteLike({
+                'note' : curNote.get('resource_uri'),
+                'liker' : app.cur_fb_user,
+            });
+            newLike.save(null, {
+                success : function(model, response) {
+                    curNote.set({
+                        'cur_user_likes' : true,
+                        'like_id' : model.get('id'),
+                        'likes_count' : parseInt(curNote.get('likes_count'))+1,
+                    });
+                    _cio.track("noteLikes",{makey_id:'{{makey_id}}',note_id:noteId});
+                },
+            });
+        } else {
+            var newLike = new app.NoteLike({
+                'id' : likeId,
+            });
+            newLike.destroy();
+            curNote.set({
+                'cur_user_likes' : false,
+                'like_id' : 0,
+                'likes_count' : parseInt(curNote.get('likes_count'))-1,
+            });
+        }
+    },
+
+    // commentsNoteOpen : function(event) {
+    //     var noteId = parseInt(event.target.id.substring(14));
+    //     var curNote = app.notesList.get(noteId);
+
+    //     var json = {
+    //         'comments' : curNote.comments.toJSON(),
+    //         'id' : noteId,
+    //     };
+    //     this.$('#note_comments_'+noteId)[0].innerHTML = this.comment_popover_template(json);
+
+    //     this.$('#note_'+noteId).popover('toggle');
+    // },
+
+    // commentsNoteClose : function(event) {
+    //     var noteId = event.target.id.substring(15);
+    //     this.$('#note_'+noteId).popover('hide');
+    //     this.options.new_comment_shown = false;
+    // },
+
+    // newComment : function(event) {
+    //     if(cur_user_details.id == undefined) {
+    //         $('#login_modal').modal('show');
+    //         return false;
+    //     }
+
+    //     if(this.options.new_comment_shown) {
+    //         return;
+    //     }
+
+    //     var noteId = parseInt(event.target.id.substring(12));
+    //     this.options.new_comment_shown = true;
+    //     var json = app.cur_fb_user;
+    //     json.note_id = noteId;
+    //     $(event.target).before(this.new_comment_template(json));
+    // },
+
+    // saveComment : function(event) {
+    //     var body = this.$('#new_comment_body')[0].value;
+    //     var noteId = this.$('#new_comment_body')[0].getAttribute('noteId');
+    //     var comment = new app.Comment({
+    //         'body' : body,
+    //     });
+
+    //     var that = this;
+    //     this.$('#success_new_comment').hide();
+    //     this.$('#waiting_new_comment').show();
+    //     comment.save(null, {
+    //         success : function(model, response) {
+    //             that.$('#waiting_new_comment').hide();
+    //             that.$('#success_new_comment').show();
+
+    //             var curNote = app.notesList.get(noteId);
+    //             curNote.comments.add(response);
+
+    //             curNote.get('comments').push(model.get('resource_uri'));
+    //             curNote.save();
+
+    //             that.$('#new_comment_body').val('');
+    //             that.options.new_comment_shown = false;
+    //             _cio.track("noteComments",{makey_id:'{{makey_id}}',note_id:noteId});
+    //         },
+    //     });
+
+    // },
+
+    // cancelComment : function(event) {
+    //     $(event.target).parent().parent().remove();
+    //     this.options.new_comment_shown = false;
+    // },
+
+    // showImage : function(event) {
+    //     var imageId = parseInt(event.target.id.substring(11));
+    //     app.imagesView.showImage(imageId);
+    //     $('#images_modal').modal('show');
+    // },
+});
+
+
+app.MakerView = Backbone.View.extend({
+    el : '#cur_maker_follow',
+    template : Handlebars.compile($('#user_follow_template').html()),
+
+    events : {
+        'click .follow_user' : 'followUser',
+        'click .unfollow_user' : 'unfollowUser',
+    },
+
+    initialize : function() {
+        if (app.cur_fb_user)
+        {
+            this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'reset', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+        }
+
+        this.listenTo(app.cur_maker, 'change', this.addAll);
+
+        this.addAll();
+    },
+
+    addAll : function() {
+        var json = {};
+
+        if(app.cur_fb_user)
+        {
+            if(app.cur_maker.get('id') == app.cur_fb_user.get('id')) {
+                json.is_cur_user = true;
+            } else if(app.cur_fb_user.following.get(app.cur_maker.get('profile_id')) == undefined) {
+                json.cur_user_follows = false
+                json.id = app.cur_maker.get('profile_id');
+            } else {
+                json.cur_user_follows = true;
+                json.id = app.cur_maker.get('profile_id');
+            }
+        }
+
+
+        this.$el.html(this.template(json));
+    },
+
+    followUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(7));
+        var userProfile = app.cur_maker.profile;
+
+        app.cur_fb_user.profile.get('following').push(userProfile.get('resource_uri'));
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.push(userProfile);
+                app.cur_maker.followers.push(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+        
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.add({'id' : userProfile.get('id')});
+        }
+    },
+
+    unfollowUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(9));
+        var userProfile = app.cur_maker.profile;
+
+        var index = app.cur_fb_user.profile.get('following').indexOf(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.get('following').splice(index, 1);
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.remove(app.cur_fb_user.following.get(userProfile.get('id')));
+                app.cur_maker.followers.remove(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.remove(userProfile);
+        }
+    },
+});
+
+/* INITIALIZE */
+app.initializeUser();
+app.initializeMaker();
+
+// app.makeyView = new app.MakeyView();
+// app.followingView = new app.FollowingView();
+// app.followersView = new app.FollowersView();
+app.makerView = new app.MakerView();
+
+app.notesList = new app.NotesList();
+app.notesList.fetch();
+app.notesView=new app.NotesView();
+
+</script>

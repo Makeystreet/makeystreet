@@ -1,0 +1,142 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet - Listing - {{listing.company}} - {{listing.title}} {% endblock %}
+
+{% block contentmeta%}
+
+    <meta property="og:type"              content="makey_street:job_listing" />
+    <meta property="og:url"               content="http://www.makeystreet.com/listing/{{listing.id}}/" />
+    <meta property="og:title"             content="{{listing.company}} is looking for a {{listing.title}}" />
+    <meta property="og:determiner"        content="a" />
+    <meta property="og:site_name"         content="Makeystreet" />
+    <meta property="makey_street:company" content="{{listing.company}}" />
+{% endblock%}
+
+{% block extra_js %}
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+    $(document).ready(function(){
+        $("#sticker_leftcolumn").sticky({topSpacing:0});
+    });
+</script>
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_listing_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+     {% include "catalog/bb/bb_listing_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+
+                <div class="row">
+                    <div class ="col-xs-12">
+                        <h3 style="margin-top: 0px;">{{listing.company}} - {{listing.title}}</h3>
+                        {% if listing.can_edit %}
+                            <a type="button" class="btn btn-default" href="{% url 'catalog:edit_listing' listing.id %}">Edit</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <hr style="border-top: dotted 1px #DDD;" />
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        {{listing.content|safe}}
+                    </div>
+                </div>
+
+                <hr style="border-top: dotted 1px #DDD;" />
+
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="col-xs-12">
+                        <span id="listing-{{listing.id}}-likes">
+                            <span class="likes"></span>
+                            <div class="modal fade col-sm-12" id="all_likes_modal" tabindex="-1" role="dialog" aria-labelledby="all_likes_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                            <h4 class="modal-title" id="all_likes_label">People who like this</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            List of likers
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default close_comment_modal" data-dismiss="modal" id="close_new_comment_modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </span>
+                    </div>
+                </div>
+                <br/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-3 col-md-3" >
+    <div id="sticker_leftcolumn">
+        <div class="mini-layout-sidebar" style="width:250px;">
+            <ul class="nav nav-list well">
+                <li class="nav-header text_center">
+                    <h3>All Listings</h3>
+                </li>
+                <hr/>
+                <li>
+                    <p>Found this job listing interesting? Why don't you check out other interesting ones?</p>
+                </li>
+                <a class="btn btn-lg btn-success btn-group-justified" href = "{% url 'catalog:all_listing' %}">
+                    All Job Listings
+                </a>
+            </ul>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

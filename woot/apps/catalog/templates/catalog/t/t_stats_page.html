@@ -1,0 +1,243 @@
+{% verbatim %}
+
+<script type="text/template" id="heading">
+<div class="row">
+    <div class="col-xs-12">
+        <h1>{{metric_name}}<small>( {{metric_text}} )</small></h1>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="product_likes">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Combined Product Likes</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="product_reviews">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Combined Product Reviews</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="store_likes">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Combined Store Likes</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="store_reviews">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Combined Store Reviews</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_makeys">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>New Makeys Linked</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_tutorials">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>New Tutorials Linked</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="store_link_clicks">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Store links clicked on</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_user_follows">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>New User Follows</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_users">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>New Signups</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="server_uptime">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Server Uptime %</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}}</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="revenue">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Revenue</small></h2>
+            <h2>{{value}}<small class="{{change_class}}"> ({{change_value}} : {{change_percentage}}%)</small></h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_product_likes">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Total Product Likes</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>    
+</script>
+
+<script type="text/template" id="total_product_reviews">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Total Product Reviews</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>    
+</script>
+
+<script type="text/template" id="total_store_likes">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Total Store Likes</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>    
+</script>
+
+<script type="text/template" id="total_store_reviews">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Total Store Reviews</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>    
+</script>
+
+
+
+<script type="text/template" id="total_users">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Registered Users</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_stores">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Stores</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_products">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Products Indexed</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_makeys">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Makeys (Projects)</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_tutorials">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Tutorials</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="total_clicks">
+<div class="col-xs-3">
+    <div class="well">
+        <center>
+            <h2><small>Store URL Clicks</small></h2>
+            <h2>{{value}}</h2>
+        </center>
+    </div>
+</div>
+</script>
+{% endverbatim %}

@@ -1,0 +1,265 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} {{maker.first_name}} {{maker.last_name}} {% endblock %}
+{% block contentmeta%}
+    <meta name="description" content="Get to know about all the projects done by {{maker.first_name}} {{maker.last_name}}">
+    <!-- <meta name="author" content="Siddardha G, Alex VJ"> -->
+{% endblock%}
+
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_maker_reviews_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="modal fade col-sm-12" id="like_comment_notify" tabindex="-1" role="dialog" aria-labelledby="edit_name_label" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content col-sm-offset-1">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="edit_name_label">Like or Comment from Makey page</h4>
+            </div>
+            <div class="modal-body">
+                <p> For now you can only like or comment on an insight from the corresponding makey page</p>
+                <p> Go to the makey page: <a href="#" id="note_comment_notify_makey"></a></p>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_name_modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/maker_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+    <!-- User notes -->
+    <div class="row" id="reviews">
+        <div class="col-sm-12 col-md-12">
+            <div class="show_product_reviews">
+                <div class="row">
+                    <div class="block">
+                        <div class="block-title">
+                            <div class="block-options pull-right">
+                                <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                            </div>
+                            <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Product Reviews by the current Maker"><strong>Product Reviews</strong></h3>
+                        </div>
+                        <div class="block-content">
+                            <div id="product_reviews">
+                                {% if maker.productreview_set.count > 0 %}
+                                    {% for review in maker.productreview_set.all %}
+                                    <div id="product_review_{{review.id}}" class="row">
+                                        <div class ="col-xs-12">
+                                            <p class=""><b>{{review.title}}</b></p>
+
+                                            <p class="show_product_review_id" style="display:none;">{{review.id}}</p>
+
+                                            <p>{{review.review|truncatewords:20}} <a href="{% url 'catalog:product_review' review.id %}">more</a></p>
+
+                                            <p class="pull-right">
+                                                By <a href="/maker/{{review.user.username}}">{{review.user.first_name}}</a> on <a href="/product/{{review.product.id}}">{{review.product.name}}</a>
+                                            </p>
+
+                                            <div class="pull-left">
+                                            {% if review.rating > 0 %}
+                                            <span>
+                                                {% if review.rating == 5 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> (5/5)
+                                                {% endif %}
+                                                {% if review.rating == 4 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> (4/5)
+                                                {% endif %}
+                                                {% if review.rating == 3 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (3/5)
+                                                {% endif %}
+                                                {% if review.rating == 2 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (2/5)
+                                                {% endif %}
+                                                {% if review.rating == 1 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (1/5)
+                                                {% endif %}
+                                                {% if review.rating == 0 %}
+                                                    <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (0/5)
+                                                {% endif %}
+                                            </span>
+                                            {% else %}
+                                                No Rating
+                                            {% endif %}
+                                            </div>
+
+                                            <br/><hr>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <p>No Product reviews by the current user.
+                                    </div>
+                                    <!-- <center><i class="fa fa-refresh fa-2x fa-spin"></i></center> -->
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="show_store_reviews">
+                <div class="row">
+                    <div class="block">
+                        <div class="block-title">
+                            <div class="block-options pull-right">
+                                <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                            </div>
+                            <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Store Reviews by the current Maker"><strong>Store Reviews</strong></h3>
+                        </div>
+                        <div class="block-content">
+                            <div id="store_reviews">
+                                {% if maker.shopreview_set.count > 0 %}
+                                    {% for review in maker.shopreview_set.all %}
+                                    <div id="store_review_{{review.id}}" class="row">
+                                        <div class ="col-xs-12">
+                                            <p class=""><b>{{review.title}}</b></p>
+
+                                            <p class="show_store_review_id" style="display:none;">{{review.id}}</p>
+
+                                            <p>{{review.review|truncatewords:20}} <a href="{% url 'catalog:store_review' review.id %}">more</a></p>
+
+                                            <p class="pull-right">
+                                                By <a href="/maker/{{review.user.username}}">{{review.user.first_name}}</a> on <a href="/store/{{review.shop.id}}">{{review.shop.name}}</a>
+                                            </p>
+
+                                            <div class="pull-left">
+                                            {% if review.rating > 0 %}
+                                            <span>
+                                                {% if review.rating == 5 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> (5/5)
+                                                {% endif %}
+                                                {% if review.rating == 4 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> (4/5)
+                                                {% endif %}
+                                                {% if review.rating == 3 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (3/5)
+                                                {% endif %}
+                                                {% if review.rating == 2 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (2/5)
+                                                {% endif %}
+                                                {% if review.rating == 1 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (1/5)
+                                                {% endif %}
+                                                {% if review.rating == 0 %}
+                                                    <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (0/5)
+                                                {% endif %}
+                                            </span>
+                                            {% else %}
+                                                No Rating
+                                            {% endif %}
+                                            </div>
+
+                                            <br/><hr>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <p>No Store reviews by the current user.
+                                    </div>
+                                    <!-- <center><i class="fa fa-refresh fa-2x fa-spin"></i></center> -->
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="show_space_reviews">
+                <div class="row">
+                    <div class="block">
+                        <div class="block-title">
+                            <div class="block-options pull-right">
+                                <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                            </div>
+                            <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Space Reviews by the current Maker"><strong>Space Reviews</strong></h3>
+                        </div>
+                        <div class="block-content">
+                            <div id="space_reviews">
+                                {% if maker.spacereview_set.count > 0 %}
+                                    {% for review in maker.spacereview_set.all %}
+                                    <div id="space_review_{{review.id}}" class="row">
+                                        <div class ="col-xs-12">
+                                            <p class=""><b>{{review.title}}</b></p>
+
+                                            <p class="show_space_review_id" style="display:none;">{{review.id}}</p>
+
+                                            <p>{{review.review|truncatewords:20}} <a href="{% url 'catalog:space_review' review.id %}">more</a></p>
+
+                                            <p class="pull-right">
+                                                By <a href="/maker/{{review.user.username}}">{{review.user.first_name}}</a> on <a href="/space/{{review.space.id}}">{{review.space.name}}</a>
+                                            </p>
+
+                                            <div class="pull-left">
+                                            {% if review.rating > 0 %}
+                                            <span>
+                                                {% if review.rating == 5 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> (5/5)
+                                                {% endif %}
+                                                {% if review.rating == 4 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> (4/5)
+                                                {% endif %}
+                                                {% if review.rating == 3 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (3/5)
+                                                {% endif %}
+                                                {% if review.rating == 2 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (2/5)
+                                                {% endif %}
+                                                {% if review.rating == 1 %}
+                                                    <i class="fa fa-star"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (1/5)
+                                                {% endif %}
+                                                {% if review.rating == 0 %}
+                                                    <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> <i class="fa fa-star-o"></i> (0/5)
+                                                {% endif %}
+                                            </span>
+                                            {% else %}
+                                                No Rating
+                                            {% endif %}
+                                            </div>
+
+                                            <br/><hr>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <p>No Space reviews by the current user.
+                                    </div>
+                                    <!-- <center><i class="fa fa-refresh fa-2x fa-spin"></i></center> -->
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

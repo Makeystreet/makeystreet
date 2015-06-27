@@ -1,0 +1,252 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+<meta property="og:title"  content="{{makey.name}}" />
+<meta property="og:type"   content="makey_street:makey" />
+<meta property="og:url"    content="{{makey_url}}" />
+{% if makey.cover_pic %}
+<meta property="og:image"  content="{{makey.cover_pic}}"/>
+<meta property="og:image:url" content="{{makey.cover_pic}}" />
+{% else %}
+<meta property="og:image"  content="{{makey.images.all.0}}"/>
+<meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+{% endif %}
+
+<meta name="og:description" content="{{makey.about}}">
+<meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  var GLOBALS = {
+    'MAKEY_ID' : '{{makey.id}}',
+    'MAKEY_URL_ROOT' : '{% url 'catalog:makey_new_slug' makey.user.username makey.slug %}',
+    'SEARCH_URL' : '{% url 'catalog:search_in_makey' makey.user.username makey.slug %}'
+  }
+</script>
+
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/makey/issue.js' %}"></script>
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/makey/issue.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'app/common/typeahead.css' %}" type="text/css">
+{% endcompress %}
+<script src="{% static 'js/typeahead.js' %}"></script>
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="ten wide column">
+        <h1 class="ui header makey-header"><a href="{{makey.get_absolute_url}}">{{makey.name}}</a></h1>
+        {% if parents %}
+        <div class="ui medium breadcrumb makey-parents">
+          {% for parent in parents %}
+          <a class="section" href="{{parent.get_absolute_url}}">{{parent.name}}</a>
+          <i class="right chevron icon divider"></i>
+          {% endfor %}
+          <div class="active section">{{makey.name}}</div>
+        </div>
+        {% endif %}
+      </div>
+      <div class="six wide column">
+        {% if not request.user.is_authenticated %}
+        <a class="ui primary medium right floated button login-button">
+          <i class="add icon"></i>
+          New issue
+        </a>
+        {% else %}
+        <a class="ui primary medium right floated button add-issue-link" href="{% url 'catalog:makey_new_issue_add' makey.user.username makey.slug %}">
+          <i class="add icon"></i>
+          New issue
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui secondary pointing menu tabular">
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'overview' %}">
+          <i class="home icon"></i> OVERVIEW
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'insights' %}">
+          <i class="idea icon"></i>
+          {% if insights_count %}
+          {{insights_count}}
+          {% endif %}
+          INSIGHTS
+        </a>
+        <a class="item active" href="{% url 'catalog:makey_new_issues' makey.user.username makey.slug %}">
+          <i class="list icon"></i>
+          {% if issues_count %}
+          {{issues_count}}
+          {% endif %}
+          ISSUES
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'files' %}">
+          <i class="folder icon"></i>
+          {% if files_count %}
+          {{files_count}}
+          {% endif %}
+          FILES
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_bom' makey.user.username makey.slug %}">
+          <i class="file text outline icon"></i>
+          {% if bom_count %}
+          {{bom_count}}
+          {% endif %}
+          BOM
+        </a>
+        <a class="item" href="{% url 'catalog:makey_new_tab_slug' makey.user.username makey.slug 'docs' %}">
+          <i class="book icon"></i>
+          {% if docs_count %}
+          {{docs_count}}
+          {% endif %}
+          DOCS
+        </a>
+        <div class="right menu">
+          <div class="item">
+            <div class="ui icon input search-box">
+              <input type="text" placeholder="Search this Makey..." class="search-input">
+              <i class="search link icon search-button"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="ui grid">
+        <div class="twelve wide column">
+          <div class="ui basic segment back-segment">
+            <a class="back-button" href="{% url 'catalog:makey_new_issues' makey.user.username makey.slug %}"><i class="left chevron icon"></i>Go back to all issues</a>
+          </div>
+          <div class="ui basic segment issue-segment">
+            <div class="ui items">
+              <div class="item">
+                <div class="content">
+                  <div class="header" style="font-size: 1.4em">{{issue.title}}</div>
+                  <div class="meta">
+                    {% if issue.status == "open" %}
+                    <span class="ui green label">Open</span>
+                    {% else %}
+                    <span class="ui red label">Closed</span>
+                    {% endif %}
+                    <a class="author" href="{% url 'catalog:maker' issue.owner.username %}">{{issue.owner.first_name}} {{issue.owner.last_name}}</a>
+                    <span class="time">opened this issue {{issue.added_time|timesince}} ago</span>
+                  </div>
+                  <div class="extra">
+                    {% if issue.labels.count != 0 %}
+                    <i class="icon tags"></i>
+                    <span class="ui labels tiny">
+                      {% for tag in issue.labels.all %}
+                      <div class="ui label">{{tag.name}}</div>
+                      {% endfor %}
+                    </span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ui threaded comments">
+              {# <h3 class="ui dividing header">Comments</h3> #}
+              {% load catalog_tags %}
+              {% for comment in issue.comments.all.reverse %}
+              <div class="comment">
+                <a class="avatar">
+                  <img src="{{comment.user.profile.profile_img_url}}">
+                </a>
+                <div class="content">
+                  <a class="author">{{comment.user.first_name}} {{comment.user.last_name}}</a>
+                  <div class="metadata">
+                    <span class="date">{{comment.added_time|timesince}} ago</span>
+                  </div>
+                  <div class="text">
+                    {{comment.body|urlize_target_blank:None|linebreaks}}
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              {% endfor %}
+              <form class="ui reply form" action="" method="post">
+                <div class="field">
+                  <textarea name="body"></textarea>
+                </div>
+                <input type="hidden" name="action" value="add-issue-comment">
+                {% if not request.user.is_authenticated %}
+                <div class="ui blue labeled icon button login-button">
+                  <i class="icon edit"></i> Comment
+                </div>
+                {% else %}
+                <div class="ui blue labeled submit icon button">
+                  <i class="icon edit"></i> Comment
+                </div>
+                {% endif %}
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="four wide column" style="padding-top: 60px;">
+          <h5 class="ui header">Assignee</h5>
+          {% if issue.assignee %}
+          Assigned to <a href="{% url 'catalog:maker' issue.assignee.username %}">{{issue.assignee.first_name}} {{issue.assignee.last_name}}</a>
+          {% if issue_admin %}
+          <form action="" method="post" class="remove-assignee-form">
+            <input type="hidden" name="action" value="remove-assignee">
+            <button type="submit" class="ui mini button red inverted remove-assignee-button" style="margin-top: 10px;"><i class="close icon"></i>remove assignee</button>
+          </form>
+          {% endif %}
+          {% else %}
+          <p>No one is assigned</p>
+          {% if issue_admin %}
+          <div class="ui action left icon fluid mini input">
+            <i class="search icon"></i>
+            <input type="text" class="add-assignee-input" placeholder="Search for users">
+            <div class="ui blue mini button add-assignee-submit">Assign</div>
+          </div>
+          <form action="" method="post" class="add-assignee-form">
+            <input type="hidden" name="user_id" class="add-assignee-form-user-input">
+            <input type="hidden" name="action" value="add-assignee">
+          </form>
+          {% endif %}
+          {% endif %}
+          <div class="ui divider"></div>
+          <h5 class="ui header">Status</h5>
+          {% if issue.status == "open" %}
+          <p>This issue was opened {{issue.added_time|timesince}} ago</p>
+          {% else %}
+          <p>This issue was closed {{issue.closed_time|timesince}} ago</p>
+          {% endif %}
+          {% if issue_admin %}
+          {% if issue.status == "open" %}
+          <form action="" method="post" class="close-issue-form">
+            <input type="hidden" name="action" value="close-issue">
+            <button type="submit" class="ui tiny button basic close-issue-button">Close issue</button>
+          </form>
+          {% else %}
+          <form action="" method="post" class="reopen-issue-form">
+            <input type="hidden" name="action" value="reopen-issue">
+            <button type="submit" class="ui tiny button basic reopen-issue-button">Reopen issue</button>
+          </form>
+          {% endif %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

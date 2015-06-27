@@ -1,0 +1,84 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet{% endblock %}
+{% block contentmeta %}
+{% endblock %}
+
+{% block extra_js %}
+<!-- App Assets -->
+<script>
+  $(document).ready(function(){
+    // setTimeout("location.reload(true);", 30000);
+    $('.collection-tab .item').tab();
+  });
+</script>
+<script src="{% static 'app/wall/collection_mit.js' %}"></script>
+<link rel="stylesheet" href="{% static 'app/wall/collection_mit.css' %}" type="text/css">
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="sixteen wide column">
+        <h1 class="ui header">Science and Technology Council 2015</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui grid">
+        <div class="four wide column">
+          <div class="ui vertical pointing menu collection-tab">
+            {% for collection in collections %}
+            <a class="item {% if forloop.first %}active{% endif %}" data-tab="{{collection.id}}">
+              {{collection.name}}
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        <div class="twelve wide column">
+          {% for collection in collections %}
+          <div class="ui segment insights-segment ui tab {% if forloop.first %}active{% endif %}" data-tab="{{collection.id}}">
+            <div class="ui top attached label">{{collection.name}}</div>
+            <div class="ui divided items">
+              {% for insight in collection.insights %}
+              <div class="item">
+                <div class="content">
+                  <a class="header" href="{% url 'catalog:makey_new_insight_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug insight.id %}">{{insight.title}}</a>
+                  <div class="meta">
+                    <span class="time">posted {{insight.added_time|timesince}} ago by</span>
+                    <a class="author" href="{% url 'catalog:maker' insight.user.username %}">{{insight.user.first_name}} {{insight.user.last_name}}</a>
+                    <span>on</span>
+                    <a class="makey-link" href="{% url 'catalog:makey_new_slug' insight.makeynotes.all.0.user.username insight.makeynotes.all.0.slug %}">{{insight.makeynotes.all.0.name}}</a>
+                  </div>
+                  <div class="description">
+                    {% load catalog_tags %}
+                    {{insight.body|linebreaks|urlize_target_blank:None}}
+                  </div>
+                </div>
+              </div>
+              {% empty %}
+              <div class="item">
+                <div class="content">
+                  <p>No insights yet</p>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

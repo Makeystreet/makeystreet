@@ -1,0 +1,210 @@
+<script>
+var False = false;
+var True = true;
+var app = {};
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user === undefined) {
+        if(!cur_user_details.id) {
+            // $('#login_modal').modal('show');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+    }
+};
+app.initializeUser();
+
+app.Makey = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/makey/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('id') === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.MakeyFav = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/favorites/makey/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    initialize: function(options) {
+        this.makey_id = this.makey_id || options.makey_id;
+        this.set('makey', '/api/v1/makey/'+ this.makey_id +'/');
+    }
+});
+
+app.MakeyFavList = Backbone.Tastypie.Collection.extend({
+    model : app.MakeyFav,
+    idAttribute : 'id',
+    urlRoot : '/api/v1/favorites/makey/',
+
+    url : function() {
+        return this.urlRoot + "?limit=2&makey=" + this.makey_id + "&user=" + cur_user_details.id;
+    },
+
+    initialize : function(options) {
+        options = options || {};
+        this.makey_id = options.makey_id;
+    },
+});
+
+app.MakeyFavView = Backbone.View.extend({
+    template : Handlebars.compile($('#fav_template').html()),
+
+    events : {
+        'click .fav_makey' : 'toggleFav'
+    },
+
+    initialize : function(options) {
+
+        this.setElement("#makey-" + options.makey_id + "-fav");
+        this.makey_id = options.makey_id;
+
+        this.userFavs = new app.MakeyFavList({
+            makey_id: this.makey_id
+        });
+
+        this.loadFavs();
+
+    },
+
+    loadFavs: function() {
+        var that = this;
+
+        if(cur_user_details.id === undefined) {
+            this.refreshFavStatus();
+            return;
+        }
+
+        this.userFavs.fetch({
+            reset:true,
+            success: function() {
+                that.refreshFavStatus();
+            }
+        });
+    },
+
+    checkUserFav: function() {
+
+        this.userFav = undefined;
+
+        if(cur_user_details.id === undefined)
+            return;
+
+        if(this.userFavs.models.length === 1 &&
+            this.userFavs.models[0].get('user').id === cur_user_details.id) {
+            this.userFav = this.userFavs.models[0];
+        }
+    },
+
+    refreshFavStatus : function() {
+
+        this.checkUserFav();
+
+        var currentUserFav = false;
+
+        if(this.userFav) {
+            currentUserFav = true;
+        }
+
+        this.$el.html(
+            this.template({
+                'favorited': currentUserFav
+            })
+        );
+    },
+
+    toggleFav : function(event) {
+        if(cur_user_details.id === undefined) {
+            $('#login_modal').modal('show');
+            return;
+        }
+
+        mixpanel.track("MakeyAll: Event", {
+            event_type: "fav_clicked",
+            makey_id: this.makey_id,
+            user_id: cur_user_details.id,
+        });
+
+        this.$('.btn').attr("disabled", true);
+
+        if(this.userFav) {
+            var that = this;
+            this.userFav.destroy({
+                success : function() {
+                    that.loadFavs();
+                },
+            });
+
+        } else {
+            var newFav = new app.MakeyFav({
+                'user' : app.cur_fb_user,
+                'makey_id': this.makey_id
+            });
+
+            var that = this;
+            newFav.save(null, {
+                success : function(model, response) {
+                    that.loadFavs();
+                },
+            });
+        }
+    },
+});
+
+app.MakeyView = Backbone.View.extend({
+
+    initialize: function(options) {
+        this.makey_id = options.makey_id;
+        this.setElement("#makey-" + this.makey_id);
+        this.favView = new app.MakeyFavView({
+            makey_id: this.makey_id
+        });
+    }
+});
+
+//--------------
+// Initializers
+//--------------
+
+app.makeys = [];
+app.$makeys = $('.makey .makey-data');
+
+for(var i=0; i<app.$makeys.length; ++i) {
+    var makey_data = app.$makeys[i];
+    var makey_id = $(makey_data).data('makey-id');
+    app.makeys.push(new app.MakeyView({makey_id: makey_id}));
+}
+
+</script>

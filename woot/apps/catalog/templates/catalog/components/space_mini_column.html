@@ -1,0 +1,84 @@
+    <div class="widget">
+        <div class="widget-advanced widget-advanced-alt">
+            <!-- Widget Header -->
+            <div class="widget-header text-center themed-background-dark-flatie">
+                <h4 class="widget-content-light">
+                    {% if space.logo %}
+                    <a href="/space/{{space.id}}/">
+                    <div style="background-image: url('{{space.logo}}');" class="landscape-img"></div>
+                    </a>
+                    {% endif %}
+                    <a href="/space/{{space.id}}/" class="themed-color-flatie"><strong style="color: white;">{{space.name}}</strong></a><br>
+                </h4>
+            </div>
+            <!-- END Widget Header -->
+
+            <!-- Widget Main -->
+            <div class="widget-main">
+                <div class="list-group remove-margin">
+                    {% if "members" in request.path %}
+                    <a href="/space/{{space.id}}/members/" class="list-group-item active">
+                    {% else %}
+                    <a href="/space/{{space.id}}/members/" class="list-group-item">
+                    {% endif %}
+                        <span class="pull-right"><strong class="no_members">{{space.no_members}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-users fa-fw"></i> Members</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    {% if "makeys" in request.path %}
+                    <a href="/space/{{space.id}}/makeys/" class="list-group-item active">
+                    {% else %}
+                    <a href="/space/{{space.id}}/makeys/" class="list-group-item">
+                    {% endif %}
+                        <span class="pull-right"><strong class="no_insights">{{space.no_makeys}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Makeys</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    {% if "inventory" in request.path %}
+                    <a href="/space/{{space.id}}/inventory/" class="list-group-item active">
+                    {% else %}
+                    <a href="/space/{{space.id}}/inventory/" class="list-group-item">
+                    {% endif %}
+                        <span class="pull-right"><strong class="no_inventory">{{space.total_inventory_count}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-briefcase fa-fw"></i> Tools Inventory</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <!-- <a href="/maker/{{maker.username}}/followers/" class="list-group-item">
+                        <span class="pull-right"><strong class="no_followers">{{maker.no_followers}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-users fa-fw"></i> Followers</h4>
+                        <p class="list-group-item-text"></p>
+                    </a> -->
+                    <!-- <a href="/space/{{space.id}}/tools/" class="list-group-item">
+                        <span class="pull-right"><strong class="no_following">{{space.no_tools}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-briefcase fa-fw"></i> Tools</h4>
+                        <p class="list-group-item-text"></p>
+                    </a> -->
+                    <!-- Introduct this later -->
+                    <!-- <a href="javascript:void(0)" class="list-group-item">
+                        <span class="pull-right"><strong>15.325</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Reviews</h4>
+                        <p class="list-group-item-text"></p>
+                    </a> -->
+
+
+                    <!-- these should go on the wall -->
+                    <!-- <a href="javascript:void(0)" class="list-group-item">
+                        <span class="pull-right"><strong>15.325</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Likes</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="javascript:void(0)" class="list-group-item">
+                        <span class="pull-right"><strong>15.325</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Comments</h4>
+                        <p class="list-group-item-text"></p>
+                    </a> -->
+
+                </div>
+                <!-- <br/> -->
+                <!-- <span class="glyphicon glyphicon-minus"></span> makeystreet.com -->
+                <!-- <br/> -->
+                <!-- <i class="fa fa-refresh" ></i>  -->
+            </div>
+            <!-- END Widget Main -->
+        </div>
+    </div>

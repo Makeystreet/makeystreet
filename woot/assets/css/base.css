@@ -1,0 +1,62 @@
+.transparent{
+  background:rgba(255,255,255,0.5);
+}
+#jumbo {
+  padding-bottom: 0px;
+}
+
+.navbar .nav > li > a:focus,
+.navbar .nav > li > a:hover {
+  color: #ffffff;
+  text-decoration: none;
+  /*background-color: #1684c2;*/
+  background-color: #000000;
+}
+.dull{
+	color:#999999;
+}
+.bright{
+	color:#2fa4e7;
+	font-size: 21px;
+
+}
+.square-thumbnail
+{
+
+	float:left;
+  width: 100%;
+  padding-bottom: 100%; /* = width for a 1:1 aspect ratio */
+  margin:1.66%;
+  /*background-color: #1E1E1E;*/
+  background-position: center center;
+	background-repeat: no-repeat;
+	background-size: cover;
+}
+
+.landscape-img {
+  float: left;
+  width: 100%;
+  padding-bottom: 75%; /* hack for 4:3 aspect ratio. (height / width) x 100 */
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.content2 {
+    position:absolute;
+    height:100%; /* = 100% - 2*10% padding */
+    width:100%; /* = 100% - 2*5% padding */
+    /*padding: 10% 5%;*/
+}
+
+.table2{
+    display:table;
+    height:100%;
+    width:100%;
+}
+.table-cell2{
+    display:table-cell;
+    vertical-align:middle;
+    height:100%;
+    width:100%;
+}

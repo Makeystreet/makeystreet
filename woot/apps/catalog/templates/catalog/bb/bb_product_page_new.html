@@ -1,0 +1,114 @@
+<script type="text/javascript">
+var app = {};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            // alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+app.ImageView = Backbone.View.extend({
+    el: '.gallery',
+
+    events: {
+        'click .product_image': 'showImage',
+    },
+
+    showImage: function(event){
+        var imgUrl = event.target.style.background.replace('url(','').replace(')','');
+        this.$('#mainimage img')[0].src = imgUrl;
+    },
+});
+
+app.MixpanelView = Backbone.View.extend({
+    el: 'body',
+
+    events: {
+        'click .moduleMixpanel': 'clickModule',
+        'click .imageMixpanel': 'clickImage',
+        'click .reviewMixpanel': 'clickReviewMore',
+        'click .shopurlMixpanel': 'clickShopurl',
+        'click .descriptionMixpanel': 'clickDescription',
+    },
+
+    initialize: function(){
+        mixpanel.track("ProductP: Event", {
+            event_type: "page_opened",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+        });
+    },
+
+    clickImage: function(event){
+        mixpanel.track("ProductP: Event", {
+            event_type: "image_clicked",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+            image_id: event.target.id.substring(4),
+        });
+    },
+
+    clickModule: function(event){
+        mixpanel.track("ProductP: Event", {
+            event_type: "makey_clicked",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+            image_id: event.target.id.substring(7),
+        });
+    },
+
+    clickReviewMore: function(event){
+        mixpanel.track("ProductP: Event", {
+            event_type: "review_clicked",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+            image_id: event.target.id.substring(7),
+        });
+    },
+
+    clickShopurl: function(event){
+        mixpanel.track("ProductP: Event", {
+            event_type: "shopurl_clicked",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+            image_id: event.target.id.substring(8),
+        });
+    },
+
+    clickDescription: function(event){
+        mixpanel.track("ProductP: Event", {
+            event_type: "description_clicked",
+            user_id: global_user_id,
+            product_id: {{product_id}},
+            image_id: event.target.id.substring(12),
+        });
+    },
+})
+
+/* INITIALISE */
+app.initializeUser();
+app.galleryView = new app.ImageView();
+app.mixpanelView = new app.MixpanelView();
+</script>

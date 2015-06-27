@@ -1,0 +1,179 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} {{space.name}} {% endblock %}
+{% block contentmeta%}
+    <meta name="description" content="Find more details about makerspace - {{space.name}}">
+    <!-- <meta name="author" content="Siddardha G, Alex VJ"> -->
+{% endblock%}
+
+
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+        $(document).ready(function(){
+        {% if can_edit %}
+            $('.show_stackoverflow').show();
+            $('.show_blog').show();
+            $('.show_website').show();
+            $('.show_location').show();
+        {% endif %}
+        });
+</script>
+
+{% if not is_space_admin and space.latitude and space.longitude %}
+<style type="text/css">
+    #space_location_map {
+        width: 100%;
+        height: 250px;
+    }
+</style>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js"></script>
+<script type="text/javascript">
+    function initialize() {
+        var markerPosition = new google.maps.LatLng({{space.latitude}}, {{space.longitude}});
+        var zoom_level = {{space.map_zoom_level}} || 13;
+        var map_canvas = document.getElementById('space_location_map');
+        var map_options = {
+            center: markerPosition,
+            zoom: zoom_level,
+            mapTypeId: google.maps.MapTypeId.ROADMAP,
+            streetViewControl: false,
+            mapTypeControl: false
+        };
+        var map = new google.maps.Map(map_canvas, map_options);
+        var marker = new google.maps.Marker({
+            position: markerPosition,
+            map: map
+        });
+    }
+    google.maps.event.addDomListener(window, 'load', initialize);
+</script>
+{% elif is_space_admin %}
+<style type="text/css">
+    .gllpMap {
+        width: 100%;
+        height: 250px;
+    }
+    .gllpLatlonPicker {
+        margin-bottom: 20px;
+    }
+</style>
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js"></script>
+<script type="text/javascript" src="{% static 'js/jquery-gmaps-latlon-picker.js' %}"></script>
+<script type="text/javascript">
+    $(function() {
+        $('.gllpSaveButton').bind('click', function() {
+            $('.gllpSaveStatus').html('Saving location...');
+            $.ajax({
+                headers : {
+                    'Content-Type' : 'application/json'
+                },
+                url : '/api/v1/space/{{space.id}}',
+                type : 'PATCH',
+                data :  JSON.stringify({
+                    latitude: $('.gllpLatitude').val(),
+                    longitude: $('.gllpLongitude').val(),
+                    map_zoom_level: $('.gllpZoom').val()
+                }),
+                success : function(response, textStatus, jqXhr) {
+                    $('.gllpSaveStatus').html('Location saved.');
+                },
+                error : function(jqXhr, textStatus, errorThrown) {
+                    $('.gllpSaveStatus').html("Can't save location");
+                }
+            });
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_space_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_space_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/space_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+    {% if not is_space_admin and space.latitude and space.longitude %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block" style="padding: 0;">
+                <div id="space_location_map">
+                    <center><i class="fa fa-circle-o-notch fa-spin"></i> Loading map...</center>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% elif is_space_admin %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+                <div class="block-title">
+                <h2><strong>Edit Makerspace location</strong></h2>
+                </div>
+                <div class="block-content">
+                    <div id="space_location_map_editable">
+                        <p>Drag the marker, or double click on the map to set location. Search for cities, countries or landmarks. Click save when done.</p>
+                        <fieldset class="gllpLatlonPicker" id="space_location_map_element">
+                            <input type="text" class="gllpSearchField" placeholder="Bangalore" />
+                            <input type="button" class="gllpSearchButton" value="Search" />
+                            <input type="button" class="gllpSaveButton" value="Save" />
+                            <span class="gllpSaveStatus"></span>
+                            <br /><br />
+                            <div class="gllpMap">Google Maps</div>
+                            {% if space.latitude and space.longitude %}
+                                <input type="hidden" class="gllpLatitude" value="{{space.latitude}}" />
+                                <input type="hidden" class="gllpLongitude" value="{{space.longitude}}" />
+                            {% else %}
+                                <input type="hidden" class="gllpLatitude" value="12.9667" />
+                                <input type="hidden" class="gllpLongitude" value="77.5667" />
+                            {% endif %}
+                            {% if space.map_zoom_level %}
+                                <input type="hidden" class="gllpZoom" value="{{space.map_zoom_level}}" />
+                            {% else %}
+                                <input type="hidden" class="gllpZoom" value="13" />
+                            {% endif %}
+                        </fieldset>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+                <div class="block-title">
+                    <h2><strong>About {{space.name}}</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="maker_aboutme" class="">
+
+                    </div>
+                    <p>{{space.description}}</p>
+                    <p>
+                        Website: <a href="{{space.website}}">{{space.website}}</a><br/>
+                        Contact: <a href="{{space.website}}">{{space.email}}</a><br/>
+                        Address: <a href="{{space.website}}">{{space.address}}</a><br/>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

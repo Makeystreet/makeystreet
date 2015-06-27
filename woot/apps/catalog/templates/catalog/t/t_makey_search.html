@@ -1,0 +1,114 @@
+
+{% verbatim %}
+<!-- Top Makey template -->
+<script type="text/template" id="makey_template">
+    <div class="col-sm-4 col-md-4">
+        <div class="widget themed-background-dark">
+            <a href="/makey/{{id}}/">
+                <div style="background-image: url('{{cover_pic_url}}');" class="landscape-img"></div>
+            </a>
+            <div class="widget-extra">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h4 style="margin:10px;"><a href="/makey/{{id}}/" style="color:#ffffff;">{{name}}</a></h4>
+                    </div>
+                </div>
+                <hr style="margin:0px;">
+                <!-- showing makey stats-->
+                <div class="row text-center">
+                    <div class="col-xs-4">
+                        <div style="width: 100%">
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <strong>{{images_count}}</strong>
+                                </h4>
+                            </center>
+                        </div>
+                        <div>
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <small>Images</small>
+                                </h4>
+                            </center>
+                        </div>
+                    </div>
+                    <div class="col-xs-4">
+                        <div style="width: 100%">
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <strong>{{insights_count}}</strong>
+                                </h4>
+                            </center>
+                        </div>
+                        <div>
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <small>Insights</small>
+                                </h4>
+                            </center>
+                        </div>
+                    </div>
+                    <div class="col-xs-4">
+                        <div style="width: 100%">
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <strong>{{parts_count}}</strong>
+                                </h4>
+                            </center>
+                        </div>
+                        <div>
+                            <center>
+                                <h4 class="widget-content-light">
+                                    <small>Parts</small>
+                                </h4>
+                            </center>
+                        </div>
+                    </div>
+                </div>
+                <!-- showing user images-->
+                <div class="row">
+                    <div class="col-xs-12"  >
+                        <div class="table-responsive">
+                            <table class="table" style="margin:0px; padding:0px; border:none;">
+                            <tbody>
+                            <tr>
+                            {{#each collaborators}}
+                                <td style="padding:2px; width: 40px;">
+                                <a href="/maker/{{username}}/">
+                                <img style="max-height:35px;max-width:35px; border-radius: 5px;" src="{{profile_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{first_name}} {{last_name}}"></a>
+                                </td>
+                            {{/each}}
+                            </tr
+                            </tbody>
+                            </table>
+                        </div>
+                        </br>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+<script type="text/template" id="filter_item_template">
+    <div class="filter-item" data-id="{{id}}">
+        <span>{{name}}</span>
+    </div>
+</script>
+<script type="text/template" id="search_overview_template">
+    <span>Showing {{number}} results for "{{query}}"</span>
+    {{#if tags}}
+        <span>, filtered by:</span>
+        <ul>
+        {{#each tags}}
+            <li><span class="search-overview-tag">{{name}}</span></li>
+        {{/each}}
+        </ul>
+    {{/if}}
+</script>
+<script type="text/template" id="search_waiting_template">
+    <center><i class="fa fa-spin fa-circle-o-notch"></i> Searching... Hold tight.</center>
+</script>
+{% endverbatim %}

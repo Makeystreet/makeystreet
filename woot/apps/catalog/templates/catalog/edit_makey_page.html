@@ -1,0 +1,1872 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}{{ makey_name }}{% endblock %}
+{% block contentmeta %}
+    <meta property="og:title"  content="{{makey.name}}" />
+    <meta property="og:type"   content="makey_street:makey" />
+    <meta property="og:url"    content="{{makey_url}}" />
+    {% if makey.cover_pic %}
+        <meta property="og:image"  content="{{makey.cover_pic}}"/>
+        <meta property="og:image:url" content="{{makey.cover_pic}}" />
+    {% else %}
+        <meta property="og:image"  content="{{makey.images.all.0}}"/>
+        <meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+    {% endif %}
+
+    <meta name="og:description" content="{{makey.about}}">
+    <meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.userPopover{
+    max-width : 500px !important;
+    width : 350px !important;
+    padding: 1px;
+    margin: 1px;
+    /*height: 194px ;*/
+}
+.notePopover{
+    width: 275px !important;
+
+}
+
+
+.cn {
+    position: absolute;
+    display: table;
+    z-index: 2;
+    opacity: 0;
+    left: 10;
+    top: 10;
+    width:50px; /*replace this width programatically*/
+    height:50px;
+    vertical-align: middle;
+    text-align: center;
+    margin: auto;
+    opacity:1;
+    background:rgba(0,0,0,0) center no-repeat;
+}
+
+div.inner {
+    xdisplay: block;
+    /*width: 280px;*/
+    /*height: 80px;*/
+    display:table-cell;
+    vertical-align:middle;
+}
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- block extra_js -->
+<!-- light box for showing images -->
+<link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script src="{% static 'js/jquery.backstretch.min.js' %}"></script>
+<script src="{% static 'js/intro.min.js' %}"></script>
+<script src="{% static 'js/jquery.cookie.js' %}"></script>
+<script src="{% static 'introjs.js/intro.min.js' %}"></script>
+<script src="{% static 'js/s3upload.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/introjs.min.css' %}" type="text/css">
+
+<!-- NPROGRESS Stuff -->
+<link rel="stylesheet" href="{% static 'css/nprogress.css' %}" type="text/css">
+<script src="{% static 'js/nprogress.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/animate.css' %}" type="text/css">
+<script src="{% static 'js/bootstrap-growl.min.js' %}"></script>
+<script src="{% static 'js/notify-combined.min.js' %}"></script>
+
+<!-- <script src="{% static 'proui/js/app.js' %}"></script> -->
+<script>
+    // function onScroll(event){
+    //     var scrollPos = $(document).scrollTop();
+
+    //     console.log("test1");
+    //     console.log(scrollPos);
+    //     $('#toc2 a').each(function () {
+    //         var currLink = $(this);
+    //         // console.log(currLink);
+    //         var refElement = $(currLink.attr("href"));
+    //         console.log(refElement.offset().top);
+    //         console.log(refElement.offset().top + refElement.height());
+    //         if (refElement.offset().top <= scrollPos && refElement.offset().top + refElement.height() > scrollPos) {
+    //             $('#toc2 ul li a').removeClass("active"); //added to remove active class from all a elements
+    //             currLink.addClass("active");
+    //             console.log("test2");
+    //         }
+    //         else{
+    //             currLink.removeClass("active");
+    //             console.log("test3");
+    //         }
+    //     });
+    // }
+    function onScroll(event){
+        var scrollPos = $(document).scrollTop();
+
+        // console.log("test1");
+        // console.log(scrollPos);
+        $('#toc2 a').each(function () {
+            var currLink = $(this);
+            // console.log(currLink);
+            var refElement = $(currLink.attr("href"));
+            // console.log(refElement.offset().top);
+            // console.log(refElement.offset().top + refElement.height());
+            if (refElement.offset().top <= scrollPos+15 && refElement.offset().top + refElement.height() > scrollPos+15) {
+                $('#toc2 ul li a').removeClass("active"); //added to remove active class from all a elements
+                currLink.addClass("active");
+                // console.log("test2");
+            }
+            else{
+                currLink.removeClass("active");
+                // console.log("test3");
+            }
+        });
+    }
+    $(document).ready(function(){
+        $('a.img').nivoLightbox();
+        $('#sticker_leftcolumn').width($('#left_column').width());
+        $(window).resize(function() {
+            $('#sticker_leftcolumn').width($('#left_column').width());
+        });
+        $("#sticker_leftcolumn").sticky({topSpacing:0});
+        // mixpanel when this page is launched
+        mixpanel.track("MakeyP: Launched",{makey_id:{{makey_id}},user_id:cur_user_details.id,user_name:cur_user_details.facebook_name});
+
+        // scroll navigation animation
+        // $('a[href^="#"]').on('click', function (e) {
+        //     e.preventDefault();
+        //     $(document).off("scroll");
+
+        //     $('a').each(function () {
+        //         $(this).removeClass('active');
+        //     })
+        //     $(this).addClass('active');
+        //     var target = this.hash,
+        //         menu = target;
+        //         console.log(menu);
+        //     $target = $(target);
+        //     console.log($target.offset());
+        //     $('html, body').stop().animate({
+        //         'scrollTop': 2
+        //     }, 500, 'swing', function () {
+        //         window.location.hash = target;
+        //         $(document).on("scroll", onScroll);
+        //     });
+        // });
+        $(document).on("scroll", onScroll);
+        // end of scroll navigation animation
+
+        // $("#sticker_submenu").sticky({topSpacing:0});
+        // $('#a_images').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#images").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Images"});
+        // });
+        // $('#a_about').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#about").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"About"});
+        // });
+        // $('#a_notes').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#notes").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Notes"});
+        // });
+        // $('#a_documentations').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#documentations").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Documentations"});
+        // });
+        // $('#a_collaborators').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#collaborators").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Collaborators"});
+        // });
+        // $('#a_parts_used').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#parts").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Parts Used"});
+        // });
+        // $('#a_tools_used').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#tools").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Tools Used"});
+        // });
+        // $('#a_comments').click(function(){
+        //     $('html, body').animate({
+        //         'scrollTop' : $("#comments").offset().top - $('#sticker_submenu').height() -20
+        //     });
+        //     mixpanel.track("Makey Subnavbar clicked",{item:"Comments"});
+        // });
+        {% if can_edit%}
+            $('.show_parts').show();
+            $('.show_tools').show();
+            $('.show_mentors').show();
+            $('.show_credits').show();
+            $('.show_why').show();
+            $('.show_how').show();
+            $('.show_status').show();
+            $('.show_notes').show();
+        {% endif %}
+
+        {% if makey.cover_pic %}
+            $('#bg').backstretch("{{makey.cover_pic}}");
+        {% else %}
+            {% if makey.images.all|length > 0 %}
+                $('#bg').backstretch("{{makey.images.all.0}}");
+            {% else %}
+                $('#bg').backstretch("{% static 'images/tools.jpg' %}");
+            {% endif %}
+        {% endif %}
+        // $('#bg').css('z-index', '');
+        // introduction for the people who sign up for the first time.
+
+        // var introguide=introJs();
+        // introguide.setOptions({
+        //     steps:[
+        //     // {
+        //     //     element:'#makey_about',
+        //     //     intro:'This is a short description about the project',
+        //     //     position:'bottom',
+        //     // },
+        //     {
+        //         element:'#sticker_submenu',
+        //         intro:'<strong>Stats and navigation for this makey.</strong><br><br> Click to navigate to each section.',
+        //         position:'bottom',
+
+        //     },
+        //     {
+        //         element:'#likes',
+        //         intro:'<strong>Like this makey</strong><br><br>Let the collaborators know that you like their work',
+        //         position:'bottom',
+
+        //     },
+        //     {
+        //         element:'#create_comment',
+        //         intro:'<strong>Comment on this makey</strong><br><br>ask a question or leave a feedback / comment',
+        //         position:'right',
+
+        //     },
+        //     {
+        //         element:'#nav_create_makey',
+        //         intro:'<strong>Create a makey!</strong>',
+        //         position:'right',
+
+        //     },
+
+
+
+        //     ]
+        // });
+        // var show_makey_intro={{show_makey_intro}};
+        // var is_loggedin={{is_loggedin}};
+        // if (!is_loggedin)
+        // {
+        //     //show_makey_intro variable from the backend is irrelevant
+        //     if($.cookie('seen_makey_intro'))
+        //     {
+        //         show_makey_intro=false;
+        //         // $.cookie('seen_makey_intro','true')
+        //     }
+        //     else
+        //     {
+        //         // user has not seen the makey intro
+        //         show_makey_intro=true;
+        //         // set cookie, so that he does not see it again
+        //         $.cookie('seen_makey_intro','true',{ expires: 30 });
+        //     }
+        // }
+        // // var show_makey_intro=true;
+        // if(show_makey_intro)
+        // {
+        //     // show the intro only if the user has never seen it.
+
+        //     introguide.start();
+        //     mixpanel.track("MakeyP: Intro started");
+        //     introguide.oncomplete(function(){
+        //         mixpanel.track("MakeyP: Intro completed",{item:""});
+        //     });
+
+        //     introguide.onexit(function() {
+        //       mixpanel.track("MakeyP: Intro exited",{item:""});
+        //       // alert("Intro exited");
+        //     });
+        //     introguide.onchange(function(targetElement){
+        //         mixpanel.track("MakeyP: Intro next step",{next_step:targetElement.id});
+        //     });
+        // }
+    });
+
+</script>
+
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        mixpanel.track_links("a[rel=topbar]", "NavbarTop", function(target){
+        var details = {};
+
+        if(app.cur_fb_user == undefined) {
+            curUser = "NotLoggedIn";
+        } else {
+            curUser = app.cur_fb_user.facebook_name;
+        }
+
+        details.btn = target.innerText;
+        details.user = curUser;
+
+        return details;
+        });
+    });
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+
+.bootstrap-tagsinput {
+    width: 100%;
+}
+
+#makey-tags .twitter-typeahead {
+    width: 100%;
+}
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.typeahead {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 8px;
+    max-width: 100%;
+    margin: 1px 0;
+    color: #394263;
+    border: 1px solid #dbe1e8;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.typeahead {
+    width: 100%;
+    font-size: 13px;
+    padding: 6px 8px;
+    max-width: 100%;
+    margin: 1px 0;
+    color: #394263;
+    border: 1px solid #dbe1e8;
+    border-radius: 4px;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.075);
+    -webkit-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+    transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+}
+
+.twitter-typeahead {
+    width: 100%;
+}
+
+.tt-query,
+.tt-hint {
+  margin-bottom: 0;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  /*min-width: 400px;*/
+  width: 100%;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+
+</style>
+{% endblock %}
+
+
+{% block templates %}
+    {% include "catalog/t/t_edit_makey_page.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_common.html" %}
+    {% include "catalog/bb/bb_edit_makey_page.html" %}
+{% endblock %}
+
+
+{% block content_top %}
+{% endblock %}
+
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Makey header -->
+<div class ="row">
+    <div class="col-xs-12">
+        <div id="bg">
+            <div style="background:rgba(255,255,255,0.1);">
+                <div class="jumbotron" style="background:rgba(0,0,0,0.1);" id="jumbo">
+                    <div id="name-editable-container">
+                    </div>
+                    <!-- collaborators -->
+                    <!-- <div class="row">
+                        <div class="col-xs-1" style="padding: 0.5px !important; margin: 0.5px !important;">
+                            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Alex JV">
+                                <a id="collab_1" href="/maker/alex/" class="collaborator">
+                                    <img height="auto" src="http://graph.facebook.com/100000198174701/picture?width=100&amp;height=100" altname="Alex">
+                                    <small style="color:#999999">Alex</small>
+                                </a>
+                            </div>
+                        </div>
+
+
+                        <div class="col-xs-1" style="padding: 0.5px !important; margin: 0.5px !important;">
+                            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Gokul Narakesardnahc">
+                                <a id="collab_138" href="/maker/gokulchandrasekaran/" class="collaborator">
+                                    <img height="auto" src="http://graph.facebook.com/683275833/picture?width=100&amp;height=100" altname="Gokul">
+                                    <small style="color:#999999">Gokul</small>
+                                </a>
+                            </div>
+                        </div>
+
+
+                        <div class="col-xs-1" style="padding: 0.5px !important; margin: 0.5px !important;">
+                            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Siddardha Garimella">
+                                <a id="collab_76" href="/maker/gsiddardha/" class="collaborator">
+                                    <img height="auto" src="http://graph.facebook.com/1140698610/picture?width=100&amp;height=100" altname="Siddardha">
+                                    <small style="color:#999999">Siddardha</small>
+                                </a>
+                            </div>
+                        </div>
+
+
+                        <div class="col-xs-1" style="padding: 0.5px !important; margin: 0.5px !important;">
+                            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="" data-original-title="Kedar Kulkarni">
+                                <a id="collab_62" href="/maker/writetokedar/" class="collaborator">
+                                    <img height="auto" src="http://graph.facebook.com/100000662591282/picture?width=100&amp;height=100" altname="Kedar">
+                                    <small style="color:#999999">Kedar</small>
+                                </a>
+                            </div>
+                        </div>
+                        </div> -->
+                    <!-- Other collaborators -->
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <br/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="collaborators">
+            <div class="col-sm-1 col-md-1">
+                <p>Made By</p>
+            </div>
+            <div class="col-sm-11 col-md-11" style="margin-bottom:-15px;">
+                <div id="makey_collaborators" style="display:block; width:100%; height:135px;">
+                    <div class="row">
+                        <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                    </div>
+                </div>
+                <div id="collab_hover_content" style="display:none;"></div>
+                {% if can_edit %}
+                <!-- Add/Edit Users Modal -->
+                <div class="modal fade col-sm-12" id="add_collab_modal" tabindex="-1" role="dialog" aria-labelledby="add_collab_label" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content col-sm-offset-1">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="add_collab_label">Add/Edit Collaborators</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="form-inline">
+                                            <div class="form-group">
+                                                <input class="form-control" type="text" id="new_collaborator" placeholder="Enter Name, Username or E-Mail Address">
+                                            </div>
+                                            <button class="btn btn-default"  id="add_new_collab">Add User</button>
+                                        </div>
+                                        <br/>
+
+                                        <div class="form-inline" style="display:none;" id="user_name_form">
+                                            <div class="form-group">
+                                                <input type="text" class="form-control" id="new_collab_name" placeholder="Enter Name">
+                                            </div>
+                                            <button class="btn btn-default" id="save_new_collab">Save User</button>
+                                            <button class="btn btn-default" id="cancel_add_new_collab">Cancel</button>
+                                        </div>
+
+                                        <div id="loading_suggestions" style="display:none;z-index:2;">
+                                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                        </div>
+                                        <div class="list-group" id="collaborators_list" style="z-index:2;"></div>
+
+                                        <!-- Notifications -->
+                                        <div class="alert alert-warning" id="waiting_user_add" style="display:none;">
+                                            Saving ... Please wait!
+                                        </div>
+                                        <div class="alert alert-success" id="success_user_add" style="display:none;">
+                                            Saved!
+                                        </div>
+                                        <div class="alert alert-danger" id="failed_new_user_add" style="display:none;">
+                                            Missing Info. Please complete before submitting
+                                        </div>
+                                        <div class="alert alert-danger" id="error_new_user_email" style="display:none;">
+                                            Please check the user's email address once again!
+                                        </div>
+
+                                        <table class="table table-bordered table-striped table-hover" id="final_collaborators_list">
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_user_modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+<div>
+    <p></p>
+</div>
+
+<div class="row">
+    <div class="column1 col-sm-3 col-md-3" id="left_column">
+
+        <div id="sticker_leftcolumn">
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Manage">
+                        <strong>Manage Makey</strong>
+                    </h2>
+                </div>
+                <div class="block-content list-group">
+                    <a href="{% url 'catalog:save_makey' makey.id %}" class="list-group-item">Done</a>
+                </div>
+            </div>
+
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Table of Content">
+                        <strong>Content</strong>
+                    </h2>
+                </div>
+                <div class="block-content list-group" id="toc2">
+                    <a href="#about" class="list-group-item active">
+                         What is this?
+                    </a>
+                    {% comment %}
+                    <a href="#whydo" class="list-group-item show_why" style="display:none;">
+                         Why did we do this?
+                    </a>
+                    {% endcomment %}
+                    <a href="#docs-text" class="list-group-item show_how" style="display:none;">
+                         Documentation
+                    </a>
+                    {% comment %}
+                    <a href="#how-to" class="list-group-item show_how" style="display:none;">
+                         Resources<span class="badge how_no">0</span>
+                    </a>
+                    {% endcomment %}
+                    <a href="#images" class="list-group-item">
+                         Gallery
+                    </a>
+                    <a href="#files" class="list-group-item">
+                         Files
+                    </a>
+                    <a href="#notes" class="list-group-item show_notes" style="display:none">
+                         Insights
+                    </a>
+                    <a href="#derived" class="list-group-item show_derived">
+                         Derived from another makey
+                    </a>
+                    <a href="#as_part" class="list-group-item show_as_part">
+                         Available as a part
+                    </a>
+                    <a href="#parts" class="list-group-item show_parts" style="display:none;">
+                         Components used
+                    </a>
+                    {% comment %}
+                    <a href="#tools" class="list-group-item show_tools" style="display:none;">
+                         Tools used<span class="badge tools_no">0</span>
+                    </a>
+                    {% endcomment %}
+                    <a href="#status" class="list-group-item show_status" style="display:none;">
+                         Status
+                    </a>
+                    <a href="#mentors" class="list-group-item show_mentors" style="display:none;">
+                         Mentors
+                    </a>
+                    {% comment %}
+                    <a href="#credits" class="list-group-item show_credits" style="display:none;">
+                         Credits
+                    </a>
+                    {% endcomment %}
+                    {% comment %}
+                    <a href="#comments" class="list-group-item">
+                         Comments<span class="badge comments_no">0</span>
+                    </a>
+                    {% endcomment %}
+
+                </div>
+            </div>
+
+            {% if makey.made_in%}
+                <div>
+                    <h4><strong>Made in</strong></h4>
+                </div>
+                <div class="widget themed-background-dark">
+                    <div class="widget-extra">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <h3 style="margin:10px;"><a href="/space/{{makey.made_in.id}}" style="color:#ffffff;">{{makey.made_in.name}}</a></h3>
+                            </div>
+                        </div>
+                        <hr style="margin:0px;">
+                        <!-- showing space stats-->
+                        <div class="row text-center">
+                            <div class="col-xs-6">
+                                <h3 style="margin:10px;" class="widget-content-light">
+                                    <a href="/space/{{makey.made_in.id}}/members" style="color:#ffffff;">
+                                        <strong>{{makey.made_in.members.all|length}}</strong><br>
+                                        <small>Members</small>
+                                    </a>
+                                </h3>
+                            </div>
+                            <div class="col-xs-6">
+                                <h3 style="margin:10px;" class="widget-content-light">
+                                    <a href="/space/{{makey.made_in.id}}/makeys" style="color:#ffffff;">
+                                        <strong>{{makey.made_in.makeys_made_in.all|length}}</strong><br>
+                                        <small>Makeys</small>
+                                    </a>
+                                </h3>
+                            </div>
+                            <!-- <div class="col-xs-4">
+                                <h3 style="margin:10px;" class="widget-content-light">
+                                    <strong>{{makey.made_in.tools.all|length}}</strong><br>
+                                    <small>Tools</small>
+                                </h3>
+                            </div> -->
+                        </div>
+                    </div>
+                </div>
+
+            {% endif %}
+            <!-- <div class="block" >
+                <div class="block-title">
+                    <h2><strong>Content</strong></h2>
+                </div>
+                <div class="block-content">
+
+                    <div id="makey_content_nav" class="">
+                        <ul>
+                            <li><a href="#about">What is this?</a></li>
+                            <li class='' ><a href="#whydo" >Why did we do it?</a></li>
+                            <li><a href="#images">Gallery</a></li>
+                            <li class='' ><a href="#how-to">How did we do it?</a></li>
+                            <li><a href="#notes">What did we learn?(Insights)</a></li>
+                            <li class='show_parts' style="display:none;"><a href="#parts" >Parts used</a></li>
+                            <li class='show_tools' style="display:none;"><a href="#tools" >Tools used</a></li>
+                            <li><a href="#status">Status</a></li>
+                            <li class='show_mentors' style="display:none;"><a href="#mentors" >Mentors</a></li>
+                            <li class='show_credits' style="display:none;"><a href="#credits" >Credits</a></li>
+                            <li><a href="#comments">Comments</a></li>
+
+                        </ul>
+
+                    </div>
+
+
+                </div>
+            </div> -->
+
+        </div>
+    </div>
+    <div class="column2 col-sm-6 col-md-6" id='column2'>
+        <!-- subnav bar -->
+        <!-- <div class="row ">
+            <div class="col-xs-12" >
+                <div class="block" id="sticker_submenu" style="z-index:2; padding:0px;">
+                    <div class="collapse navbar-collapse" >
+                        <ul class="nav navbar-nav navbar-justified">
+                            <li>
+                                <a class ="preventDefault dull" id = "a_images" href="#">
+                                    Gallery<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+                            <li>
+                                <a class ="preventDefault dull" id = "a_documentations" href="#">
+                                    Documentation<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+                            <li>
+                                <a class ="preventDefault dull" id = "a_notes" href="#">
+                                    Insights<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class ="preventDefault dull" id = "a_parts_used" href="#">
+                                    Parts<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+                            <li>
+                                <a class ="preventDefault dull" id = "a_tools_used" href="#">
+                                    Tools<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+                            <li>
+                                <a class ="preventDefault dull" id = "a_comments" href="#">
+                                    Comments<br/>
+                                    <center><span class="bright">0</span></center>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <br/> -->
+        <!-- Project Pictures -->
+
+        <!-- Project About -->
+        <div class="row" id="about">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2><strong>What is this?</strong></h2>
+                        <div class="block-options pull-right">
+                            <button type="button" class="btn btn-alt btn-success btn-sm add-images-v2" data-toggle="modal" data-target="#edit_about_modal"><i class="fa fa-pencil"></i>&nbsp;Edit description</button>
+                        </div>
+                    </div>
+                    <!-- <h3>About</h3> -->
+                    <div class="block-content">
+                        <div id="makey_about" class="">
+                            <p>Brief description about this Makey</p>
+                        </div>
+                        <div class="modal fade col-sm-12" id="edit_about_modal" tabindex="-1" role="dialog" aria-labelledby="edit_about_label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content col-sm-offset-1">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="edit_about_label">Edit Makey Description</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <textarea class="form-control" rows="3" id="edit_about" placeholder="Short description about this Makey" maxlength="200"></textarea>
+                                        <div class="alert alert-info" id="chars_about"><span id="chars_length">200</span> chars left</div>
+                                        <div class="alert alert-warning" id="waiting_about" style="display:none;">Saving ... Please wait!</div>
+                                        <div class="alert alert-success" id="success_about" style="display:none;">Saved!</div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-info" id="save_edit_about">Save</button>
+                                            <button type="button" class="btn btn-default" data-dismiss="modal" id="close_about_modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% comment %}
+        <!-- why did we do this-->
+        <div class="row" id="whydo" >
+            <div class="show_why" style="display:none;">
+                <div class="col-xs-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <h2><strong>Why did we do this?</strong></h2>
+                        </div>
+                        <!-- <h3>About</h3> -->
+                        <div class="block-content">
+                            <div id="makey_why" class="">
+                                <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div>
+                            </div>
+                            {% if can_edit %}
+                            <div>
+                                <a href="" class="preventDefault" data-toggle="modal" data-target="#edit_why_modal">
+                                <span class="glyphicon glyphicon-plus"></span> Edit this section
+                                </a>
+                            </div>
+                            <div class="modal fade col-sm-12" id="edit_why_modal" tabindex="-1" role="dialog" aria-labelledby="edit_why_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title" id="edit_why_label">Edit "Why did we do this?"</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>
+                                                Enter your motivation and inpiration for this project. Tell us why you did this project.
+                                            </p>
+
+                                            <hr/>
+                                            <textarea class="form-control" rows="5" id="edit_why" placeholder="Everyone who helped make this more awesome!"></textarea>
+                                            <div class="alert alert-warning" id="waiting_why" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_why" style="display:none;">Saved!</div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" id="save_edit_why">Save</button>
+                                                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_why_modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+
+
+
+
+
+        <!-- How did we do it? -->
+        <div class="row " id="docs-text" >
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Documentation"><strong>Documentation</strong></h2>
+                        <div class="block-options pull-right">
+                            <button type="button" class="btn btn-alt btn-success btn-sm add-textdoc-btn"><i class="fa fa-plus"></i>&nbsp;Add documentation</button>
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey-textdocs-items">
+                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                        </div>
+                        <hr />
+                        <div style="margin-bottom: 20px;" id="add-textdoc-container">
+                            <button type="button" class="btn btn-success btn-block add-textdoc-btn">Add documentation</button>
+                            <div id="add-textdoc-modal-container"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% comment %}
+        <!-- How did we do it? -->
+        <div class="row " id="how-to" >
+            <div class="show_how" style="display:none;">
+                <div class="col-sm-12 col-md-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="External Resources"><strong>Resources</strong></h2>
+                        </div>
+                        <div class="block-content">
+                            <div>
+                                <ul id="makey_documentation">
+                                    <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                </ul>
+                            </div>
+                            <hr style="width: 100%"/>
+                            <div id="add-documentation-container" style="margin-bottom: 20px;">
+                                <div style="padding-left: 5px;">Add documentation</div>
+                                <div id="add-doc-url-preview-container" style="display: none">
+                                    <a id="add-doc-url-preview-link" target="_blank">
+                                        <i class="fa fa-link"></i>
+                                        &nbsp;
+                                        <span id="add-doc-url-preview-text"></span>
+                                    </a>
+                                </div>
+                                <div class="input-group input-group-sm" id="add-doc-url-input-group">
+                                    <input type="url" class="form-control" id="add-doc-url-input" placeholder="Enter link to external pages like blog posts or instructables">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-success btn-add-save-url">Add</button>
+                                    </span>
+                                </div>
+                                <div class="input-group input-group-sm" id="add-doc-title-input-group" style="display: none">
+                                    <span class="input-group-addon">Add Title</span>
+                                    <input type="text" class="form-control" id="add-doc-title-input" placeholder="Provide a title for this link">
+                                    <span class="input-group-btn">
+                                        <button type="button" class="btn btn-info" id="btn-add-title-cancel">Cancel</button>
+                                        <button type="button" class="btn btn-success" id="btn-add-title-add">Add</button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endcomment %}
+
+        <!-- Images -->
+        <div class="row" id="images">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <button type="button" class="btn btn-alt btn-success btn-sm add-images-v2"><i class="fa fa-plus"></i>&nbsp;Add image / video</button>
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2><strong>Gallery</strong></h2>
+                    </div>
+                    <div class="block-content" style="display: block;">
+                        <div class="image" id="makey_images">
+                            <div id="image_list" class="">
+                            </div>
+                            <div class="row" id="empty_images" style="display:none;">
+                                <div class="col-sm-12 col-md-12">
+                                    <p class="text-info">There are no images added yet</p>
+                                </div>
+                            </div>
+                            <div class="modal fade col-sm-12" id="images_modal" tabindex="-1" role="dialog" aria-labelledby="images_modal_label" aria-hidden="true">
+                                <div class="modal-dialog modal-lg">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-body">
+                                            <div class="row">
+                                                <div class="col-sm-8 col-md-8">
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12">
+                                                            <div class="thumbnail" id="main_image">
+                                                                <img alt="Makey Image" width="450">
+                                                            </div>
+                                                            <div class="thumbnail"  id="main_video">
+                                                                <iframe width="100%" height="300" src="" frameborder="0"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12">
+                                                            <div id='gallery_like'>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-sm-12 col-md-12" id="gallery_pager">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-4 col-md-4">
+                                                    <div class="row">
+                                                        <div class="col-sm-6 col-md-6">
+                                                            <div id='image-remove-container'>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-sm-6 col-md-6">
+                                                            <div id='image-coverpic-container'>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" style="margin-top:5px;margin-bottom-5px;">
+                                                        <div class="col-sm-12 col-md-12">
+                                                            <div id='gallery-move-container'>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12" id="gallery_description">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row" id="image_note_row" style="display:none;">
+                                                        <div class="col-md-12" id="image_note_body">
+                                                        </div>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-12">
+                                                            <h4>Comments</h4>
+                                                            <div id="gallery_comments_list">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <hr />
+                            <button type="button" class="btn btn-success btn-sm add-images-v2"><i class="fa fa-plus"></i>&nbsp;Add image / video</button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class ="col-sm-12">
+                                <div class="themed-color-autumn"><small>Hint: Upload all your videos and images here.</small></div>
+                                <a href="" id="create_docu" class="preventDefault" data-toggle="modal" data-target="#add_image_modal">
+                                <i class="fa fa-plus fa"></i>
+                                Add/Edit images and videos in the gallery.
+                                </a>
+                            </div>
+                        </div>
+                        <div class="modal fade col-sm-12" id="add_image_v2_modal" tabindex="-1" role="dialog" aria-labelledby="add_image_label" aria-hidden="true">
+                        </div>
+                        <div class="modal fade col-sm-12" id="add_image_modal" tabindex="-1" role="dialog" aria-labelledby="add_image_label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content col-sm-offset-1">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="add_image_label">Add/Edit Images and Videos</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h5>Click your choice</h5>
+                                        <ul>
+                                            <li><a class="preventDefault" id="reorder_images">Re-Order Images</a></li>
+                                            <li><a class="preventDefault" id="reorder_videos">Re-Order Videos</a></li>
+                                        </ul>
+                                        <div class="image_sub" id="reorder_images_div" style="display:none;">
+                                            <div id="reorder_images_list">
+                                            </div>
+                                            <button type="button" class="btn btn-info" id="save_images_reorder">Save New Order</button>
+                                        </div>
+                                        <div class="image_sub" id="reorder_videos_div" style="display:none;">
+                                            <div id="reorder_videos_list">
+                                            </div>
+                                            <button type="button" class="btn btn-info" id="save_videos_reorder">Save New Order</button>
+                                        </div>
+                                        <div class="image_sub" id="select_cover_div" style="display:none;">
+                                            <div id="select_cover_list">
+                                            </div>
+                                            <button type="button" class="btn btn-info" id="save_cover_pic">Save Cover Pic</button>
+                                        </div>
+                                        <div class="alert alert-warning" id="waiting_add" style="display:none;">
+                                            Saving ... Please wait!
+                                        </div>
+                                        <div class="alert alert-success" id="success_add" style="display:none;">
+                                            Saved!
+                                        </div>
+                                        <div class="alert alert-danger" id="failed_add" style="display:none;">
+                                            Error in the link! Please check it again before submitting it.
+                                        </div>
+                                        <div class="alert alert-danger" id="error_add" style="display:none;">
+                                            There was some error! Please try later.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal" id="close_image_edit">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Files -->
+        <div class="row" id="files">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Files"><strong>Related Files</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div>
+                            <ul id="makey_files">
+                                <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                            </ul>
+                        </div>
+                        <hr style="width: 100%"/>
+                        <div id="add-files-container" style="margin-bottom: 20px;">
+                            <center><b>Upload File</b></center>
+                            <input type="file" class="form-control" id="add-file-input" placeholder="Select a file to upload">
+                            <input type="hidden" id="upload_file_url" name="upload_file_url" value="" />
+                            <input type="text" class="form-control" id="add-file-desc-input" placeholder="What does this file contain? (optional)">
+                            <button type="button" class="btn btn-success disabled" id="btn-upload-file">Upload</button>
+
+                            <p class="text-danger" id="upload_error_v2" style="display:none;">There was an error. Please try again!</p>
+                            <p class="text-warning" id="upload_error_v2_retry" style="display:none;">Retrying ... Please wait ...</p>
+                            <div class="progress progress-striped" id="progress_bar_v2" style="display:none;">
+                                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">0%</div>
+                            </div>
+                            <div class="alert alert-warning" id="waiting_add_v2" style="display:none;">
+                                Saving ... Please wait!
+                            </div>
+                            <div class="alert alert-success" id="success_add_v2" style="display:none;">
+                                Saved!
+                            </div>
+                            <div class="alert alert-danger" id="failed_add_v2" style="display:none;">
+                                Error in the link! Please check it again before submitting it.
+                            </div>
+                            <div class="alert alert-danger" id="error_add_v2" style="display:none;">
+                                There was some error! Please try later.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- Steps -->
+        <div class="row" id="steps">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Steps"><strong>Steps to Build</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey-steps">
+                            <ul class="nav nav-tabs push" data-toggle="tabs" id="steps-tabs" style="display:none;">
+                            </ul>
+                            <div class="tab-content" id="steps-content" style="display:none;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+        <!-- Project notes v2 -->
+        <div class="row" id="notes">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a class="add-insight-btn" href="#add-insight-title"><button type="button" class="btn btn-alt btn-success btn-sm"><i class="fa fa-plus"></i>&nbsp;Add an Insight</button></a>
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Specific things that the collaborators learned while doing this project"><strong>Insights</strong></h3>
+                    </div>
+                    <div class="block-content" style="margin-bottom: 10px;">
+                        <div id="makey-notes-v2-items">
+                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                        </div>
+                        <div id="makey-notes-v2-add"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="derived">
+            <div class="col-sm-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Sub-Assembly from which this makey was derived"><strong>Derived from another Makey</strong></h2>
+                    </div>
+                    <div class="block-content" style="margin-bottom: 10px;">
+                        <div id="makey_derived">
+                        </div>
+
+                        <div class="row">
+                            <div id="edit-derived-container">
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <hr />
+                                    <h5><b>Add/Edit</b></h5>
+                                </div>
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <input type="text" id="edit-derived-input" name="derived-edit-input" class="form-control" placeholder="Search for makeys">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row" id="as_part">
+            <div class="col-sm-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="This makey is available for sale as a part"><strong>Available as a part</strong></h2>
+                    </div>
+                    <div class="block-content" style="margin-bottom: 10px;">
+                        <div id="makey_as_part">
+                        </div>
+                        <div class="row">
+                            <div id="edit-as-part-container">
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <hr />
+                                    <h5><b>Add/Edit</b></h5>
+                                </div>
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <input type="text" id="edit-as-part-input" name="edit-as-part-input" class="form-control" placeholder="Search for parts">
+                                </div>
+                                <div class="form-group" id="new_part_form" style="display: none">
+                                    <span class="col-md-4">
+                                    </span>
+                                    <span class="col-md-8">
+                                        <hr align="center" color="#000000" size="2" width="70%">
+                                        <p><strong>Add new part</strong></p>
+                                    </span>
+                                    <label class="col-md-4 control-label" for="new_as_part_name">Part Name<span class="text-danger">*</span></label>
+                                    <div class="col-md-8">
+                                        <input type="text" id="new_as_part_name" name="new_as_part_name" class="form-control ui-wizard-content" placeholder="Enter Part Name" required="">
+                                    </div>
+                                    <label class="col-md-4 control-label" for="new_as_part_url">Part URL<span class="text-danger">*</span></label>
+                                    <div class="col-md-8">
+                                        <input type="url" id="new_as_part_url" name="new_as_part_url" class="form-control ui-wizard-content" placeholder="http://example.com" required="">
+                                    </div>
+                                    <span class="col-md-4"></span>
+                                    <span class="col-md-8">
+                                    <button id="btn_cancel_new_parts" type="button" class="btn btn-sm btn-warning">
+                                        <i class="fa fa-times"></i> Cancel
+                                    </button>
+                                    <button id="btn_submit_new_parts" type="button" class="btn btn-sm btn-primary" data-loading-text="Adding...">
+                                        <i class="fa fa-plus"></i> Add
+                                    </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Project parts list -->
+        <div class="row show_parts" id="parts" style="display:none;">
+            <div class="col-sm-12 col-md-12">
+                <div class="block">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                        <button type="button" class="btn btn-success btn-sm btn-alt add-part-module-v2"><i class="fa fa-plus"></i>&nbsp;Add part / module</button>
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="All the parts that was consumed in making this project"><strong>Components Used</strong></h2>
+                    </div>
+                    <div class="block-content" style="margin-bottom: 15px;">
+                        <div id="component-empty" style="display: none;">
+                            <center><b>No components added yet.</b></center>
+                        </div>
+                        <div id="makey_modules">
+                        </div>
+                        <div id="makey_parts">
+                            <div class="row">
+                                <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <hr />
+                            <button type="button" class="btn btn-success btn-sm add-part-module-v2"><i class="fa fa-plus"></i>&nbsp;Add part / module</button>
+                            </div>
+                        </div>
+                        <div id="parts_hover_content" style="display:none;"></div>
+                        {% if can_edit %}
+                        <!-- Add/Edit Parts Modal -->
+                        <div class="modal fade col-sm-12" id="add_parts_modal" tabindex="-1" role="dialog" aria-labelledby="add_parts_label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content col-sm-offset-1">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="add_parts_label">Add Parts / Modules</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <ul class="nav nav-tabs add-comp-tabs" role="tablist">
+                                            <li class="active add-part-tab-btn"><a href="javascript:void();">Add Part</a></li>
+                                            <li class="add-module-tab-btn"><a href="javascript:void();">Add Module</a></li>
+                                        </ul>
+                                        <div id="update_modules" style="display:none;">
+                                            Add a module to the project.
+                                            <input type="text" class="form-control" id="add_module_input" name="module_id" placeholder="Enter name of makey">
+                                            <div class="alert alert-warning" id="waiting_module_add" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_module_add" style="display:none;">Saved!</div>
+                                        </div>
+                                        <div id="update_parts" style="display:none;">
+                                            <p>
+                                            Add a part to your makey. If the component is an exiting makey, please add as a module in next tab.
+                                            </p>
+                                            <p>
+                                            <input class="form-control" type="text" id="new_part" placeholder="Enter name of new part">
+                                            <div class="alert alert-warning" id="waiting_part_add" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_part_add" style="display:none;">Saved!</div>
+                                            </p>
+                                            <hr/>
+                                            <p>
+                                                <em class="info">Missing a part? Add them to your project by entering:</em>
+                                                <ol>
+                                                    <li>Name of the Part</li>
+                                                    <li>Link to the store url where you purchased the part</li>
+                                                </ol>
+                                            </p>
+                                            <div>
+                                                <input type="text" class="form-control" id="new_part_name" placeholder="Enter Name">
+                                                <input type="email" class="form-control" id="new_part_url" placeholder="Enter URL">
+                                                <button class="btn btn-default"  id="add_new_part">Add Part</button>
+                                            </div>
+                                            <div class="alert alert-warning" id="waiting_new_part_add" style="display:none;">
+                                                Saving ... Please wait!
+                                            </div>
+                                            <div class="alert alert-success" id="success_new_part_add" style="display:none;">
+                                                Saved!
+                                            </div>
+                                            <div class="alert alert-danger" id="failed_new_part_add" style="display:none;">
+                                                Missing Info. Please complete before submitting
+                                            </div>
+                                            <div class="alert alert-danger" id="error_new_part_url" style="display:none;">
+                                                Please check the part's URL once again!
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal" id="close_part_modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- Tools list -->
+        <div class="row" id="tools" >
+            <div class="show_tools" style="display:none;">
+                <div class="col-sm-12 col-md-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <div class="block-options pull-right">
+                                <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                            </div>
+                            <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="A tool is something that is not used up in the project"><strong>Tools used</strong></h2>
+                        </div>
+                        <div class="block-content">
+                            <div id="makey_tools">
+                                <div class="row">
+                                    <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                </div>
+                            </div>
+                            <div id="tools_hover_content" style="display:none;"></div>
+                            {% if can_edit %}
+                            <div class="row">
+                                <div class="col-xs-12">
+                                    <div class="themed-color-autumn"><small>Hint: What tools did you use to make this?</small></div>
+                                    <a href="" id="create_tool" class="preventDefault" data-toggle="modal" data-target="#add_tools_modal">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                    Add/Edit tools
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- Add/Edit Tools Modal -->
+                            <div class="modal fade col-sm-12" id="add_tools_modal" tabindex="-1" role="dialog" aria-labelledby="add_tools_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title" id="add_tools_label">Add/Edit Tools</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>
+                                            <ul class="pager" id="final_tools_list"></ul>
+                                            <div class="alert alert-warning" id="waiting_tool_change" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_tool_change" style="display:none;">Saved!</div>
+                                            Add a tool to the project.
+                                            <ol>
+                                                <li>Start typing the tool name.</li>
+                                                <li>From the list of suggestions, click the name of the tool</li>
+                                                <li>Since the suggestions are limited to a maximum of 10, please type more characters in the name to get better suggestions</li>
+                                                <li class="text-danger">To remove a tool, click on the name above</li>
+                                            </ol>
+                                            </p>
+                                            <p>
+                                            <input class="form-control" type="text" id="new_tool" placeholder="Enter name of new tool">
+                                            <div id="loading_suggestions" style="display:none;">
+                                                <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                            </div>
+                                            <div class="list-group" id="tools_list"></div>
+                                            <div class="alert alert-warning" id="waiting_tool_add" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_tool_add" style="display:none;">Saved!</div>
+                                            </p>
+
+                                            <hr/>
+                                            <p>
+                                                <em class="info">Missing a tool? Add them to your project by entering:</em>
+                                                <ol>
+                                                    <li>Name of the tool</li>
+                                                    <li>Link to the store url where you purchased the tool</li>
+                                                </ol>
+                                            </p>
+                                            <div>
+                                                <input type="text" class="form-control" id="new_tool_name" placeholder="Enter Name">
+                                                <input type="email" class="form-control" id="new_tool_url" placeholder="Enter URL">
+                                                <button class="btn btn-default"  id="add_new_tool">Add tool</button>
+                                            </div>
+                                            <div class="alert alert-warning" id="waiting_new_tool_add" style="display:none;">
+                                                Saving ... Please wait!
+                                            </div>
+                                            <div class="alert alert-success" id="success_new_tool_add" style="display:none;">
+                                                Saved!
+                                            </div>
+                                            <div class="alert alert-danger" id="failed_new_tool_add" style="display:none;">
+                                                Missing Info. Please complete before submitting
+                                            </div>
+                                            <div class="alert alert-danger" id="error_new_tool_url" style="display:none;">
+                                                Please check the tool's URL once again!
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal" id="close_tool_modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+        <!-- status -->
+        <div class="row" id="status" >
+            <div class="show_status" style="display:none;">
+                <div class="col-xs-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <h2><strong>Status</strong></h2>
+                        </div>
+                        <div class="block-content">
+                            <div id="makey_status" class="">
+                            </div>
+                        </br>
+                            {% if can_edit %}
+                            <div class="themed-color-autumn"><small>Hint: What is the current status of this makey?</small></div>
+                            <div>
+                                <a href="" class="preventDefault" data-toggle="modal" data-target="#edit_status_modal">
+                                <span class="glyphicon glyphicon-plus"></span> Edit this section
+                                </a>
+                            </div>
+                            <div class="modal fade col-sm-12" id="edit_status_modal" tabindex="-1" role="dialog" aria-labelledby="edit_status_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title" id="edit_status_label">Edit Status</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>
+                                                What is the current status of your makey?
+                                            </p>
+
+                                            <hr/>
+                                            <div class="form-group" id="status-radio-container">
+                                                <label class="col-md-3 control-label">Project Status</label>
+                                                <div class="col-md-9">
+                                                    <label class="radio-inline" for="inline-status-picker1">
+                                                        <input type="radio" id="inline-status-picker1" name="inline-status-pickers" value="Idea"> Idea
+                                                    </label>
+                                                    <label class="radio-inline" for="inline-status-picker2">
+                                                        <input type="radio" id="inline-status-picker2" name="inline-status-pickers" value="Work In Progress"> Work In Progress
+                                                    </label>
+                                                    <label class="radio-inline" for="inline-status-picker3">
+                                                        <input type="radio" id="inline-status-picker3" name="inline-status-pickers" value="Completed"> Completed
+                                                    </label>
+                                                </div>
+                                                <div class="clearfix"> </div>
+                                            </div>
+                                            <div class="alert alert-warning" id="waiting_status" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_status" style="display:none;">Saved!</div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" id="save_edit_status">Save</button>
+                                                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_status_modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- mentors -->
+        <div class="row" id="mentors" >
+            <div class="show_mentors" style="display:none;">
+                <div class="col-xs-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <h2><strong>Mentors</strong></h2>
+                        </div>
+                        <!-- <h3>About</h3> -->
+                        <div class="block-content">
+                            <div id="makey_mentors" class="">
+                            </div>
+                            {% if can_edit %}
+                            <div class="themed-color-autumn"><small>Hint: Who are the mentors who helped you with this project?</small></div>
+                            <div>
+                                <a href="" class="preventDefault" data-toggle="modal" data-target="#edit_mentors_modal">
+                                <span class="glyphicon glyphicon-plus"></span> Edit this section
+                                </a>
+                            </div>
+                            <div class="modal fade col-sm-12" id="edit_mentors_modal" tabindex="-1" role="dialog" aria-labelledby="edit_mentors_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title" id="edit_mentors_label">Edit mentors</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>
+                                                You might want to credit the following people:
+                                                <ol>
+                                                    <li>Someone who gave you motivation</li>
+                                                    <li>Someone who helped you out with the issues</li>
+                                                    <li>Someone who gave guidance while making this makey</li>
+                                                    <li>And everyone else ... :-)</li>
+                                                </ol>
+                                            </p>
+
+                                            <hr/>
+                                            <textarea class="form-control" rows="5" id="edit_mentors" placeholder="Everyone who helped make this more awesome!"></textarea>
+                                            <div class="alert alert-warning" id="waiting_mentors" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_mentors" style="display:none;">Saved!</div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" id="save_edit_mentors">Save</button>
+                                                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_mentors_modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+{% comment %}
+        <!-- credits -->
+        <div class="row" id="credits" >
+            <div class="show_credits" style="display:none;">
+                <div class="col-xs-12">
+                    <div class="block">
+                        <div class="block-title">
+                            <h2><strong>Credits</strong></h2>
+                        </div>
+                        <!-- <h3>About</h3> -->
+                        <div class="block-content">
+                            <div id="makey_credits" class="">
+                                <div class="themed-color-autumn"><small>Hint: Are there some organisations or people who you want to credit for helping you out, say financially for say for testing your project etc?</small></div>
+                            </div>
+                            {% if can_edit %}
+                            <div>
+                                <a href="" class="preventDefault" data-toggle="modal" data-target="#edit_credits_modal">
+                                <span class="glyphicon glyphicon-plus"></span> Edit this section
+                                </a>
+                            </div>
+                            <div class="modal fade col-sm-12" id="edit_credits_modal" tabindex="-1" role="dialog" aria-labelledby="edit_credits_label" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content col-sm-offset-1">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                            <h4 class="modal-title" id="edit_credits_label">Edit Credits</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>
+                                                You might want to credit the following people/organisations:
+                                                <ol>
+                                                    <li>The place (Makerspace/Lab etc.) where you worked.</li>
+                                                    <li>The place which provided the tools.</li>
+                                                    <li>Someone who financed your project</li>
+                                                    <li>And, everyone else who helped you out with this makey</li>
+                                                </ol>
+                                            </p>
+
+                                            <hr/>
+                                            <textarea class="form-control" rows="5" id="edit_credits" placeholder="Everyone who helped make this more awesome!"></textarea>
+                                            <div class="alert alert-warning" id="waiting_credits" style="display:none;">Saving ... Please wait!</div>
+                                            <div class="alert alert-success" id="success_credits" style="display:none;">Saved!</div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-info" id="save_edit_credits">Save</button>
+                                                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_credits_modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+{% comment %}
+        <!-- Comments -->
+        <div class="row">
+            <div class="col-sm-12 col-md-12">
+                <div class="block" id="comments">
+                    <div class="block-title">
+                        <div class="block-options pull-right">
+                            <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                        </div>
+                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Comments from others"><strong>Comments</strong></h2>
+                    </div>
+                    <div class="block-content">
+                        <div id="makey_comments">
+                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="" id="create_comment" class="preventDefault" data-toggle="modal" data-target="#new_comment_modal">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Add new comment
+                                </a>
+                            </div>
+                        </div>
+                        {% if user.is_authenticated %}
+                        <!-- New Comment Modal -->
+                        <div class="modal fade col-sm-12" id="new_comment_modal" tabindex="-1" role="dialog" aria-labelledby="new_comment_label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content col-sm-offset-1">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title" id="new_comment_label">New Comment</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Enter the comment details and click submit.
+                                            <textarea class="form-control" id="new_comment_body" name="new_comment_body" placeholder="Write comment here .."></textarea>
+                                        </p>
+                                        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+                                        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-info" id="save_new_comment">Submit</button>
+                                        <button type="button" class="btn btn-default close_comment_modal" data-dismiss="modal" id="close_new_comment_modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+{% endcomment %}
+
+    </div>
+    <div class="column3 col-sm-3 col-md-3">
+        <div class="row">
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Manage">
+                        <strong>Makey Type</strong>
+                    </h2>
+                </div>
+                <div class="block-content" style="margin-bottom: 15px;">
+                    <center>
+                        <div class="btn-group" id="makey-access-toggle">
+                            {% if makey.is_private %}
+                                <button class="btn btn-alt btn-primary" id="makey-type-public"><i class="fa fa-eye"></i>&nbsp;Public</button>
+                                <button class="btn btn-alt btn-primary active" id="makey-type-private"><i class="fa fa-eye-slash"></i>&nbsp;Private</button>
+                            {% else %}
+                                <button class="btn btn-alt btn-primary active" id="makey-type-public"><i class="fa fa-eye"></i>&nbsp;Public</button>
+                                <button class="btn btn-alt btn-primary" id="makey-type-private"><i class="fa fa-eye-slash"></i>&nbsp;Private</button>
+                            {% endif %}
+                        </div>
+                    </center>
+                </div>
+            </div>
+        </div>
+        <div class="row" id="makey-tags">
+            <div class="block">
+                <div class="block-title">
+                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Manage">
+                        <strong>Tags</strong>
+                    </h2>
+                </div>
+                <div class="block-content" style="margin-bottom: 15px;">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" id="makey-tags-preview">
+                        <span id="makey-tags-list"><i class="fa fa-circle-o-notch fa-spin"></i></span>
+                        <span>&nbsp;<a href="javascript:void()" id="edit-tags-btn">(edit)</a></span>
+                    </div>
+                    <div class="form-group" id="tag-edit-form" style="display:none;">
+                        <div class="col-md-12">
+                            <input id="makey-tags-input" name="tags" class="form-control" placeholder="Enter tags" data-role="tagsinput" />
+                            <div id="tag-create-form" class="row" style="display: none;">
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <div class="input-group">
+                                        <span class="input-group-addon">New tag</span>
+                                        <input type="text" id="tag-create-input" class="form-control" placeholder="Tag Name">
+                                    </div>
+                                    <span class="btn-group pull-right">
+                                        <button type="button" id="tag-create-cancel" class="btn btn-default">Cancel</button>
+                                        <button type="button" id="tag-create-btn" class="btn btn-primary">Create</button>
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" id="save-tags" class="btn btn-success pull-right" data-loading-text="Saving...">Save</button>
+                            <button type="button" id="cancel-tags-edit" class="btn btn-default pull-right" style="margin-right: 5px;">Cancel</button>
+                        </div>
+                    </div>
+                    <div class="clearfix"> </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.modal').on('hidden.bs.modal', function( event ) {
+        $(this).removeClass( 'fv-modal-stack' );
+        $('body').data( 'fv_open_modals', $('body').data( 'fv_open_modals' ) - 1 );
+    });
+
+
+    $( '.modal' ).on( 'shown.bs.modal', function ( event ) {
+       // keep track of the number of open modals
+       if ( typeof( $('body').data( 'fv_open_modals' ) ) == 'undefined' ) {
+         $('body').data( 'fv_open_modals', 0 );
+       }
+
+        // if the z-index of this modal has been set, ignore.
+        if($(this).hasClass('fv-modal-stack')) {
+            return;
+        }
+
+        $(this).addClass( 'fv-modal-stack' );
+
+        $('body').data( 'fv_open_modals', $('body').data( 'fv_open_modals' ) + 1 );
+
+        $(this).css('z-index', 1040 + (10 * $('body').data( 'fv_open_modals' )));
+
+        $( '.modal-backdrop' ).not( '.fv-modal-stack' )
+                .css( 'z-index', 1039 + (10 * $('body').data( 'fv_open_modals' )));
+
+
+        $( '.modal-backdrop' ).not( 'fv-modal-stack' )
+                .addClass( 'fv-modal-stack' );
+     });
+});
+</script>
+{% endblock %}

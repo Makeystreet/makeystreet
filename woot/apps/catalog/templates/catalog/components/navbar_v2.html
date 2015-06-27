@@ -1,0 +1,119 @@
+<!-- Top Nav Bar -->
+<div class="ui grid navbar-container">
+  <div class="row">
+    <div class="ui inverted menu navbar page grid">
+      <a href="{% url 'catalog:landing_page' %}" class="brand item">Makeystreet</a>
+      <a href="http://blog.makeystreet.com" class="item">Blog</a>
+      <div class="right menu">
+        {% if request.user.is_authenticated %}
+        <a href="{% url 'catalog:create_makey' %}" class="item">Create Makey</a>
+        <a class="ui item notifications-popup-button">
+          <i class="inbox icon"></i>
+          <span class="ui blue circular label">{{notifications|length}}</span>
+        </a>
+        <a class="ui dropdown item">{{request.user.username}}
+          <i class="dropdown icon"></i>
+          <div class="menu">
+            <div class="item" onclick="window.open('{% url 'catalog:maker' request.user.username %}','_self')"><i class="user icon"></i> Profile</div>
+            <div class="item" onclick="window.open('{% url 'catalog:logout' %}','_self')"><i class="sign out icon"></i> Logout</div>
+          </div>
+        </a>
+        {% else %}
+        <a href="#" class="item login">Login</a>
+        <a href="{% url 'account_signup' %}" class="item">Signup</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% load catalog_tags %}
+<div class="ui flowing popup notifications-popup">
+  {% if notifications %}
+  <div class="ui feed small">
+    {% for notif in notifications %}
+    <div class="event">
+      <a class="content" href="{% url 'catalog:read_notification' notif.id %}">
+        {% with notif.interaction|activity_type as act_type %}
+        <div class="summary">
+          {% if act_type == "activity_insight_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} created an Insight in {{notif.interaction.makey.name}}</div>
+          {% elif act_type == "activity_question_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} asked a Question in {{notif.interaction.makey.name}}</div>
+          {% elif act_type == "activity_answer_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} answered a Question in {{notif.interaction.makey.name}}</div>
+          {% elif act_type == "activity_insight_comment_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} commented on an Insight in {{notif.interaction.makey.name}}</div>
+          {% elif act_type == "activity_answer_comment_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} commented on an Answer in {{notif.interaction.makey.name}}</div>
+          {% elif act_type == "activity_question_comment_created" %}
+          <div>{{notif.interaction.user.first_name}} {{notif.interaction.user.last_name}} commented on a Question in {{notif.interaction.makey.name}}</div>
+          {% endif %}
+        </div>
+        {% endwith %}
+        <div class="date" style="margin-top: 0">{{notif.interaction.added_time|timesince}} ago</div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <h1 class="ui header"><center>All caught up!</center></h1>
+    <p>No unread notifications</p>
+  {% endif %}
+</div>
+{% load socialaccount %}
+<div class="ui modal login">
+  <i class="close icon"></i>
+  <div class="header">Login to Makeystreet</div>
+  <div class="content">
+    <div class="ui two column middle aligned relaxed fitted stackable grid login-grid">
+      <div class="column">
+        <form class="ui form segment login-form" method="post" action="{% url 'account_login' %}">
+          <div class="field">
+            <label>Email Address</label>
+            <div class="ui left icon input">
+              <input type="email" placeholder="email address" name="login">
+              <i class="mail icon"></i>
+            </div>
+          </div>
+          <div class="field">
+            <label>Password</label>
+            <div class="ui left icon input">
+              <input type="password" name="password" placeholder="password">
+              <i class="lock icon"></i>
+            </div>
+          </div>
+          <div class="ui blue submit button">Login</div>
+          {# <div class="ui basic button">Forgot Password</div> #}
+          <a class="right floated" href="{% url 'account_reset_password' %}">Forgot Password</a>
+        </form>
+      </div>
+      <div class="ui vertical divider">
+        Or
+      </div>
+      <div class="center aligned column">
+        <a href="{% provider_login_url 'twitter' next=request.get_full_path %}">
+          <div class="ui twitter big button social-button">
+            <i class="twitter icon"></i>
+            Login with Twitter
+          </div>
+        </a>
+        <a href="{% provider_login_url 'facebook' next=request.get_full_path %}">
+          <div class="ui facebook big button social-button">
+            <i class="facebook icon"></i>
+            Login with Facebook
+          </div>
+        </a>
+        <a href="{% provider_login_url 'google' next=request.get_full_path %}">
+          <div class="ui google plus big button social-button">
+            <i class="google plus icon"></i>
+            Login with Google Plus
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+  <div class="actions login-actions">
+    <span>Not a member yet?</span><a class="ui green button" href="{% url 'account_signup' %}">Signup</a>
+  </div>
+</div>
+<!-- End of Top Nav Bar -->

@@ -1,0 +1,115 @@
+{% verbatim %}
+
+<!-- Members -->
+<script type="text/template" id="makeys_template">
+    <div class="col-sm-4 col-md-4">
+        <div class="widget themed-background-dark">
+            <a href="/{{user.username}}/{{slug}}/">
+                    {{#if cover_pic}}
+                        <img src="{{cover_pic.large_url}}" alt="avatar" class="img-responsive">
+                    {{else}}
+                        <img src="{{images.0.large_url}}" alt="avatar" class="img-responsive">
+                    {{/if}}
+                </a>
+            <div class="widget-extra">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h3 style="margin:10px;"><a href="/{{user.username}}/{{slug}}/" style="color:#ffffff;">{{name}}</a></h3>
+                    </div>
+                </div>
+                <hr style="margin:0px;">
+                <!-- showing makey stats-->
+                <div class="row text-center">
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{images.length}}</strong><br>
+                            <small>Images</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{notes.length}}</strong><br>
+                            <small>Insights</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{parts.length}}</strong><br>
+                            <small>Parts</small>
+                        </h3>
+                    </div>
+                </div>
+                <!-- showing user images-->
+                <div class="row">
+                    <div class="col-xs-12"  >
+                        <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                        <div class="table-responsive">
+                            <table class="table" style="margin:0px; padding:0px; border:none;">
+                            <tbody>
+                            <tr>
+                            {{#each collaborators}}
+                                <td style="padding:2px">
+                                <a href="/maker/{{username}}">
+                                <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{profile_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{first_name}} {{last_name}}"></a>
+                                </td>
+                            {{/each}}
+                            </tr
+                            </tbody>
+                            </table>
+                        </div>
+                        </br>
+                    </div>
+                </div>
+
+
+
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<!-- New row -->
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+
+
+<!-- pagination template -->
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+
+<script type="text/template" id="tt-makey-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+
+<script type="text/template" id="tt-makey-suggestion-template">
+    <p>{{name}} <small>by {{user_name}}</small></p>
+</script>
+
+{% endverbatim %}

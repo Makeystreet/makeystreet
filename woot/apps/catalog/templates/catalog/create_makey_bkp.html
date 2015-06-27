@@ -1,0 +1,981 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create a Makey {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+    var selected_users = new Array();
+    var selected_parts = new Array();
+    var selected_tools = new Array();
+</script>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_create_makey.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_create_makey.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-8 col-md-8 well">
+    <div class="row">
+        <center><h3>New Makey</h3></center>
+    </div>
+
+    <form method="POST" class="form-horizontal" role="form" enctype="multipart/form-data">
+        <div class="row form-horizontal" id="makey_details">
+            <div class="form-group">
+                <label for="makey_name" class="col-sm-2 control-label">Name</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="makey_name" id="makey_name" placeholder="Name of the Makey">
+                    <br/>
+                    <div class="alert alert-danger" style="display: none;" id="missing_name">Please enter a name</div>
+                </div>
+            </div>
+
+            <div class="form-group" id="collab">
+                <label for="collab_names" class="col-sm-2 control-label">Makey Collaborators</label>
+                <div class="col-sm-9">
+                    <ul class="pager" id="final_collaborators_list"></ul>
+                    <a href="" class="preventDefault" data-toggle="modal" data-target="#add_collab_modal">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add/Edit Collaborators
+                    </a>
+                    <!-- Modal -->
+                    <div class="modal fade col-sm-12" id="add_collab_modal" tabindex="-1" role="dialog" aria-labelledby="add_collab_label" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content col-sm-offset-1">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="add_collab_label">Add/Edit Collaborators</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>
+                                        <ul class="pager" id="final_collaborators_list2"></ul>
+                                        Add an existing user to the project. You are already added as a member.
+                                        <ol>
+                                            <li>Start typing their name.</li>
+                                            <li>From the list of suggestions, click the name of the team member</li>
+                                            <li>To remove a user, click on the name above</li>
+                                        </ol>
+                                    </p>
+                                    <p>
+                                        <input class="form-control" type="text" id="new_collaborator" placeholder="Enter name of new collaborator">
+                                        <div id="collabs_loading" style="display:none;">
+                                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                        </div>
+                                        <div class="list-group" id="collaborators_list"></div>
+                                    </p>
+
+                                    <p>
+                                        <em class="info">Missing a user? Add them to your project by entering their name and email address.</em>
+                                    </p>
+                                    <div>
+                                        <!-- <form class="form-horizontal"> -->
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-2" for="new_collab_name">Name</label>
+                                                <div class="col-sm-6">
+                                                    <input type="text" class="form-control" id="new_collab_name" placeholder="Enter name">
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="control-label col-sm-2" for="new_collab_email">Email</label>
+                                                <div class="col-sm-6">
+                                                    <input type="email" class="form-control" id="new_collab_email" placeholder="Enter email">
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-offset-2">
+                                                <a  id="add_new_collab">Add User</a>
+                                            </div>
+                                            <div class="alert alert-danger" id="failed_new_user_add" style="display:none;">
+                                                Missing Info. Please complete before submitting
+                                            </div>
+                                            <div class="alert alert-danger" id="error_new_user_email" style="display:none;">
+                                                Please check the user's email address once again!
+                                            </div>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_user_modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="collab_names" id="collab_names" value=",">
+                    <input type="hidden" name="new_collab_names" id="new_collab_names" value=",">
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                <label for="makey_about" class="col-sm-2 control-label">
+                    About <p>(<span id="chars_left" class="text-info">200</span> chars left)</p>
+                </label>
+                <div class="col-sm-9">
+                    <textarea class="form-control" rows="3" id="makey_about" name="makey_about" placeholder="A few lines about the Makey" maxlength="200"></textarea>
+                    <br/>
+                    <div class="alert alert-danger" style="display: none;" id="missing_about">Please enter a few lines describing the makey</div>
+                    <div class="alert alert-danger" style="display: none;" id="length_about">Please describe in 200 characters or less</div>
+                </div>
+            </div>
+
+            <!--
+            <div class="form-group">
+                <label for="makey_images" class="col-sm-2 control-label">Images</label>
+                <div class="col-sm-9">
+                    <input class="form-control" type="file" id="makey_images" name="makey_images" accept="image/*" multiple>
+                </div>
+            </div>
+            -->
+
+            <div>
+                <div class="col-sm-offset-2 col-sm-9 list-group" id="images_list"></div>
+            </div>
+
+            <div>
+                <div class="col-sm-offset-2 col-sm-9" id="progress_bar"></div>
+            </div>
+
+            <div class="form-group" id="parts">
+                <label for="part_names" class="col-sm-2 control-label">Parts Used for Making</label>
+                <div class="col-sm-9">
+                    <ul class="pager" id="final_parts_list"></ul>
+                    <a href="" class="preventDefault" data-toggle="modal" data-target="#add_part_modal">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add/Edit Parts
+                    </a>
+                    <!-- Modal -->
+                    <div class="modal fade col-sm-12" id="add_part_modal" tabindex="-1" role="dialog" aria-labelledby="add_part_label" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content col-sm-offset-1">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="add_tool_label">Add/Edit Parts</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>
+                                        <ul class="pager" id="final_parts_list2"></ul>
+                                        Add a part to the project.
+                                        <ol>
+                                            <li>Start typing the part name.</li>
+                                            <li>From the list of suggestions, click the name of the part</li>
+                                            <li>Since the suggestions are limited to a maximum of 10, please be more specific about the name</li>
+                                            <li>To remove a part, click on the name above</li>
+                                        </ol>
+                                    </p>
+                                    <p>
+                                        <input type="text" class="form-control" id="new_parts" placeholder="Enter name of the part used">
+                                        <div id="parts_loading" style="display:none;">
+                                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                        </div>
+                                        <div class="list-group" id="parts_list"></div>
+                                    </p>
+                                    <hr/>
+                                    <p>
+                                        <em class="info">Missing a part? Add them to your project by entering:</em>
+                                        <ol>
+                                            <li>Name of the Part</li>
+                                            <li>Link to the store url where you purchased the part</li>
+                                        </ol>
+                                    </p>
+                                    <div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="new_part_name">Name</label>
+                                            <div class="col-sm-6">
+                                                <input type="text" class="form-control" id="new_part_name" placeholder="Enter Name">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-sm-2" for="new_part_url">URL</label>
+                                            <div class="col-sm-6">
+                                                <input type="url" class="form-control" id="new_part_url" placeholder="Enter URL">
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-offset-2">
+                                            <a id="add_new_part">Add Part</a>
+                                        </div>
+                                    </div>
+                                    <div class="alert alert-warning" id="waiting_new_part_add" style="display:none;">
+                                        Saving ... Please wait!
+                                    </div>
+                                    <div class="alert alert-success" id="success_new_part_add" style="display:none;">
+                                        Saved!
+                                    </div>
+                                    <div class="alert alert-danger" id="failed_new_part_add" style="display:none;">
+                                        Missing Info. Please complete before submitting
+                                    </div>
+                                    <div class="alert alert-danger" id="error_new_part_url" style="display:none;">
+                                        Please check the part's URL once again!
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_part_modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger" style="display: none;" id="missing_part">Please select the parts used in creating the makey</div>
+                    <input type="hidden" name="part_names" id="part_names" value=",">
+                    <input type="hidden" name="new_part_names" id="new_part_names" value=",">
+                </div>
+            </div>
+
+            <div class="form-group" id="tools">
+                <label for="tool_names" class="col-sm-2 control-label">Tools Used for Making</label>
+                <div class="col-sm-9">
+                    <ul class="pager" id="final_tools_list"></ul>
+                    <a href="" class="preventDefault" data-toggle="modal" data-target="#add_tools_modal">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add/Edit Tools
+                    </a>
+                    <!-- Modal -->
+                    <div class="modal fade col-sm-12" id="add_tools_modal" tabindex="-1" role="dialog" aria-labelledby="add_tool_label" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content col-sm-offset-1">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="add_tool_label">Add/Edit Tools</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>
+                                        <ul class="pager" id="final_tools_list2"></ul>
+                                        Add a tool to the project.
+                                        <ol>
+                                            <li>Start typing the tool name.</li>
+                                            <li>From the list of suggestions, click the name of the tool</li>
+                                            <li>Since the suggestions are limited to a maximum of 10, please be more specific about the name</li>
+                                            <li>To remove a tool, click on the name above</li>
+                                        </ol>
+                                    </p>
+                                    <p>
+                                        <input type="text" class="form-control" id="new_tools" placeholder="Enter name of the tool used">
+                                        <div id="tools_loading" style="display:none;">
+                                            <center><i class="fa fa-refresh fa-2x fa-spin"></i></center>
+                                        </div>
+                                        <div class="list-group" id="tools_list"></div>
+                                    </p>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_tool_modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="tool_names" id="tool_names" value=",">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="docu_urls" class="col-sm-2 control-label">Documentation URLs</label>
+                <div class="col-sm-9">
+                    <ol id="final_docus_list"></ol>
+                    <a href="" class="preventDefault" data-toggle="modal" data-target="#add_docus_modal">
+                        <span class="glyphicon glyphicon-plus"></span>
+                        Add/Edit Documentations
+                    </a>
+                    <!-- Modal -->
+                    <div class="modal fade col-sm-12" id="add_docus_modal" tabindex="-1" role="dialog" aria-labelledby="add_docus_label" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content col-sm-offset-1">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h4 class="modal-title" id="add_docus_label">Add/Edit Documentations</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <h5>Add New Documentation</h5>
+                                    <ul>
+                                        <li>You can add detailed information about your makey by providing links to
+                                            <ul>
+                                                <li>blogs,</li>
+                                                <li>instructable(recommended), etc.</li>
+                                            </ul>
+                                        </li>
+                                        <li>To add a new resource, enter the exact link to the resource in the field below and click on the "Add" button. The resource won't be saved otherwise.</li>
+                                    </ul>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="docu_url" name="docu_url" placeholder="Link to the resource">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-info" id="save_add_docu">Add</button>
+                                        </span>
+                                    </div>
+                                    <div class="alert alert-warning" id="waiting_add_docu" style="display:none;">
+                                        Saving ... Please wait!
+                                    </div>
+                                    <div class="alert alert-success" id="success_add_docu" style="display:none;">
+                                        Saved!
+                                    </div>
+                                    <div class="alert alert-danger" id="failed_add_docu" style="display:none;">
+                                        Error in the link! Please check it again before submitting it.
+                                    </div>
+                                    <div class="alert alert-danger" id="error_add_docu" style="display:none;">
+                                        There was some error! Please try later.
+                                    </div>
+
+                                    <hr/>
+
+                                    <h5>Remove Existing Documentation</h5>
+                                    <p class="text-danger">To remove a resource, click on the resource name in the list below. Once it has been removed, it cannot be retrieved anymore</p>
+                                    <ol id="edit_makey_documentation">
+                                    </ol>
+                                    <div class="alert alert-warning" id="waiting_docu_change" style="display:none;">
+                                        Saving ... Please wait!
+                                    </div>
+                                    <div class="alert alert-success" id="success_docu_change" style="display:none;">
+                                        Saved!
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal" id="close_add_docu_modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="docu_urls" id="docu_urls" value=",">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-9">
+                    <button type="submit" class="btn btn-default" name="submit_form" id="submit_form">Submit</button>
+                </div>
+            </div>
+        </div>
+        {% csrf_token %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script>
+    function validate_name() {
+        $('#missing_name').hide();
+        if($('#makey_name').val() == "") {
+            $('#missing_name').show();
+            $('#makey_name').focus();
+
+            return false;
+        }
+        return true;
+    }
+
+    function validate_parts() {
+        $('#missing_part').hide();
+        if($('#new_parts').val() == "" && $('#part_names').val() == ',') {
+            $('#missing_part').show();
+            $('#new_parts').focus();
+
+            return false;
+        }
+        return true;
+    }
+
+    function validate_about() {
+        $('#missing_about').hide();
+        $('#length_about').hide()
+        if($('#makey_about').val() == "") {
+            $('#missing_about').show();
+            $('#makey_about').focus();
+
+            return false;
+        }
+
+        var about_length = $('#makey_about').val().length;
+        if(about_length > 200) {
+            $('#length_about').show();
+            $('#makey_about').focus();
+
+            return false;
+        }
+
+        return true;
+    }
+
+    $('#makey_about').keypress(function(e) {
+        if(this.value.length == 200) {
+            e.preventDefault();
+        } else if(this.value.length > 200) {
+            console.log(this.value)
+            this.value = this.value.substring(0,199);
+        }
+    });
+
+    $('#makey_about').keyup(function() {
+        var chars_elem = $('#chars_left');
+        var about_length = $('#makey_about').val().length;
+        chars_elem.html(200-about_length);
+
+        chars_elem.removeClass();
+        if(about_length < 150) {
+            chars_elem.addClass('text-info');
+        } else if (about_length >= 150 && about_length < 180) {
+            chars_elem.addClass('text-warning');
+        } else {
+            chars_elem.addClass('text-danger');
+        }
+    });
+
+
+    $("#makey_name").blur(function() {
+        validate_name();
+    });
+
+    $('#new_parts').blur(function() {
+        validate_parts();
+    });
+
+    $('#makey_about').blur(function() {
+        validate_about();
+    });
+
+    $("#submit_form").click(function() {
+        $('.alert').hide();
+
+        if(!validate_name() || !validate_about() || !validate_parts()) {
+            return false;
+        }
+
+        return true;
+    })
+</script>
+
+<script>
+    $('#save_add_docu').click(function() {
+        var url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
+        var url = $('#docu_url').val();
+
+        if(!url_regex.test(url)) {
+            $('#failed_add_docu').show();
+            return;
+        }
+        $('#failed_add_docu').hide();
+        $('#error_add_docu').hide();
+
+        if(url.substring(4,0) != "http") {
+            url = "http://" + url;
+        }
+
+        $('#success_add_docu').hide();
+        $('#waiting_add_docu').show();
+        $.ajax({
+            url : "/api/v1/documentation/",
+            type : "POST",
+            data : JSON.stringify({url : url, added_time : 'Now'}),
+            dataType : "json",
+            contentType : "application/json; charset=utf-8",
+            success : function(msg) {
+                $('#waiting_add_docu').hide();
+                $('#success_add_docu').hide();
+
+                var title = msg.title;
+
+                var current_val = $('#docu_urls').val();
+                var new_val = current_val + msg.id + ",";
+                $('#docu_urls').val(new_val);
+
+                var html = "<li id='final_docu_" + msg.id + "'><a>";
+                html += title;
+                html += "</a></li>";
+                $('#final_docus_list').append(html);
+
+                var html2 = "<li class='remove_docu' id='docu_" + msg.id + "'>";
+                html2 += "<a id='docu_" + msg.id + "'>"
+                html2 += title;
+                html2 += "</a></li>"
+                $('#edit_makey_documentation').append(html2);
+
+                reset_docuclick();
+            }
+        });
+
+        $('#docu_url').val('');
+    });
+
+    function reset_docuclick () {
+        $('.remove_docu').click(function(event) {
+            var docu_id = event.target.id.substring(5);
+
+            var current_val = $('#docu_urls').val();
+            var new_val = current_val.split(","+docu_id+",");
+            new_val = new_val.join(',');
+            $('#docu_urls').val(new_val);
+
+            $('#final_docu_'+docu_id).remove();
+            $('#docu_'+docu_id).remove();
+        });
+    };
+
+</script>
+
+<script>
+    function removeMessages () {
+        $('#error_new_user_email').hide();
+        $('#failed_new_user_add').hide();
+    };
+
+    $('#add_new_collab').click(function() {
+        removeMessages();
+        var new_user_name = $('#new_collab_name').val();
+        var new_user_email = $('#new_collab_email').val();
+
+        var email_regex = /^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$/;
+        if(new_user_name == "" || new_user_email == "") {
+            $('#failed_new_user_add').show();
+            if(new_user_name == "") {
+                $('#new_collab_name').select();
+            } else {
+                $('#new_collab_email').select();
+            }
+            return;
+        }
+
+        if(!email_regex.test(new_user_email)) {
+            $('#error_new_user_email').show();
+            $('#new_collab_email').select();
+            return;
+        }
+
+        var current_val = $('#new_collab_names').val();
+        var new_val = current_val + new_user_name + "~~~" + new_user_email + ",";
+        $('#new_collab_names').val(new_val);
+
+        var html = "";
+        html += "<li><a id='final_new_user_" + new_user_name.replace(' ','_') + "'>";
+        html += new_user_email;
+        html += "</a></li>";
+        $('#final_collaborators_list').append(html);
+
+        var html2 = "";
+        html2 += "<li><a class='remove_new_user' id='new_user_" + new_user_name.replace(' ','_') + "'>";
+        html2 += new_user_email;
+        html2 += "</a></li>";
+
+        $('#final_collaborators_list2').append(html2);
+        $('#new_collab_name').val('');
+        $('#new_collab_email').val('');
+
+        $('.remove_new_user').click(function(event) {
+            var user_name = event.target.id.substring(9);
+            var user_email = event.target.innerText;
+
+            var current_val = $('#new_collab_names').val();
+            var new_val = current_val.split(","+user_name.replace('_',' ') + "~~~" + user_email +",");
+            new_val = new_val.join(',');
+            $('#new_collab_names').val(new_val);
+
+            $('#final_new_user_'+user_name).remove();
+            $(event.target).remove();
+        });
+    });
+
+    $("#new_collaborator").keyup(function() {
+        removeMessages();
+
+        var query = $("#new_collaborator").val();
+        if(query == "") {
+            $('#collaborators_list').html('');
+            return;
+        }
+
+        $('#collaborators_list').html('');
+        $('#collabs_loading').show();
+
+        $.ajax({
+            url: {% url 'catalog:user_autocomplete' %},
+            type: "GET",
+            data: {'q':query},
+        }).done(function(msg) {
+            $('#collabs_loading').hide();
+            var html = "";
+            if(query == "") {
+                $("#collaborators_list").html("");
+            } else {
+                var users = msg.split("##");
+
+                for(var i=0; i<users.length-1; i++) {
+                    var cur_user = users[i].split("~~~");
+                    if(selected_users.indexOf(parseInt(cur_user[1])) != -1) {
+                        continue;
+                    }
+
+                    html += "<a class='user list-group-item' id='user_"+cur_user[1] + "'>";
+                    html += cur_user[0];
+                    html += "</a>";
+                }
+                $("#collaborators_list").html(html);
+            }
+            reset_userclick();
+        });
+    });
+
+    $('#makey_images').change(function() {
+        $('#images_list').html('');
+        resetProgressBar();
+        previewImages(this);
+        removeProgressBar();
+    });
+
+    function resetProgressBar (argument) {
+        var html = "<div class='progress'>";
+        html += "<div class='progress-bar' role='progressbar' aria-valuenow='0' aria-valuemin='0' aria-valuemax='100' style='width: 0%;'>";
+        html += "</div>";
+        html += "</div>";
+
+        $('#progress_bar').html(html);
+    };
+
+    function updateProgress (event) {
+        var progressBar = $('.progress-bar');
+        if(event.lengthComputable) {
+            var percentLoaded = Math.round((event.loaded / event.total) * 100);
+            if (percentLoaded < 100) {
+                progressBar.css('width', percentLoaded + '%');
+            }
+        }
+    }
+
+    function removeProgressBar (argument) {
+        $('#progress_bar').html('');
+    }
+
+    function previewImages(input) {
+        if(input.files) {
+            var files = input.files;
+            for(var i=0; i<files.length; i++) {
+                var cur_image = files[i];
+                if(!cur_image.type.match('image.*')) {
+                    continue;
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(imageFile) {
+                    var html = "<div class='col-sm-3 col-md-3'><div class='thumbnail'>";
+                    html += "<img src='";
+                    html += imageFile.target.result;
+                    html += "' height='' alt='";
+                    html += imageFile.name;
+                    html += "'>";
+                    html += "</div></div>";
+
+                    $('#images_list').append(html);
+                };
+                reader.onprogress = updateProgress;
+
+                reader.readAsDataURL(cur_image);
+            }
+        }
+    };
+
+    function reset_userclick () {
+        $(".user").click(function(event) {
+            var user_id = parseInt(event.target.id.substring(5));
+            if(selected_users.indexOf(user_id) != -1) {
+                return;
+            }
+
+            var user_name = $(event.target).text();
+            $('#new_collaborator').val('');
+            $('#collaborators_list').html('');
+
+            var html = "";
+            html += "<li><a id='final_user_" + user_id + "'>";
+            html += user_name;
+            html += "</a></li>";
+            $('#final_collaborators_list').append(html);
+
+            var html2 = "";
+            html2 += "<li><a class='remove_user' id='user_" + user_id + "'>";
+            html2 += user_name;
+            html2 += "</a></li>";
+
+            $('#final_collaborators_list2').append(html2);
+
+            var current_val = $('#collab_names').val();
+            $("#collab_names").val(current_val + user_id + ",");
+            selected_users.push(user_id);
+
+            $('.remove_user').click(function(event) {
+                var user_id = parseInt(event.target.id.substring(5));
+
+                var current_val = $('#collab_names').val();
+                var new_val = current_val.split(","+user_id+",");
+                new_val = new_val.join(',');
+                $('#collab_names').val(new_val);
+
+                if(selected_users.indexOf(user_id) == -1) {
+                    return;
+                }
+                selected_users.splice(selected_users.indexOf(user_id), 1);
+
+                $('#final_user_'+user_id).remove();
+                $(event.target).remove();
+            });
+        });
+    };
+</script>
+
+<script>
+    function removePartSavedMessages (argument) {
+        $('#success_part_add').hide();
+        $('#success_part_change').hide();
+
+        $('#waiting_new_part_add').hide();
+        $('#success_new_part_add').hide();
+        $('#failed_new_part_add').hide();
+        $('#error_new_part_url').hide();
+    };
+
+    $('#close_part_modal').keypress(function() {
+        removePartSavedMessages();
+    });
+
+    $("#new_parts").keyup(function() {
+        var query = $("#new_parts").val();
+        if(query == "") {
+            $('#parts_list').html('');
+            return;
+        }
+
+        $('#parts_list').html('');
+        $('#parts_loading').show();
+        $.ajax({
+            url: {% url 'catalog:search_autocomplete' %},
+            type: "GET",
+            data: {'q':query},
+        }).done(function(msg) {
+            $('#parts_loading').hide();
+            var html = "";
+            if(query == "") {
+                $("#parts_list").html("");
+            } else {
+                var parts = msg.split("##");
+
+                for(var i=0; i<parts.length-1; i++) {
+                    var cur_part = parts[i].split("~~~");
+                    if(selected_parts.indexOf(parseInt(cur_part[1])) != -1) {
+                        continue;
+                    }
+
+                    html += "<a class='part list-group-item' id='part_"+cur_part[1] + "'>";
+                    html += cur_part[0];
+                    html += "</a>";
+                }
+                $("#parts_list").html(html);
+            }
+            reset_partclick();
+        });
+    });
+
+    function reset_partclick () {
+        $(".part").click(function(event) {
+            var part_id = parseInt(event.target.id.substring(5));
+            if(selected_parts.indexOf(part_id) != -1) {
+                return;
+            }
+
+            var part_name = $(event.target).text();
+            $('#new_parts').val('');
+            $('#parts_list').html('');
+
+            var html = "";
+            html += "<li><a id='final_part_" + part_id + "'>";
+            html += part_name;
+            html += "</a></li>";
+            $('#final_parts_list').append(html);
+
+            var html2 = "";
+            html2 += "<li><a class='remove_part' id='part_" + part_id + "'>";
+            html2 += part_name;
+            html2 += "</a></li>";
+            $('#final_parts_list2').append(html2);
+
+            var current_val = $('#part_names').val();
+            $("#part_names").val(current_val + part_id + ",");
+            selected_parts.push(part_id);
+
+            $('.remove_part').click(function(event) {
+                var part_id = parseInt(event.target.id.substring(5));
+
+                var current_val = $('#part_names').val();
+                var new_val = current_val.split(","+part_id+",");
+                new_val = new_val.join(',');
+                $('#part_names').val(new_val);
+
+                if(selected_parts.indexOf(part_id) == -1) {
+                    return;
+                }
+                selected_parts.splice(selected_parts.indexOf(part_id), 1);
+
+                $('#final_part_' + part_id).remove()
+                $(event.target).remove();
+            });
+        });
+    };
+
+    $('#add_new_part').click(function() {
+        removePartSavedMessages();
+
+        var new_part_name = $('#new_part_name').val();
+        var new_part_url = $('#new_part_url').val();
+
+        if(new_part_name == "" || new_part_url == "") {
+            $('#failed_new_part_add').show();
+            if(new_part_name == "") {
+                $('#new_part_name').select();
+            } else {
+                $('#new_part_url').select();
+            }
+            return;
+        }
+
+        var url_regex = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[\-;:&=\+\$,\w]+@)?[A-Za-z0-9\.\-]+|(?:www\.|[\-;:&=\+\$,\w]+@)[A-Za-z0-9\.\-]+)((?:\/[\+~%\/\.\w\-_]*)?\??(?:[\-\+=&;%@\.\w_]*)#?(?:[\.\!\/\\\w]*))?)/;
+        if(!url_regex.test(new_part_url)) {
+            $('#error_new_part_url').show();
+            $('#new_part_url').select();
+            return;
+        }
+
+        $('#success_new_part_add').hide();
+        $('#waiting_new_part_add').show();
+
+        $.ajax({
+            url : "/api/v1/new_part/",
+            type : "POST",
+            data : JSON.stringify({name : new_part_name, url : new_part_url, added_time : 'Now'}),
+            dataType : "json",
+            contentType : "application/json; charset=utf-8",
+            success : function(msg) {
+                $('#waiting_new_part_add').hide();
+                $('#success_new_part_add').show();
+
+                var current_val = $('#new_part_names').val();
+                var new_val = current_val + msg.id + ",";
+                $('#new_part_names').val(new_val);
+
+                var html = "";
+                html += "<li><a id='final_new_part_" + msg.id + "'>";
+                html += msg.name;
+                html += "</a></li>";
+                $('#final_parts_list').append(html);
+
+                var html2 = "";
+                html2 += "<li><a class='remove_new_part' id='new_part_" + msg.id + "'>";
+                html2 += msg.name;
+                html2 += "</a></li>";
+                $('#final_parts_list2').append(html2);
+
+                reset_newpartclick();
+            }
+        });
+
+        $('#new_part_name').val('');
+        $('#new_part_url').val('');
+    });
+
+    function reset_newpartclick() {
+        $('.remove_new_part').click(function(event) {
+            var new_part_id = parseInt(event.target.id.substring(9));
+
+            var current_val = $('#new_part_names').val();
+            var new_val = current_val.split(","+new_part_id+",");
+            new_val = new_val.join(',');
+            $('#new_part_names').val(new_val);
+
+            $('#final_new_part_'+new_part_id).remove();
+            $('#new_part_'+new_part_id).remove();
+        });
+    };
+</script>
+
+<script>
+    $("#new_tools").keyup(function() {
+        var query = $("#new_tools").val();
+        if(query == "") {
+            $('#tools_list').html('');
+            return;
+        }
+
+        $('#tools_list').html('');
+        $('#tools_loading').show();
+        $.ajax({
+            url: {% url 'catalog:search_autocomplete' %},
+            type: "GET",
+            data: {'q':query},
+        }).done(function(msg) {
+            $('#tools_loading').hide();
+            var html = "";
+            if(query == "") {
+                $("#tools_list").html("");
+            } else {
+                var tools = msg.split("##");
+
+                for(var i=0; i<tools.length-1; i++) {
+                    var cur_tool = tools[i].split("~~~");
+                    if(selected_tools.indexOf(parseInt(cur_tool[1])) != -1) {
+                        continue;
+                    }
+
+                    html += "<a class='tool list-group-item' id='tool_"+cur_tool[1] + "'>";
+                    html += cur_tool[0];
+                    html += "</a>";
+                }
+                $("#tools_list").html(html);
+            }
+            reset_toolclick();
+        });
+    });
+
+    function reset_toolclick () {
+        $(".tool").click(function(event) {
+            var tool_id = parseInt(event.target.id.substring(5));
+            if(selected_tools.indexOf(tool_id) != -1) {
+                return;
+            }
+
+            var tool_name = $(event.target).text();
+            $('#new_tools').val('');
+            $('#tools_list').html('');
+
+            var html = "";
+            html += "<li><a id='final_tool_" + tool_id + "'>";
+            html += tool_name;
+            html += "</a></li>";
+            $('#final_tools_list').append(html);
+
+            var html2 = "";
+            html2 += "<li><a class='remove_tool' id='tool_" + tool_id + "'>";
+            html2 += tool_name;
+            html2 += "</a></li>";
+            $('#final_tools_list2').append(html2);
+
+            var current_val = $('#tool_names').val();
+            $("#tool_names").val(current_val + tool_id + ",");
+            selected_tools.push(tool_id);
+
+            $('.remove_tool').click(function(event) {
+                var tool_id = parseInt(event.target.id.substring(5));
+
+                var current_val = $('#tool_names').val();
+                var new_val = current_val.split(","+tool_id+",");
+                new_val = new_val.join(',');
+                $('#tool_names').val(new_val);
+
+                if(selected_tools.indexOf(tool_id) == -1) {
+                    return;
+                }
+                selected_tools.splice(selected_tools.indexOf(tool_id), 1);
+
+                $('#final_tool_' + tool_id).remove()
+                $(event.target).remove();
+            });
+        });
+    };
+</script>
+{% endblock %}

@@ -1,0 +1,320 @@
+{% extends "catalog/base.html" %} 
+
+{% load static from staticfiles %} 
+
+{% block title %}MakeyStreet | CFI Store{% endblock %}
+
+{% block extra_js %}
+    <script src="http://code.highcharts.com/highcharts.js"></script>
+    <script src="http://code.highcharts.com/modules/exporting.js"></script>
+
+    <script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+        var active_user_chart;
+    </script>
+    <!-- This one is for Monthly active users -->
+    <script>
+        $(function () {
+            active_user_chart = new Highcharts.Chart({
+                chart: {
+                    renderTo: 'active_users',
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: 'Monthly Active Users'
+                },
+                subtitle: {
+                    text: 'Source: Internal'
+                },
+                xAxis: [{
+                    // categories: ['312/3', '7/4', '14/4', '21/4', '28/4', '5/5',
+                    //     '12/5', '19/5', '26/5', '2/6', '9/6', '16/6']
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}%',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: 'Growth WoW',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: 'Monthly Active Users',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    labels: {
+                        format: '{value} mau',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'left',
+                    x: 120,
+                    verticalAlign: 'top',
+                    y: 100,
+                    floating: true,
+                    backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                },
+                series: [{
+                    name: 'Monthly_Active_Users',
+                    type: 'column',
+                    yAxis: 1,
+                    // data: [70, 77, 85, 99, 110, 115, 125, 137, 150, 169, 190, 215],
+                    data: [],
+                    tooltip: {
+                        valueSuffix: ' U'
+                    }
+        
+                }, {
+                    name: 'Growth_WoW',
+                    type: 'spline',
+                    // data: [7.0, 6.9, 9.5, 7.5, 8.2, 6.5, 7.2, 6.5, 7.3, 8.3, 9.9, 6.6],
+                    data: [],
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        });
+    </script>
+
+    <!-- This one is for Monthly active projects -->
+    <script>
+        $(function () {
+            $('#active_projects').highcharts({
+                chart: {
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: 'Monthly Active Projects'
+                },
+                subtitle: {
+                    text: 'Source: Internal'
+                },
+                xAxis: [{
+                    categories: ['31/3', '7/4', '14/4', '21/4', '28/4', '5/5',
+                        '12/5', '19/5', '26/5', '2/6', '9/6', '16/6']
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}%',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: 'Growth WoW',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: 'Monthly Active Projects',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    labels: {
+                        format: '{value} map',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'left',
+                    x: 120,
+                    verticalAlign: 'top',
+                    y: 100,
+                    floating: true,
+                    backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                },
+                series: [{
+                    name: 'Monthly Active Projects',
+                    type: 'column',
+                    yAxis: 1,
+                    data: [70, 77, 85, 99, 110, 115, 125, 137, 150, 169, 190, 215],
+                    tooltip: {
+                        valueSuffix: ' P'
+                    }
+        
+                }, {
+                    name: 'Growth WoW',
+                    type: 'spline',
+                    data: [7.0, 6.9, 9.5, 7.5, 8.2, 6.5, 7.2, 6.5, 7.3, 8.3, 9.9, 6.6],
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        });
+    </script>
+
+    <!-- This one is for Weekly activity -->
+    <script>
+        $(function () {
+            $('#weekly_activity').highcharts({
+                chart: {
+                    zoomType: 'xy'
+                },
+                title: {
+                    text: 'Weekly Activity'
+                },
+                subtitle: {
+                    text: 'Source: Internal'
+                },
+                xAxis: [{
+                    categories: ['31/3', '7/4', '14/4', '21/4', '28/4', '5/5',
+                        '12/5', '19/5', '26/5', '2/6', '9/6', '16/6']
+                }],
+                yAxis: [{ // Primary yAxis
+                    labels: {
+                        format: '{value}%',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    },
+                    title: {
+                        text: 'Growth WoW',
+                        style: {
+                            color: Highcharts.getOptions().colors[1]
+                        }
+                    }
+                }, { // Secondary yAxis
+                    title: {
+                        text: 'Weekly Activity',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    labels: {
+                        format: '{value} wa',
+                        style: {
+                            color: Highcharts.getOptions().colors[0]
+                        }
+                    },
+                    opposite: true
+                }],
+                tooltip: {
+                    shared: true
+                },
+                legend: {
+                    layout: 'vertical',
+                    align: 'left',
+                    x: 120,
+                    verticalAlign: 'top',
+                    y: 100,
+                    floating: true,
+                    backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor) || '#FFFFFF'
+                },
+                series: [{
+                    name: 'Weekly Activity',
+                    type: 'column',
+                    yAxis: 1,
+                    data: [70, 77, 85, 99, 110, 115, 125, 137, 150, 169, 190, 215],
+                    tooltip: {
+                        valueSuffix: ' A'
+                    }
+        
+                }, {
+                    name: 'Growth WoW',
+                    type: 'spline',
+                    data: [7.0, 6.9, 9.5, 7.5, 8.2, 6.5, 7.2, 6.5, 7.3, 8.3, 9.9, 6.6],
+                    tooltip: {
+                        valueSuffix: '%'
+                    }
+                }]
+            });
+        });
+    </script>
+    
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_stats_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_stats_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %} 
+
+
+{% block content_full %}
+<div class="row">
+    <div class="col-lg-6">
+        <!-- Widget -->
+        <div class="widget">
+            <div class="widget-simple">
+                <a href="javascript:void(0)" class="widget-icon pull-left themed-background">
+                    <small>MAU</small>
+                </a>
+                <h3 class="pull-left">this week</h3>
+                <h3 class="text-right animation-stretchRight"><strong>115 </strong> Users</h3>
+            </div>
+        </div>
+        <!-- END Widget -->
+        <div id="active_users">
+        </div>
+        <br/>
+    </div>
+    <div class="col-lg-6">
+        <!-- Widget -->
+        <div class="widget">
+            <div class="widget-simple">
+                <a href="javascript:void(0)" class="widget-icon pull-left themed-background-amethyst">
+                    <small>MAP</small>
+                </a>
+                <h3 class="pull-left">this week</h3>
+                <h3 class="text-right animation-stretchRight"><strong>230 </strong> Projects</h3>
+            </div>
+        </div>
+        <!-- END Widget -->
+        <div id="active_projects">
+        </div>
+        <br/>
+    </div>
+    <div class="col-lg-6">
+        <!-- Widget -->
+        <div class="widget">
+            <div class="widget-simple">
+                <a href="javascript:void(0)" class="widget-icon pull-left themed-background-autumn">
+                    WA
+                </a>
+                <h3 class="pull-left">this week</h3>
+                <h3 class="text-right animation-stretchRight"><strong>2.2k </strong> Activity</h3>
+            </div>
+        </div>
+        <!-- END Widget -->
+        <div id="weekly_activity">
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

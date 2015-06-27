@@ -1,0 +1,272 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %} 
+
+{% block title %} {{maker.first_name}} {{maker.last_name}} {% endblock %}
+{% block contentmeta%} 
+    <meta name="description" content="Get to know about all the projects done by {{maker.first_name}} {{maker.last_name}}">
+    <!-- <meta name="author" content="Siddardha G, Alex VJ"> -->
+{% endblock%}
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+        $(document).ready(function(){
+        {% if can_edit %}
+            $('.show_patent').show();
+            $('.show_college').show();
+            $('.show_membership').show();
+            $('.show_instructables').show();
+            $('.show_github').show();
+            $('.show_linkedin').show();
+            $('.show_facebook').show();
+            $('.show_twitter').show();
+            $('.show_yt_channel').show();
+            $('.show_stackoverflow').show();
+            $('.show_blog').show();
+            $('.show_website').show();
+            $('.show_location').show();
+        {% endif %}
+        });
+</script>
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_maker_profile_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_maker_profile_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %} 
+
+{% block content_full %}
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/maker_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+                <div class="block-title">
+                    <h2><strong>About Me</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="maker_aboutme" class="">
+                        <div id="aboutme_content">
+                        </div>
+                        {% if can_edit %}
+                        <div class="themed-color-autumn"><small>Hint: Tell us something about yourself.</small></div>
+                        <div>
+                            <a href="#" class="preventDefault edit hide_when_editing">
+                            <span class="glyphicon glyphicon-edit"></span> Edit About Me
+                            </a>
+                        </div>
+                            <a class="preventDefault save show_when_editing " href="#" style="display:none">
+                            <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        {% endif %}
+                    </div>
+                    <br/>
+                    <div id="makey" class="">
+                        <p><strong>Web presence</strong></p>
+
+                    </div>
+
+                    <div id="maker_weburl" class="">
+                        <div id="maker_instructables" class="show_instructables" style="display:none">
+                            <span id="instructables_url">Instructables:</span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_github" class="show_github" style="display:none">
+                            <span id="github_url">Github: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_linkedin" class="show_linkedin" style="display:none">
+                            <span id="linkedin_url">Linkedin: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_facebook" class="show_facebook" style="display:none">
+                            <span id="facebook_url">Facebook: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_twitter" class="show_twitter" style="display:none">
+                            <span id="twitter_url">Twitter: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_yt_channel" class="show_yt_channel" style="display:none">
+                            <span id="yt_channel_url">Youtube Channel: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_stackoverflow" class="show_stackoverflow" style="display:none">
+                            <span id="stackoverflow_url">Stackoverflow: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_blog" class="show_blog" style="display:none">
+                            <span id="blog_url">Blog: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        <div id="maker_website" class="show_website" style="display:none">
+                            <span id="website_url">Website: </span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                        
+                        
+                    </div>
+
+                    
+                    
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block show_membership" style="display:none">
+                <div class="block-title">
+                    <h2><strong>Member of Makerspaces?</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="makerspace_membership" class="">
+                        <div id="membership_content">
+                        </div>
+                        {% if can_edit %}
+                        <div class="themed-color-autumn"><small>Hint: Are you a member of any makerspace?</small></div>
+                        <div>
+                            <a href="#" class="preventDefault edit hide_when_editing">
+                            <span class="glyphicon glyphicon-edit"></span> Edit Membership details
+                            </a>
+                        </div>
+                            <a class="preventDefault save show_when_editing " href="#" style="display:none">
+                            <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block show_membership" style="display:none">
+                <div class="block-title">
+                    <h2><strong>Member of Makerspaces?</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="makerspace_membership" class="">
+                        <div id="membership_content">
+                        </div>
+                        {% if can_edit %}
+                        <div class="themed-color-autumn"><small>Hint: Are you a member of any makerspace?</small></div>
+                        <div>
+                            <a href="#" class="preventDefault edit hide_when_editing">
+                            <span class="glyphicon glyphicon-edit"></span> Edit Membership details
+                            </a>
+                        </div>
+                            <a class="preventDefault save show_when_editing " href="#" style="display:none">
+                            <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block show_college" style="display:none">
+                <div class="block-title">
+                    <h2><strong>College</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="maker_college" class="">
+                        <div id="college_content">
+                        </div>
+                        {% if can_edit %}
+                        <div class="themed-color-autumn"><small>Hint: Mention your college here.</small></div>
+                        <div>
+                            <a href="#" class="preventDefault edit hide_when_editing">
+                            <span class="glyphicon glyphicon-edit"></span> Edit College details
+                            </a>
+                        </div>
+                            <a class="preventDefault save show_when_editing " href="#" style="display:none">
+                            <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block show_patent" style="display:none">
+                <div class="block-title">
+                    <h2><strong>Patents</strong></h2>
+                </div>
+                <!-- <h3>About</h3> -->
+                <div class="block-content">
+                    <div id="maker_patent" class="">
+                        <div id="patent_content">
+                        </div>
+                        {% if can_edit %}
+                        <div class="themed-color-autumn"><small>Hint: Mention all your patents here.</small></div>
+                        <div>
+                            <a href="#" class="preventDefault edit hide_when_editing">
+                            <span class="glyphicon glyphicon-edit"></span> Edit Patent details
+                            </a>
+                        </div>
+                            <a class="preventDefault save show_when_editing " href="#" style="display:none">
+                            <span class="glyphicon glyphicon-ok"></span> Save
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

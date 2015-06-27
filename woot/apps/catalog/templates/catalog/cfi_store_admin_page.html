@@ -1,0 +1,99 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | CFI Store{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script>
+    function popover_card(){
+        $('.popovers').popover({
+            html: true,
+            trigger: 'manual',
+            container: $(this).attr('id'),
+        }).on("mouseenter", function () {
+            var _this = this;
+            $(this).popover("show");
+            $(this).siblings(".popover").on("mouseleave", function () {
+                $(_this).popover('hide');
+            });
+        }).on("mouseleave", function () {
+            var _this = this;
+            setTimeout(function () {
+                if (!$(".popover:hover").length) {
+                    $(_this).popover("hide")
+                }
+            }, 100);
+        });
+    };
+    $(document).ready(function(){
+        $('a.img').nivoLightbox();
+        popover_card();
+    });
+</script>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+
+{% block content_full %}
+
+<div class="row">
+    <div class ="col-xs-12">
+        <h1>Makers who like CFI store item.</h1>
+        <div class = "row">
+            <div class ="col-xs-6">
+                <h3>Maker</h3>
+            </div>
+            <div class = "col-xs-6">
+                <h3>Products liked</h3>
+            </div>
+        </div>
+        {% load tz %}
+
+        {% for user in users %}
+            <div class= "row">
+                <div class="col-xs-6">
+                    <p><a href="/maker/{{user.username}}">{{user.first_name}} {{user.last_name}}</a></p>
+                    <div class= "row">
+                        <div class="col-xs-6">
+                            <img width="70%" height="auto" src="{{user.profile.profile_img_url}}" title="facebook stored image">
+                            {% timezone "Asia/Kolkata" %}
+                            <p><strong>Date Joined:</strong> {{user.date_joined}}</p>
+                            <p><strong>Last login:</strong> {{user.last_login}}</p>
+                            {% endtimezone %}
+                            <p><strong>Email:</strong> {{user.email}}</p>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xs-6">
+
+                    {% for item in user.cfi_store_item_likes.all %}
+                        <p><a href="/product/{{ item.item.id }}"> {{ item.item.name }}</a></p>
+                    {% endfor %}
+                </div>
+
+            </div>
+            <br>
+                    <br>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

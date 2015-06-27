@@ -1,0 +1,96 @@
+{% extends "catalog/base_v2.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | Dashboard{% endblock %}
+
+{% block extra_js %}
+{% load compress %}
+{% compress js %}
+<script src="{% static 'app/common/dashboard.js' %}"></script>
+<script src="{% static 'app/common/navbar.js' %}"></script>
+{% endcompress %}
+{% compress css %}
+<link rel="stylesheet" href="{% static 'app/common/dashboard.css' %}" type="text/css">
+{% endcompress %}
+{% endblock %}
+
+{% block content_full %}
+
+<!-- Top Nav Bar -->
+<div class="ui grid title-bar-container">
+  <div class="row">
+    <div class="ui page grid title-bar">
+      <div class="eight wide column">
+        <h1 class="ui header makey-header">Dashboard</h1>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="ui page grid page-container">
+  <div class="ui grid page-content">
+    <div class="row">
+      <div class="ui grid">
+        <div class="ten wide column">
+          <h3 class="ui dividing header">Activity Feed</h3>
+          {% if activities %}
+          <div class="ui feed">
+            {% for activity in activities %}
+            <div class="event">
+              <div class="label">
+                <img src="{{activity.user.profile.profile_img_url}}">
+              </div>
+              <div class="content">
+                <div class="summary">
+                  {% load catalog_tags %}
+                  {% with activity|activity_type as act_type %}
+                  {% if act_type == "activity_insight_created" %}
+                  <a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> added an <a href="{{activity.makey.get_absolute_url}}insights/{{activity.event_id}}/">insight</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a>
+                  {% elif act_type == "activity_question_created" %}
+                  <a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> asked a <a href="{{activity.makey.get_absolute_url}}discussions/{{activity.event_id}}/">question</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a>
+                  {% elif act_type == "activity_answer_created" %}
+                  <a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> answered a <a href="{{activity.makey.get_absolute_url}}discussions/{{activity.answer.question.id}}/">question</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a>
+                  {% endif %}
+                  {% endwith %}
+                  <div class="date">{{activity.added_time|timesince}} ago</div>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <p>No activities yet. Watch or Contribute to Makeys to receive updates here.</p>
+          {% endif %}
+        </div>
+        <div class="six wide column">
+          <div class="ui segment">
+            <div class="ui top attached label">Your Makeys</div>
+            <div class="ui divided list">
+              {% for makey in makeys %}
+              <div class="item">
+                {% if makey.is_private %}
+                <i class="lock icon"></i>
+                {% else %}
+                <i class="unlock icon"></i>
+                {% endif %}
+                <div class="content">
+                  <a class="header" href="{{makey.get_absolute_url}}">{{makey.name}}</a>
+                </div>
+              </div>
+              {% empty %}
+              <div class="item">
+                <i class="add icon"></i>
+                <div class="content">
+                  <a class="header" href="{% url 'catalog:create_makey' %}">Create a Makey</a>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

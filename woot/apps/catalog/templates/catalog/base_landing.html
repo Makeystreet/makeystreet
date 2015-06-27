@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en" xmlns:fb="http://ogp.me/ns/fb#">
+<head prefix="og: http://ogp.me/ns# fb: http://ogp.me/ns/fb# makey_street: http://ogp.me/ns/fb/makey_street#">
+    {% load static from staticfiles %}
+    {% include "components/google_analytics.html" %}
+    {% include "components/mixpanel.html" %}
+
+    <title> {% block title %} {% endblock %} </title>
+
+    <!-- Meta Info -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block contentmeta%}
+    <meta name="description" content="Engage with makers around you!">
+    <meta name="author" content="Siddardha G, Alex VJ">
+    {% endblock%}
+
+    <!-- Open Graph Values -->
+    <meta property="fb:app_id" content="455683431181264" />
+    {% block opengraph %} {% endblock %}
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{% static 'images/favicon.ico' %}">
+
+    <!-- CSS Styles -->
+    <link href="{% static 'css/facebook.css' %}" type="text/css" rel="stylesheet" media="all">
+    <link href="{% static 'css/base.css' %}" rel="stylesheet">
+    <link href="{% static 'css/font-awesome.css' %}" rel="stylesheet">
+    <!-- <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet"> -->
+
+    <!--[if lt IE 9]>
+        <script src="http://html5shim.googlecode.com/svn/trunk/html5.js">
+        </script>
+    <![endif]-->
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+    <link href="{% static 'css/image-picker.css' %}" rel="stylesheet">
+    <link href="{% static 'css/bootstrap-tagsinput.css' %}" rel="stylesheet">
+
+    <!-- ProUI related css -->
+    <link href="{% static 'proui/css/main_landing.css' %}" rel="stylesheet">
+    <link href="{% static 'proui/css/main.css' %}" rel="stylesheet">
+    <!-- <link href="{% static 'proui/css/themes/amethyst.css' %}" rel="stylesheet"> -->
+    <link href="{% static 'proui/css/themes.css' %}" rel="stylesheet">
+    <link href="{% static 'proui/css/plugins_landing.css' %}" rel="stylesheet">
+    <link href="{% static 'proui/css/plugins.css' %}" rel="stylesheet">
+
+    <link href="//netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css" rel="stylesheet">
+
+    <!-- JQUERY -->
+    <script src="{% static 'js/jquery-1.10.1.min.js' %}"></script>
+    <script src="{% static 'js/jquery-migrate-1.2.1.min.js' %}"></script>
+    <script src="{% static 'js/jquery.cookie.js' %}"></script>
+
+    <!-- Bootstrap and rest -->
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap-tagsinput.js' %}"></script>
+    <script src="{% static 'js/underscore.js' %}"></script>
+    <script src="{% static 'js/backbone-min.js' %}"></script>
+    <script src="{% static 'js/backbone-tastypie.js' %}"></script>
+    <script src="{% static 'js/handlebars.min.js' %}"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+    <script src="{% static 'js/Autolinker.min.js' %}"></script>
+    <script src-"{% static 'js/image-picker.js' %}"></script>
+
+    <!-- ProUI related js -->
+    <script src="{% static 'proui/js/app_landing.js' %}"></script>
+    <script src="{% static 'proui/js/plugins_landing.js' %}"></script>
+    <script src="{% static 'proui/js/plugins.js' %}"></script>
+
+    <!-- pnotify -->
+    <script src="{% static 'js/pnotify.custom.min.js' %}"></script>
+    <link href="{% static 'css/pnotify.custom.min.css' %}" rel="stylesheet">
+
+    <!-- backbone trackit for patch requests -->
+    <script src="{% static 'js/backbone.trackit.min.js' %}"></script>
+
+    <!-- Django AllAuth -->
+    {% load account %}
+    {% load socialaccount %}
+    {% providers_media_js %}
+
+    {% include "catalog/components/simple_js_functions.html" %}
+    {% include "catalog/components/csrf_js.html" %}
+
+    {% block templates %} {% endblock %}
+    {% block extra_js %} {% endblock %}
+    {% block extra_css %} {% endblock %}
+    {% block fb_meta %} {% endblock %}
+
+    <script type="text/javascript">
+    $(document).ready(function() {
+        $(document).on("click",".preventDefault",function(event){
+            event.preventDefault();
+        });
+        $('#nav_create_makey').click(function(event) {
+            {% if not user.is_authenticated %}
+                alert('Please Login to Create a Makey');
+            {% endif %}
+        });
+    });
+    </script>
+
+    <style type="text/css">
+    .menu-profile-img {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #fff;
+        border-radius: 17px;
+        vertical-align: top;
+        max-width: none;
+    }
+
+    </style>
+
+    <meta name="csrf-token" content="{{csrf_token}}" />
+</head>
+
+<body>
+    {% include "catalog/components/navbar_landing.html" %}
+    {% block no_container %}
+    {% endblock %}
+    <div id="page-content">
+        <div class="container">
+            <div class="row"><div class="col-sm-12 col-md-12"></div></div>
+            <div class="row"><div class="col-sm-12 col-md-12"></div></div>
+
+            {% if messages %}
+                <div class="row">
+                    <div class="col-lg-offset-1 col-sm-10 col-md-10">
+                        {% for message in messages %}
+                            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% endif %} alert-warning">
+                                <center>
+                                    <button type="button" class="close" data-dismiss="alert">×</button>
+                                    {% autoescape off %}{{ message }}{% endautoescape %}
+                                </center>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% block content_top %} {% endblock %}
+            <!--start - used for all pages that needs the full width  -->
+
+            <div class="row" id="">
+                <div class="col-sm-12 col-md-12">
+                    {% block content_full %}
+                    {% endblock %}
+                </div>
+            </div>
+
+            <!-- start - used for the designer page  -->
+            <div class="row">
+                <div class="col-sm-3 col-md-3">
+                    <!-- discountinued. do not use this block. will be removed soon -->
+                    {% block content_left %}
+                    {% endblock %}
+                </div>
+                <div class="col-sm-9 col-md-9">
+                    <!-- discountinued. do not use this block. will be removed soon -->
+                    {% block content_right %}
+                    {% endblock %}
+                </div>
+            </div>
+
+            <!--end - used for the designer page  -->
+            {% block content_bottom %} {% endblock %}
+        </div>
+    </div>
+
+    <div id="footer" style="background-color:#eaedf1;">
+        <div class="container-fluid  text-center">
+            <br/>
+            <div class="row">
+                <div class="col-xs-12">
+                    <p>&copy; 2014, Makeystreet.</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12">
+                    <p class="credit text-muted">Suggestions or bugs? Reach us at <a href="https://twitter.com/Makeystreet">@makeystreet</a> | <a href="{% url 'catalog:privacy' %}">Privacy Policy</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- dummy divs created to make sure that app.js dont throw errors -->
+    <script>
+        $('.tooltips').tooltip();
+    </script>
+
+    {% block sample_data%} {% endblock%}
+    {% block extra_js_end %} {% endblock %}
+    {% block backbone %} {% endblock %}
+    {% include "components/customerio.html" %}
+</body>
+</html>

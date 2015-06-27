@@ -1,0 +1,437 @@
+<script type="text/javascript">
+var app = {};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+
+        if(cur_user_details.id) {
+            user_id = cur_user_details.id;
+        } else {
+            user_id = -1;
+        }
+        mixpanel.track("RecoSub: Event", {event_type: "reco_sub_started", user_id: "{{temp_id}}"});
+    }
+};
+app.initializeUser();
+
+app.Tag = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/top_tags/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('resource_uri') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.TagList = Backbone.Tastypie.Collection.extend({
+    model : app.Tag,
+    urlRoot : '/api/v1/top_tags/?limit=12',
+
+    url : function() {
+        return this.urlRoot;
+    },
+
+    initialize: function(){
+    },
+});
+
+app.TagSearchList = Backbone.Collection.extend({
+    urlRoot : '/api/v1/tags/search/',
+
+    url : function() {
+        return this.urlRoot;
+    },
+
+    // fetch: function(options) {
+    //     return Backbone.Collection.prototype.fetch.call(this, options);
+    // },
+
+    parse: function(response) {
+        return response.tags;
+    }
+});
+
+app.TagsView = Backbone.View.extend({
+    el: $('#step-1'),
+    tag_select_template: Handlebars.compile(this.$('#tag_select_card_template').html()),
+
+    initialize: function(){
+        this.listenTo(app.topTags, 'reset', this.showTopTags);
+        this.listenTo(app.resultTags, 'reset', this.showSearchResults);
+        app.topTags.fetch({reset: true});
+        var that = this;
+        this.$("#tag-search-box").on("keyup", _.debounce(
+            function () {
+                that.searchTags(that.$("#tag-search-box").val());
+            }
+        , 500));
+    },
+
+    events: {
+        'click .tag-card' : 'handleCardClick'
+    },
+
+    handleCardClick: function(e) {
+
+        var $el = this.$(e.target);
+
+        if (!$el.is("div"))
+            $el = $el.parent();
+
+        var id = $el.data("tag-id");
+        var name = $el.find(".tag-name").first().html();
+
+        var existingSelection = app.selectedTags.find(function(item){
+            return item.id == id;
+        });
+
+        if(existingSelection) {
+            app.selectedTags.remove({name: name, id: id });
+        } else {
+            app.selectedTags.add({name: name, id: id });
+        }
+
+        this.refreshHighlights();
+    },
+
+    refreshHighlights: function() {
+        this.$("#tag-search-result").find(".tag-card-container").children().map(function(){
+            var id = $(this).data('tag-id');
+            var name = $(this).find(".tag-name").first().html();
+            var existingItem = app.selectedTags.find(function(item){
+                return item.id == id;
+            });
+
+            if(existingItem)
+                $(this).addClass("selected");
+            else
+                $(this).removeClass("selected");
+        });
+    },
+
+    searchTags: function(query) {
+        if(!query) {
+            this.showTopTags();
+            return;
+        }
+
+        app.resultTags.fetch({data : $.param({ q: query}), reset: true});
+    },
+
+    addSelectedItems: function() {
+        for(var i=0; i<app.selectedTags.models.length; i++){
+            var curTag = app.selectedTags.models[i];
+            this.$("#tag-search-result").append(this.tag_select_template({
+                'name': curTag.get('name'),
+                'id': curTag.get('id'),
+            }));
+        }
+    },
+
+    showTopTags: function(){
+        // this.$("#space-result-heading").html('Top Spaces');
+        this.$("#tag-search-result").empty();
+        this.addSelectedItems();
+        for(var i=0; i<app.topTags.models.length; i++){
+            var curTag = app.topTags.models[i];
+            var id = curTag.get('id');
+            var name = curTag.get('name');
+
+            var existingItem = app.selectedTags.find(function(item){
+                return item.id == id;
+            });
+
+            if(!existingItem) {
+                this.$("#tag-search-result").append(this.tag_select_template({
+                    'name': name,
+                    'id': id,
+                }));
+            }
+        }
+
+        this.refreshHighlights();
+    },
+
+    showSearchResults: function(){
+        // this.$("#tag-result-heading").html('Search Results');
+        this.$("#tag-search-result").empty();
+        this.addSelectedItems();
+
+        if(app.resultTags.models.length === 0) {
+            this.$("#tag-search-result").append("No results");
+            return;
+        }
+
+        for(var i=0; i<app.resultTags.models.length; i++){
+            var curTag = app.resultTags.models[i];
+            var id = curTag.get('id');
+            var name = curTag.get('name');
+
+            var existingItem = app.selectedTags.find(function(item){
+                return item.id == id;
+            });
+
+            if(!existingItem) {
+                this.$("#tag-search-result").append(this.tag_select_template({
+                    'name': name,
+                    'id': id,
+                }));
+            }
+        }
+
+        this.refreshHighlights();
+    },
+});
+
+app.TopUser = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/top_reco_users/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        } else if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        } else {
+            return this.urlRoot;
+        }
+    },
+
+    initialize : function() {
+        if(this.get('resource_uri') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.UserList = Backbone.Tastypie.Collection.extend({
+    model : app.TopUser,
+    urlRoot : '/api/v1/top_reco_users/?limit=12',
+
+    url : function() {
+        return this.urlRoot;
+    },
+
+    initialize: function(){
+    },
+});
+
+app.UserSearchList = Backbone.Collection.extend({
+    urlRoot : '/api/v1/user/search/',
+
+    url : function() {
+        return this.urlRoot;
+    },
+
+    // fetch: function(options) {
+    //     return Backbone.Collection.prototype.fetch.call(this, options);
+    // },
+
+    parse: function(response) {
+        return response.users;
+    }
+});
+
+app.UsersView = Backbone.View.extend({
+    el: $('#step-2'),
+    user_select_template: Handlebars.compile(this.$('#user_select_card_template').html()),
+
+    initialize: function(){
+        this.listenTo(app.topUsers, 'reset', this.showTopUsers);
+        this.listenTo(app.resultUsers, 'reset', this.showSearchResults);
+        app.topUsers.fetch({reset: true});
+        var that = this;
+        this.$("#user-search-box").on("keyup", _.debounce(
+            function () {
+                that.searchUsers(that.$("#user-search-box").val());
+            }
+        , 500));
+    },
+
+    events: {
+        'click .user-card' : 'handleCardClick'
+    },
+
+    handleCardClick: function(e) {
+
+        var $el = this.$(e.target);
+
+        if (!$el.is("div"))
+            $el = $el.parent();
+
+        var id = $el.data("user-id");
+        var name = $el.find(".user-name").first().html();
+
+        var existingSelection = app.selectedUsers.find(function(item){
+            return item.id == id;
+        });
+
+        if(existingSelection) {
+            app.selectedUsers.remove({name: name, id: id });
+        } else {
+            app.selectedUsers.add({name: name, id: id });
+        }
+
+        this.refreshHighlights();
+    },
+
+    refreshHighlights: function() {
+        this.$("#user-search-result").find(".user-card-container").children().map(function(){
+            var id = $(this).data('user-id');
+            var name = $(this).find(".user-name").first().html();
+            var existingItem = app.selectedUsers.find(function(item){
+                return item.id == id;
+            });
+
+            if(existingItem)
+                $(this).addClass("selected");
+            else
+                $(this).removeClass("selected");
+        });
+    },
+
+    searchUsers: function(query) {
+        if(!query) {
+            this.showTopUsers();
+            return;
+        }
+
+        app.resultUsers.fetch({data : $.param({ q: query}), reset: true});
+    },
+
+    addSelectedItems: function() {
+        for(var i=0; i<app.selectedUsers.models.length; i++){
+            var curUser = app.selectedUsers.models[i];
+            this.$("#user-search-result").append(this.user_select_template({
+                'name': curUser.get('name'),
+                'id': curUser.get('id'),
+            }));
+        }
+    },
+
+    showTopUsers: function(){
+        // this.$("#space-result-heading").html('Top Spaces');
+        this.$("#user-search-result").empty();
+        this.addSelectedItems();
+        for(var i=0; i<app.topUsers.models.length; i++){
+            var curUser = app.topUsers.models[i];
+            var id = curUser.get('id');
+            var name = curUser.get('first_name') + " " + curUser.get('last_name');
+
+            var existingItem = app.selectedUsers.find(function(item){
+                return item.id == id;
+            });
+
+            if(!existingItem) {
+                this.$("#user-search-result").append(this.user_select_template({
+                    'name': name,
+                    'id': id,
+                }));
+            }
+        }
+
+        this.refreshHighlights();
+    },
+
+    showSearchResults: function(){
+        // this.$("#user-result-heading").html('Search Results');
+        this.$("#user-search-result").empty();
+        this.addSelectedItems();
+
+        if(app.resultUsers.models.length === 0) {
+            this.$("#user-search-result").append("No results");
+            return;
+        }
+
+        for(var i=0; i<app.resultUsers.models.length; i++){
+            var curUser = app.resultUsers.models[i];
+            var id = curUser.get('id');
+            var name = curUser.get('first_name') + " " + curUser.get('last_name');
+
+            var existingItem = app.selectedUsers.find(function(item){
+                return item.id == id;
+            });
+
+            if(!existingItem) {
+                this.$("#user-search-result").append(this.user_select_template({
+                    'name': name,
+                    'id': id,
+                }));
+            }
+        }
+
+        this.refreshHighlights();
+    },
+});
+
+app.selectedTags = new Backbone.Collection();
+app.topTags = new app.TagList();
+app.resultTags = new app.TagSearchList();
+app.tagsView = new app.TagsView();
+
+app.selectedUsers = new Backbone.Collection();
+app.topUsers = new app.UserList();
+app.resultUsers = new app.UserSearchList();
+app.usersView = new app.UsersView();
+
+$(function(){
+
+    $("#what-space").on('click', function(){
+        window.open("{% url 'catalog:what_space' %}", "_blank");
+    });
+
+    $("#step-1").show();
+    $("#step-1-next").on('click', function(){
+        $("#step-1").hide();
+        $("#step-2").show();
+    });
+    $("#step-1-skip").on('click', function(){
+        $("#step-1").hide();
+        $("#step-2").show();
+    });
+    $("#step-2-prev").on('click', function(){
+        $("#step-2").hide();
+        $("#step-1").show();
+    });
+    $("#step-2-finish").on('click', function(){
+        $("#subscribe-form input[name=tags]").val(app.selectedTags.pluck("id").join(","));
+        $("#subscribe-form input[name=users]").val(app.selectedUsers.pluck("id").join(","));
+        $("#subscribe-form").submit();
+    });
+});
+</script>

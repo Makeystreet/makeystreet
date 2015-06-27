@@ -1,0 +1,292 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Edit Article{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+.bootstrap-tagsinput {
+    width: 100%;
+}
+
+.article-user .twitter-typeahead {
+    width: 100%;
+}
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 400px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+</style>
+{% endblock %}
+
+{% block templates %}
+{% endblock %}
+
+{% block backbone %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-10 col-md-10 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Edit Article</h2>
+        </div>
+        <form action="#" method="post" class="form-horizontal form-bordered">
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="title">Title<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="text" id="title" name="title" class="form-control" placeholder="Article title" required="" value="{{article.title}}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="description">Description<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <textarea id="description" name="description" rows="5" class="form-control" placeholder="Short description for the article">{{article.description}}</textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="image_url">Image URL<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="url" id="image_url" name="image_url" class="form-control" placeholder="http://example.com/awesome.jpg" required="" value="{{article.image_url}}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="recommendation">Recommendation<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="text" id="recommendation" name="recommendation" class="form-control" placeholder="Awesome article" required="" value="{{article.recommendation}}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="tags">Channels<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input id="article-tags-input" name="tags" class="form-control" placeholder="Enter tags" data-role="tagsinput" />
+                    <div id="tag-create-form" class="row" style="display: none;">
+                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                            <div class="input-group">
+                                <span class="input-group-addon">New tag</span>
+                                <input type="text" id="tag-create-input" class="form-control" placeholder="Tag Name">
+                                <span class="input-group-btn">
+                                    <button type="button" id="tag-create-cancel" class="btn btn-default">Cancel</button>
+                                    <button type="button" id="tag-create-btn" class="btn btn-primary">Create</button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group form-actions">
+                <div class="col-xs-12">
+                    <button type="submit" class="btn btn-sm btn-primary pull-right" id="article-save" style="margin-left: 10px;" data-loading-text="Saving">Save</button>
+                    <a href="{% url 'catalog:article_page' article.id %}">
+                    <button type="button" class="btn btn-sm btn-warning pull-right"><i class="fa fa-times"></i>&nbsp;Cancel</button>
+                    </a>
+                </div>
+            </div>
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/template" id="tt-tags-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+<script type="text/template" id="tt-tags-suggestion-footer-template">
+    <div class="tt-suggestion-empty">
+        <hr align="center" color="#000000" size="2" width="70%">
+        <span>Cant find your tag?</span>
+        <button id="btn_add_new_tag" type="button" class="btn btn-sm btn-primary pull-right" style="display: inline">
+            Create new tag
+        </button>
+    </div>
+</script>
+<script type="text/javascript">
+
+var current_tags = {{current_tags|safe}};
+
+app = {}
+app.Tag = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/tags/',
+    idAttribute : 'id',
+
+    defaults : {
+        'added_time' : 'Now',
+    },
+
+    url : function() {
+        if(this.get('id') === undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+
+    initialize : function() {
+    },
+});
+
+// Tag selection init
+var tagsEngine = new Bloodhound({
+    datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+    queryTokenizer: Bloodhound.tokenizers.whitespace,
+    remote: {
+        url: '/api/v1/tags/search/?q=%QUERY',
+        filter: function(list) {
+            return $.map(list.tags, function(tag) {
+                return { name: tag.name, id: tag.id };
+            });
+        }
+    },
+    limit: 10
+});
+tagsEngine.initialize();
+
+$('#article-tags-input').tagsinput({
+    itemText : 'name',
+    itemValue : 'id',
+    typeaheadjs: {
+        hint: false,
+        highlight: true,
+        minLength: 1,
+        name: 'tags',
+        displayKey: 'name',
+        source: this.tagsEngine.ttAdapter(),
+        templates: {
+            empty: Handlebars.compile($('#tt-tags-suggestion-empty-template').html()),
+            footer: Handlebars.compile($('#tt-tags-suggestion-footer-template').html()),
+        }
+    }
+});
+
+if(current_tags.tags) {
+    for(var i=0; i<current_tags.tags.length; ++i)
+        $('#article-tags-input').tagsinput('add', current_tags.tags[i]);
+
+    $('#article-tags-input').tagsinput('refresh');
+}
+
+function showNewTagForm() {
+    $($('#article-tags-input').tagsinput('input')).typeahead('close');
+    $($('#article-tags-input').tagsinput('input')).typeahead('val', '');
+    $("#tag-create-form").slideDown();
+    $('#tag-create-input').focus();
+}
+
+function hideNewTagForm() {
+    $("#tag-create-form").slideUp();
+    $("#tag-create-input").val('');
+    $('#article-tags-input').tagsinput('input').focus();
+}
+
+function createNewTag() {
+    var newTagName = $('#tag-create-input').val();
+    if(!newTagName)
+        return;
+
+    var newTagSnippet = newTagName.toLowerCase().replace(/\s+/g, '-');
+
+    var newTag = new app.Tag({
+        'name': newTagName,
+        'url_snippet': newTagSnippet
+    });
+
+    newTag.save(null, {
+        success : function(model, response) {
+            addNewTag(model);
+            hideNewTagForm();
+            $('#article-tags-input').tagsinput('focus');
+        }
+    });
+
+    tagsEngine.clearRemoteCache();
+}
+
+function addNewTag(newTag) {
+    $('#article-tags-input').tagsinput('add', {
+        name: newTag.get('name'),
+        id: newTag.get('id')
+    });
+}
+
+$("body").on("click", "#btn_add_new_tag", showNewTagForm);
+$("body").on("click", "#tag-create-btn", createNewTag);
+$("body").on("click", "#tag-create-cancel", hideNewTagForm);
+$("#article-save").on("click", function(){
+    $(this).button('loading');
+});
+
+</script>
+{% endblock %}

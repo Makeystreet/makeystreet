@@ -1,0 +1,1712 @@
+{% verbatim %}
+<style type="text/css">
+    .doc-edit-static.ui-sortable-helper {
+        /*background: #EEEEEE;*/
+        -webkit-box-shadow: 0px 0px 10px 3px rgba(51,51,51,1);
+        -moz-box-shadow: 0px 0px 10px 3px rgba(51,51,51,1);
+        box-shadow: 0px 0px 10px 3px rgba(51,51,51,1);
+    }
+    /*.docu_entry:hover {
+        /*font-weight: bold;
+    }
+*/
+    #makey_documentation {
+        list-style-type: none;
+        padding-left: 0px;
+    }
+    .docu_entry .doc-edit-title {
+        display: none;
+    }
+    .docu_entry .doc-edit-url {
+        display: none;
+    }
+    .docu_entry.edit-title .doc-edit-title {
+        display: inline-block;
+    }
+    .docu_entry.edit-url .doc-edit-url {
+        display: inline-block;
+    }
+    .docu_entry .doc-edit-static {
+        display: block;
+    }
+    .docu_entry.edit-title .doc-edit-static {
+        display: none;
+    }
+    .docu_entry.edit-url .doc-edit-static {
+        display: none;
+    }
+    .doc-edit-input {
+        width: 100%;
+    }
+    #name-editable-container {
+        position: relative;
+        height: 250px;
+    }
+
+    #name-editable-container h1 {
+        color: white;
+        font-weight: bold;
+    }
+
+    #name-edit-form {
+        position: absolute;
+        bottom: 50px;
+    }
+
+</style>
+
+<!-- Misc -->
+
+<script type="text/template" id="name_view_template">
+<h1>{{name}}</h1>
+<button type="button" class="btn btn-default btn-sm pull-left" id="btn-edit-name"><i class="fa fa-pencil"></i>&nbsp;edit</button>
+<div class="clearfix"></div>
+</script>
+
+<script type="text/template" id="name_edit_template">
+<span class="input-group" id="name-edit-form">
+    <span class="input-group-addon">Edit Name</span>
+    <input type="text" class="form-control" id="edit-name-input" placeholder="Enter Name for this Makey" value="{{name}}">
+    <span class="input-group-btn">
+        <button type="button" class="btn btn-info" id="btn-edit-name-cancel">Cancel</button>
+        <button type="button" class="btn btn-success" id="btn-edit-name-save" data-loading-text="Saving">Save</button>
+    </span>
+</span>
+</script>
+
+<!-- template for like button -->
+<script type="text/template" id="likes_partial">
+    <a href ="#" id = "likeproject" class = "btn btn-small popover_people preventDefault" rel="popover" data-title="Other people who like this" data-content="{{#each all_likes}}{{name}},{{/each}}"> {{#if like}} unlike{{else}}like{{/if}}</a>
+</script>
+<!-- End Misc -->
+
+<!-- About the Makey -->
+<script type="text/template" id="makey_about_template">
+    <p>{{makey_about}}</p>
+</script>
+
+
+<!-- FILES TEMPLATES -->
+<script type="text/template" id="makey_file_template">
+    <li><a href="{{url}}" target="_blank" style="display:block">{{filename}} - <b>{{filetype}}</b></a>
+    <small>{{description}}</small>
+    </li>
+</script>
+<!-- END FILES TEMPLATES -->
+
+
+<!-- DOCUMENTATION TEMPLATES -->
+<!-- Main -->
+<script type="text/template" id="makey_documentation_template">
+    <li><a class="docu" id="docu_{{id}}" href="{{url}}" target="_blank">{{domain_name}} - {{title}}</a></li>
+</script>
+<!-- Login Required -->
+<script type="text/template" id="documentation_login_template">
+    <li class="text-danger">Please login to view all the documentation links.</li>
+</script>
+<!-- Edit -->
+<script type="text/template" id="makey_documentation_edit_template">
+    <li><a class="remove_docu" id="docu_{{id}}" target="_blank">{{title}}</a></li>
+</script>
+<!-- Empty -->
+<script type="text/template" id="makey_documentation_empty_template">
+    <li>No documentation added for this project yet.</li>
+</script>
+<!-- DOCUMENTATION TEMPLATES -->
+
+<!-- DOCUMENTATION v2 TEMPLATES -->
+<!-- Main -->
+<script type="text/template" id="makey_documentation_v2_template">
+    <li class="docu_entry" id="docu_{{id}}">
+        <span class="doc-edit-static">
+            <span><a href="{{url}}" target="_blank"><i class="fa fa-link"></i></a>&nbsp;{{title}}</span>
+            <span class="btn-group pull-right">
+                <span class="btn-group">
+                    <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                        <span><i class="fa fa-pencil"></i></span>
+                    </span>
+                    <ul class="dropdown-menu text-left">
+                        <li class="btn-edit-select-title"><a href="javascript:void(0)">Edit Title</a></li>
+                        <li class="btn-edit-select-url"><a href="javascript:void(0)">Edit URL</a></li>
+                    </ul>
+                </span>
+                <span class="btn-group">
+                    <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                        <span><i class="fa fa-trash-o"></i></span>
+                    </span>
+                    <ul class="dropdown-menu text-left">
+                        <li class="dropdown-header">Are you sure?</li>
+                       <li><a href="javascript:void(0)">
+                            <i class="fa fa-times"></i>&nbsp;Cancel
+                        </a></li>
+                        <li class="btn-delete-confirm"><a href="javascript:void(0)">
+                            <i class="fa fa-check"></i>&nbsp;Remove
+                        </a></li>
+                    </ul>
+                </span>
+                {{#if sortable}}
+                    <span class="btn btn-sm btn-alt btn-primary tooltips docu-reorder handle" data-placement="top" data-toggle="tooltip" title="" data-original-title="Drag to reorder"><i class="fa fa-arrows-v"></i></span>
+                {{/if}}
+            </span>
+        </span>
+        <span class="doc-edit-title">
+            <span class="input-group input-group-sm">
+                <span class="input-group-addon">Edit Title</span>
+                <input type="text" class="form-control edit-doc-input-title" placeholder="Enter Title">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-info btn-edit-title-cancel">Cancel</button>
+                    <button type="button" class="btn btn-success btn-edit-title-save">Save</button>
+                </span>
+            </span>
+        </span>
+        <span class="doc-edit-url">
+            <span class="input-group input-group-sm">
+                <span class="input-group-addon">Edit URL</span>
+                <input type="url" class="form-control edit-doc-input-url" placeholder="Enter Documentation URL">
+                <span class="input-group-btn">
+                    <button type="button" class="btn btn-info btn-edit-url-cancel">Cancel</button>
+                    <button type="button" class="btn btn-success btn-edit-url-save" data-loading-text="Saving">Save</button>
+                </span>
+            </span>
+        </span>
+        <div class="clearfix"></div>
+    </li>
+</script>
+<!-- Edit -->
+<script type="text/template" id="makey_documentation_v2_edit_template">
+    <li><a class="remove_docu" id="docu_{{id}}" target="_blank">{{title}}</a></li>
+</script>
+<!-- Empty -->
+<script type="text/template" id="makey_documentation_v2_empty_template">
+    <li id="empty_doc">No documentations added for this project yet. Link build instructions in a blog or instructable below.</li>
+</script>
+<!-- DOCUMENTATION v2 TEMPLATES -->
+
+<!-- style="max-height:110px;max-width:110px;" -->
+<!-- Collaborators template -->
+
+<script type="text/template" id="makey_collaborator_template">
+    <div class = "col-xs-1" style="padding: 0.5px; margin: 0.5px; margin-bottom:0px; width:110px;">
+        <div class="thumbnail">
+            <a id="collab_{{id}}" href="/maker/{{username}}/" class="collaborator">
+                <img class="img-responsive" height="auto" style="max-height:105px;width:100%;"  src="{{profile_url}}" imgId="collab_{{id}}" />
+                {{first_name}}
+            </a>
+        </div>
+    </div>
+</script>
+                <!-- <h4><i class="fa fa-user fa-5x"></i></h4> -->
+<!--             <span class="fa-stack fa-lg ">
+                <i class="fa fa-user fa-stack-2x text-primary "></i>
+                <i class="fa fa-plus-square fa-stack-1x pull-right"></i>
+            </span> -->
+
+<script type="text/template" id="makey_new_collab_template">
+    <div class = "col-xs-1" style="padding: 0.5px; margin: 0.5px;">
+        <div class="thumbnail">
+            <center>
+            <a href="" class="preventDefault" data-toggle="modal" data-target="#add_collab_modal">
+                <h4><i class="fa fa-plus-square text-primary fa-4x "></i></h4>
+            </a>
+
+            </center>
+            <a href="" class="preventDefault" data-toggle="modal" data-target="#add_collab_modal">
+
+            </a>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="makey_collaborator_popover">
+<div class="row">
+    <div class="col-xs-12">
+        <div class="widget">
+            <div class="widget-simple">
+                <a href="page_ready_user_profile.html">
+                    <img src="{{profile_url}}" alt="avatar" class="widget-image img-circle pull-left">
+                </a>
+                <h4 class="widget-content">
+                    <a href="" class="themed-color">
+                        <strong>{{first_name}} {{last_name}}</strong>
+                    </a>
+                    <small>Maker</small>
+                </h4>
+            </div>
+            <div class="widget-extra">
+                <div class="row text-center themed-background-dark">
+                    <div class="col-xs-4">
+                        <h3 class="widget-content-light">
+                            <strong>{{makeys_count}}</strong><br>
+                            <small>Makeys</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 class="widget-content-light">
+                            <strong>{{followers_count}}</strong><br>
+                            <small>Followers</small>
+                        </h3>
+                    </div>
+                    <div class="col-xs-4">
+                        <h3 class="widget-content-light">
+                            <strong>{{following_count}}</strong><br>
+                            <small>Following</small>
+                        </h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<!-- New User template -->
+<script type="text/template" id="makey_new_user_template">
+    <div class = "col-xs-1" style="padding: 0.5px; margin: 0.5px;">
+        <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="auto bottom" title="{{name}}">
+            <img height="auto" src="https://makeystatic.s3.amazonaws.com/images/newuser.gif" altname="{{name}}" />
+            <small>{{name}}</small>
+        </div>
+    </div>
+
+</script>
+
+<script type="text/template" id="makey_user_pager_template">
+    <li><a class='remove_user' id="user_{{id}}">{{first_name}} {{last_name}}</a></li>
+</script>
+
+<script type="text/template" id="makey_user_table_heading">
+<tr>
+    <th>Name</th>
+    <th>Username</th>
+    <th>Signed Up?</th>
+    <th>Remove</th>
+</tr>
+</script>
+
+<script type="text/template" id="makey_user_table_template">
+<tr>
+    <td>{{first_name}} {{last_name}}</td>
+    <td>{{username}}</td>
+    <td>
+        <div class="form-group">
+            <div class="checkbox">
+                <input type="checkbox" checked disabled>
+            </div>
+        </div>
+    </td>
+    <td class="remove_user" id="user_{{id}}">&times;</td>
+</tr>
+</script>
+
+<script type="text/template" id="makey_new_user_table_template">
+<tr>
+    <td>{{name}}</td>
+    <td>{{email}}</td>
+    <td>
+        <div class="form-group">
+            <div class="checkbox">
+                <input type="checkbox" disabled>
+            </div>
+        </div>
+    </td>
+    <td class="remove_new_user" id="new_user_{{id}}">&times;</td>
+</tr>
+</script>
+
+<script type="text/template" id="makey_new_user_pager_template">
+    <li><a class='remove_new_user' id="new_user_{{id}}">{{email}}</a></li>
+</script>
+
+<script type="text/template" id="makey_user_suggestion_template">
+    <a class="user list-group-item" id="user_{{user_id}}">{{user_name}}</a>
+</script>
+
+
+<!-- template for makey as sub-module display -->
+<script type="text/template" id="makey_module_template">
+<div class="row" id="module-item-{{makey_id}}">
+    <div class="col-xs-3">
+        <div class="thumbnail">
+            <a class="module" href="{{makey_url}}">
+                <img class="img-responsive" src="{{makey_img_url}}">
+            </a>
+        </div>
+    </div>
+    <div class="col-xs-9">
+        <a href="{{makey_url}}">
+            <h5>{{makey_name}}</h5>
+            <span class="label label-primary">Sub-Assembly</span>
+        </a>
+        <span class="btn-group pull-right">
+            <span data-toggle="dropdown" class="btn btn-danger btn-alt btn-xs dropdown-toggle">
+                <span><i class="fa fa-trash-o"></i>&nbsp;Delete {{type}}</span>
+            </span>
+            <ul class="dropdown-menu text-left">
+                <li class="dropdown-header">Are you sure?</li>
+               <li><a href="javascript:void(0)">
+                    <i class="fa fa-times"></i>&nbsp;Cancel
+                </a></li>
+                <li><a href="javascript:void(0)" class="module-delete-btn" data-id="{{makey_id}}">
+                    <i class="fa fa-check"></i>&nbsp;Delete
+                </a></li>
+            </ul>
+        </span>
+    </div>
+</div>
+</script>
+
+<!-- template for parts display -->
+<script type="text/template" id="makey_parts_template">
+<div class="row" id="part-item-{{id}}">
+    <div class = "col-xs-3">
+        <div class="thumbnail ">
+            <a class="partMixpanel part" id="partidI_{{id}}" href="/product/{{id}}" target="_blank">
+                {{#if images.0.url }}
+                    <img class="img-responsive" src="{{ images.0.url }}" imgId="part_{{id}}">
+                {{else}}
+                    <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" imgId="part_{{id}}">
+                {{/if}}
+            </a>
+        </div>
+    </div>
+    <div class="col-xs-9">
+        <a class="partMixpanel" id="partidT_{{id}}" href="/product/{{id}}" target="_blank">
+            <h5>{{name}}</h5>
+            <span class="label label-success">Part</span>
+        </a>
+        <span class="btn-group pull-right">
+            <span data-toggle="dropdown" class="btn btn-danger btn-alt btn-xs dropdown-toggle">
+                <span><i class="fa fa-trash-o"></i>&nbsp;Delete {{type}}</span>
+            </span>
+            <ul class="dropdown-menu text-left">
+                <li class="dropdown-header">Are you sure?</li>
+               <li><a href="javascript:void(0)">
+                    <i class="fa fa-times"></i>&nbsp;Cancel
+                </a></li>
+                <li><a href="javascript:void(0)" class="part-delete-btn" data-id="{{id}}">
+                    <i class="fa fa-check"></i>&nbsp;Delete
+                </a></li>
+            </ul>
+        </span>
+    </div>
+</div>
+</script>
+
+    <!-- <p><a href="/product/{{id}}/">{{name}}</a></p> -->
+<script type="text/template" id="parts_popover_template">
+    <p><h4><u>{{name}}</u></h4><br/>
+    Makeys that use this part: <strong>{{makeys_count}}</strong></p>
+</script>
+<script type="text/template" id="parts_popover_template2">
+
+    Id : {{id}}
+    Name : {{name}}
+    Stores : {{stores_count}}
+    Makeys : {{makeys_count}}
+    Tutorials : {{tutorials_count}}
+    Img : {{images.0.url}}
+</script>
+<script type="text/template" id="makey_new_part_template">
+    <div class="row" id="newpart-item-{{id}}">
+        <div class = "col-xs-3">
+            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="{{name}}">
+                <a id="partidI_{{id}}" href="{{url}}" target="_blank">
+                    {{#if image}}
+                    <img class="img-responsive" src="{{image.large_url}}" alt="Image for {{name}}">
+                    {{else}}
+                    <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" alt="Image for {{name}}">
+                    {{/if}}
+                </a>
+            </div>
+        </div>
+        <div class="col-xs-9">
+            <a id="partidT_{{id}}" href="{{url}}" target="_blank">
+                <h5>{{name}}</h5>
+                <span class="label label-success">Part</span>
+            </a>
+            <span class="btn-group pull-right">
+                <span data-toggle="dropdown" class="btn btn-danger btn-alt btn-xs dropdown-toggle">
+                    <span><i class="fa fa-trash-o"></i>&nbsp;Delete</span>
+                </span>
+                <ul class="dropdown-menu text-left">
+                    <li class="dropdown-header">Are you sure?</li>
+                   <li><a href="javascript:void(0)">
+                        <i class="fa fa-times"></i>&nbsp;Cancel
+                    </a></li>
+                    <li><a href="javascript:void(0)" class="new-part-delete-btn" data-id="{{id}}">
+                        <i class="fa fa-check"></i>&nbsp;Delete
+                    </a></li>
+                </ul>
+            </span>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="makey_new_tool_template">
+    <div class="row">
+        <div class = "col-xs-3">
+            <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="bottom" title="{{name}}">
+                <a id="toolidI_{{id}}" href="{{url}}" target="_blank">
+                    {{#if image}}
+                        <img class="img-responsive" src="{{image.large_url}}" alt="Image for {{name}}">
+                    {{else}}
+                        <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" alt="Image for {{name}}">
+                    {{/if}}
+                </a>
+            </div>
+        </div>
+        <div class="col-xs-9">
+            <a id="toolidT_{{id}}" href="{{url}}" target="_blank">
+                <h5>{{name}}</h5>
+            </a>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="makey_new_part_pager_template">
+    <li><a class='remove_new_part' id="new_part_{{id}}">{{name}}</a></li>
+</script>
+
+<script type="text/template" id="makey_new_tool_pager_template">
+    <li><a class='remove_new_tool' id="new_tool_{{id}}">{{name}}</a></li>
+</script>
+
+<script type="text/template" id="parts_login_template">
+    <div class="row">
+        <div class="col-xs-12">
+            <p class="text-danger">Please login to view all the parts used in making this Makey</p>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="makey_part_pager_template">
+    <li><a class='remove_part' id="part_{{id}}">{{name}}</a></li>
+</script>
+
+<script type="text/template" id="makey_module_pager_template">
+    <li><a class='remove_module' id="module_{{id}}">{{name}}</a></li>
+</script>
+
+
+<script type="text/template" id="makey_part_suggestion_template">
+    <a class="part list-group-item" id="part_{{part_id}}">{{part_name}}</a>
+</script>
+
+
+<!-- TOOLS TEMPLATES -->
+<script type="text/template" id="makey_tools_template">
+    <div class="row">
+        <div class = "col-xs-3">
+            <div class="thumbnail">
+                <a class="partMixpanel tool" id="toolidI_{{id}}" href="/product/{{id}}" target="_blank">
+                {{#if images.0.url }}
+                    <img class="img-responsive" src="{{ images.0.url }}" imgId="tool_{{id}}">
+                {{else}}
+                    <img class="img-responsive" src="https://makeystatic.s3.amazonaws.com/images/newpart.png" imgId="part_{{id}}">
+                {{/if}}
+                </a>
+            </div>
+        </div>
+        <div class="col-xs-9">
+            <a class="partMixpanel" id="toolidT_{{id}}" href="/product/{{id}}" target="_blank">
+                <h5>{{name}}</h5>
+            </a>
+        </div>
+    </div>
+</script>
+<script type="text/template" id="tools_popover_template">
+    <p><h4><u>{{name}}</u></h4><br/>
+    Makeys that use this tool: <strong>{{makeys_count}}</strong></p>
+</script>
+
+<script type="text/template" id="tools_popover_template_old">
+    Id : {{id}}
+    Name : {{name}}
+    Stores : {{stores_count}}
+    Makeys : {{makeys_count}}
+    Tutorials : {{tutorials_count}}
+    Img : {{images.0.url}}
+</script>
+<script type="text/template" id="makey_tool_pager_template">
+    <li><a class='remove_tool' id="tool_{{id}}">{{name}}</a></li>
+</script>
+
+<script type="text/template" id="makey_tool_suggestion_template">
+    <a class="tool list-group-item" id="tool_{{tool_id}}">{{tool_name}}</a>
+</script>
+
+<script type="text/template" id="tools_login_template">
+    <div class="row">
+        <div class="col-xs-12">
+            <p class="text-danger">Please login to view all the tools used in making this Makey</p>
+        </div>
+    </div>
+</script>
+
+<!-- Login to view details template-->
+<script type="text/template" id="login_template">
+<div class="col-xs-12">
+    <center>Please login to view all the details</center>
+</div>
+</script>
+
+<script type="text/template" id="makey_notes_template">
+<div id="note_{{id}}" class="row note_item">
+    <div class ="col-xs-12">
+        <p class=""><b>{{title}}</b></p>
+        <!-- <p class="lead">{{title}}</p>-->
+        <p>{{{body}}}</p>
+
+        <p class="pull-right">By <a href="/maker/{{user.username}}">{{user.first_name}}</a>
+            {{#if can_edit}}
+            |
+            <a href="" class=" text-left preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Edit this"><i class="edit_delete_note fa fa-edit fa-lg text-primary-inverse" id="edit_note_{{id}}"></i></a>
+            {{/if}}
+        </p>
+
+        <p class="pull-left">
+            {{likes_count}}
+            {{#if cur_user_likes}}
+            <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{id}}_{{like_id}}"></i></a>
+            {{else}}
+            <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i></a>
+
+
+            {{/if}}
+
+            &nbsp;&nbsp;
+            {{comments.length}}
+            <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="comment_note fa fa-comments-o fa-lg text-primary-inverse" id="show_comments_{{id}}"></i></a>
+
+            &nbsp;&nbsp;
+            {{#if image}}
+                <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{image_id}}"></i>
+            {{/if}}
+        </p>
+        <br/>
+        <hr>
+    </div>
+    <div id="note_comments_{{id}}" style="display:none;"></div>
+</div>
+</script>
+
+<script type="text/template" id="reorder_note_template">
+<div class="row">
+    <div class="col-md-9">
+        <p><b>{{title}}</b></p>
+    </div>
+    <div class="col-md-3">
+        <input type="text" class="form-control" id="order_note_{{id}}" name="order_{{id}}" value="{{order}}">
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="empty_note_image_template">
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <a class="img preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img src="{{large_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <input type="radio" class="form-control" name="note_image_id" value="{{id}}">
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="note_image_template">
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <a class="img preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img src="{{large_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <input type="radio" class="form-control" name="note_image_id" value="{{id}}">
+    </div>
+</div>
+</script>
+
+<!-- Notes V2 Templates-->
+<script type="text/template" id="makey-notes-v2-item-template">
+<div class="row note_item_v2" data-note-id="{{id}}">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h5 class=""><b>{{title}}</b></h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                {{#if image}}
+                    <img src="{{image.large_url}}" class="makey_notes_v2_image" style="width: 25%; float: left; margin-right: 10px;"/>
+                {{/if}}
+                <p>{{{body}}}</p>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <p class="pull-left">
+                    {{likes_count}}
+                    {{#if cur_user_likes}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note_v2 fa fa-thumbs-up fa-lg text-success " data-like-id="{{like_id}}"></i></span>
+                    {{else}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note_v2 fa fa-thumbs-o-up fa-lg text-primary-inverse" data-like-id="{{like_id}}"></i></span>
+                    {{/if}}
+                    &nbsp;&nbsp;
+                    {{comments.length}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="comment_note_v2 fa fa-comments-o fa-lg text-primary-inverse"></i></span>
+                    &nbsp;&nbsp;
+                </p>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <center>
+                    <span class="btn-group">
+                        {{#if is_pending_approval}}
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-warning btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-clock-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-approve-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Approve
+                                </a></li>
+                            </ul>
+                        </span>
+                        {{/if}}
+                        <span class="btn btn-primary btn-alt btn-sm edit-note-v2">
+                            <span><i class="fa fa-pencil"></i></span>
+                        </span>
+                        <span class="btn btn-primary btn-alt btn-sm move-note-v2">
+                            <span><i class="fa fa-arrows-h"></i></span>
+                        </span>
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-trash-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-delete-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Remove
+                                </a></li>
+                            </ul>
+                        </span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-up" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move up"><i class="fa fa-arrow-up"></i></span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-down" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move down"><i class="fa fa-arrow-down"></i></span>
+                    </span>
+                </center>
+            </div>
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <p class="pull-right">By <a href="/maker/{{user.username}}">{{user.first_name}}</a></p>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-item-edit-template">
+<div class="row note_item_v2" data-note-id="{{id}}">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <input type="text" class="form-control makey-notes-v2-edit-input-title" placeholder="Provide a title for this insight" value="{{title}}"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                {{#if image}}
+                    <img src="{{image.large_url}}" href="javascript:void();" class="makey-notes-v2-edit-image-select img-responsive"/>
+                {{else}}
+                    <img src="http://placehold.it/150x100&text=Image" href="javascript:void();" class="makey-notes-v2-edit-image-select img-responsive"/>
+                {{/if}}
+            </div>
+            <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                <textarea class="form-control makey-notes-v2-edit-input-body" placeholder="What is your insight?" rows="3">{{{body}}}</textarea>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <button type="button" class="btn btn-primary pull-right insight-edit-save-btn" style="margin-left: 10px;">Save</button>
+                <button type="button" class="btn btn-default pull-right insight-edit-cancel-btn">Cancel</button>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+        <hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-item-move-template">
+<div class="row note_item_v2" data-note-id="{{id}}">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h5 class=""><b>{{title}}</b></h5>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                {{#if image}}
+                    <img src="{{image.large_url}}" class="makey_notes_v2_image" style="width: 25%; float: left; margin-right: 10px;"/>
+                {{/if}}
+                <p>{{{body}}}</p>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <p class="pull-left">
+                    {{likes_count}}
+                    {{#if cur_user_likes}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note_v2 fa fa-thumbs-up fa-lg text-success " data-like-id="{{like_id}}"></i></span>
+                    {{else}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note_v2 fa fa-thumbs-o-up fa-lg text-primary-inverse" data-like-id="{{like_id}}"></i></span>
+                    {{/if}}
+                    &nbsp;&nbsp;
+                    {{comments.length}}
+                    <span class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="comment_note_v2 fa fa-comments-o fa-lg text-primary-inverse"></i></span>
+                    &nbsp;&nbsp;
+                </p>
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <center>
+                    <span class="btn-group">
+                        {{#if is_pending_approval}}
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-warning btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-clock-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-approve-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Approve
+                                </a></li>
+                            </ul>
+                        </span>
+                        {{/if}}
+                        <span class="btn btn-primary btn-alt btn-sm edit-note-v2">
+                            <span><i class="fa fa-pencil"></i></span>
+                        </span>
+                        <span class="btn btn-primary btn-alt btn-sm move-note-v2">
+                            <span><i class="fa fa-arrows-h"></i></span>
+                        </span>
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-trash-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-delete-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Remove
+                                </a></li>
+                            </ul>
+                        </span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-up" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move up"><i class="fa fa-arrow-up"></i></span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-down" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move down"><i class="fa fa-arrow-down"></i></span>
+                    </span>
+                </center>
+            </div>
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                <p class="pull-right">By <a href="/maker/{{user.username}}">{{user.first_name}}</a></p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <b>Move this insight to another Makey</b><br/>
+                <input type="text" class="form-control makey-notes-v2-move-input-name" placeholder="Enter name of your Makey" value=""/>
+                <input type="hidden" class="form-control makey-notes-v2-move-input-id" value=""/>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <button type="button" class="btn btn-primary pull-right insight-move-save-btn" style="margin-left: 10px;">Move</button>
+                <button type="button" class="btn btn-default pull-right insight-move-cancel-btn">Cancel</button>
+            </div>
+        </div>
+
+        <div class="clearfix"></div>
+        <hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-add-template">
+<div class="row" id="insight-add-btn-container">
+    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <button type="button" class="btn btn-block btn-success add-insight-btn" id="add-insight-btn">Add an insight</button>
+    </div>
+</div>
+<div class="row" id="insight-add-input-container" style="display: none">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h4 id="add-insight-title"><b>Add an insight</b></h4>
+                <input type="text" class="form-control" id="makey-notes-v2-add-input-title" placeholder="Provide a title for this insight"/>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            <img src="http://placehold.it/150x100&text=Add+Image" href="javascript:void();" id="makey-notes-v2-add-image-select" class="img-responsive"/>
+            </div>
+            <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                <textarea id="makey-notes-v2-add-input-body" class="form-control" placeholder="What is your insight?" rows="3"></textarea>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 5px;">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <button type="button" class="btn btn-primary pull-right" id="insight-save-btn" style="margin-left: 10px;">Add</button>
+                <button type="button" class="btn btn-default pull-right" id="insight-add-cancel-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-image-select-template">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+        <h4 class="modal-title">Select image</h4>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="row">
+                    {{#each images}}
+                        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4" style="margin-top: 10px;">
+                            <img src="{{large_url}}" class="img-responsive img-select" data-image-id="{{id}}"/>
+                        </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</script>
+
+<script type="text/template" id="makey-notes-v2-empty-template">
+<div class="row">
+    <div class ="col-xs-12">
+        <p class=""><b>No notes added yet.</b></p>
+    </div>
+</div>
+</script>
+
+
+<!-- TEXT DOCS STUFF -->
+
+<script type="text/template" id="makey-textdocs-empty-template">
+<div class="row">
+    <div class ="col-xs-12">
+        <p class=""><b>No documentations added yet.</b></p>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-textdocs-item-template-old">
+<div class="row textdoc_item" data-id="{{id}}">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <h5 class=""><b>{{title}}</b></h5>
+            </div>
+        </div>
+{{!--         <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                {{#if 0}}
+                    <img src="{{image.large_url}}" class="img-textdoc" style="width: 25%; float: left; margin-right: 10px;"/>
+                {{/if}}
+                <p>{{{body}}}</p>
+                <div class="clearfix"></div>
+            </div>
+        </div> --}}
+        <div class="row" style="margin-top: 10px;">
+            <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+            </div>
+            <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+                <center>
+                    <span class="btn-group">
+                        <span class="btn btn-primary btn-alt btn-sm edit-item">
+                            <span><i class="fa fa-pencil"></i></span>
+                        </span>
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-trash-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-delete-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Remove
+                                </a></li>
+                            </ul>
+                        </span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-up" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move up"><i class="fa fa-arrow-up"></i></span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-down" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move down"><i class="fa fa-arrow-down"></i></span>
+                    </span>
+                </center>
+            </div>
+{{!--             {{#if user}}
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                    <p class="pull-right">By <a href="/maker/{{user.username}}">{{user.first_name}}</a></p>
+                </div>
+            {{/if}} --}}
+        </div>
+        <div class="clearfix"></div>
+        <div class="item-edit-modal-container"></div>
+        <hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-textdocs-item-template">
+<div class="row textdoc_item" data-id="{{id}}">
+    <div class ="col-xs-12">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <span><b>{{title}}</b></span>
+                <span class="pull-right">
+                    <span class="btn-group">
+                        <span class="btn btn-primary btn-alt btn-sm edit-item">
+                            <span><i class="fa fa-pencil"></i></span>
+                        </span>
+                        <span class="btn-group">
+                            <span data-toggle="dropdown" class="btn btn-primary btn-alt btn-sm dropdown-toggle">
+                                <span><i class="fa fa-trash-o"></i></span>
+                            </span>
+                            <ul class="dropdown-menu text-left">
+                                <li class="dropdown-header">Are you sure?</li>
+                               <li><a href="javascript:void(0)">
+                                    <i class="fa fa-times"></i>&nbsp;Cancel
+                                </a></li>
+                                <li class="btn-delete-confirm"><a href="javascript:void(0)">
+                                    <i class="fa fa-check"></i>&nbsp;Remove
+                                </a></li>
+                            </ul>
+                        </span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-up" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move up"><i class="fa fa-arrow-up"></i></span>
+                        <span class="btn btn-sm btn-alt btn-primary tooltips reorder-down" data-placement="top" data-toggle="tooltip" title="" data-original-title="Click to move down"><i class="fa fa-arrow-down"></i></span>
+                    </span>
+                </span>
+                <div class="clearfix"></div></div>
+        </div>
+        <div class="clearfix"></div>
+        <div class="item-edit-modal-container"></div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-textdocs-item-add-template">
+<div class="modal fade col-sm-12" id="add-textdoc-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content col-sm-offset-1">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Add documentation</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-md-3 control-label" for="doc-add-input-title">Title</label>
+                    <div class="col-md-9">
+                        <input type="text" id="doc-add-input-title" name="doc-add-input-title" class="form-control" placeholder="Provide a title for this documentation" required="">
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12" id="textdoc-add-input-body">
+                        <textarea id="doc-add-input-body" name="doc-add-input-body" rows="10" class="form-control textarea-editor" placeholder="Tell us how you did it!"></textarea>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-item-add-save">Add</button>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey-textdocs-item-edit-template">
+<div class="modal fade col-sm-12 edit-textdoc-modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content col-sm-offset-1">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit documentation</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="col-md-3 control-label" for="doc-edit-input-title">Title</label>
+                    <div class="col-md-9">
+                        <input type="text" name="doc-edit-input-title" class="form-control doc-edit-input-title" placeholder="Provide a title for this documentation">
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-12">
+                        <textarea name="doc-edit-input-body" rows="10" class="form-control textarea-editor doc-edit-input-body" placeholder="Tell us how you did it!"></textarea>
+                    </div>
+                    <div class="clearfix"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-item-edit-save">Update</button>
+            </div>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="comments_close_template">
+<span class="text-info">Comments</strong></span>
+<button type="button" id="close_comments_{{id}}" class="close close_comment">&times;</button>
+</script>
+
+<script type="text/template" id="comment_popover_template">
+{{#each comments}}
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{user.username}}">
+            <img class="img-circle" height="auto" style="max-width:40px; max-height:40px;" src="{{user.profile_url}}" altname="{{user.first_name}}" />
+        </a>
+    </div>
+    <div class="col-md-10 col-sm-10">
+        <h5><a href="/maker/{{user.username}}">{{user.first_name}} {{user.last_name}}</a></h5>
+        <p>{{body}}</p>
+    </div>
+</div>
+<hr/>
+{{/each}}
+<p><a href="" class="preventDefault new_comment"  id="new_comment_{{id}}">+ Add a comment</a></p>
+</script>
+
+<script type="text/template" id="new_comment_template">
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{username}}"><img class="img-circle" height="auto" style="max-width:40px; max-height:40px;" src="{{profile_url}}" altname="{{first_name}}" /></a>
+    </div>
+    <div class="col-md-10 col-sm-10">
+        <textarea class="form-control" id="new_comment_body" noteId="{{note_id}}" name="new_comment_body" placeholder="Write comment here .."></textarea>
+        <a href="" class="preventDefault submit_comment">Submit</a>&nbsp;&nbsp;<a href="" class="preventDefault cancel_comment" id="cancel_comment_{{id}}">Cancel</a>
+        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="notes_login_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-danger">Please login to view all the notes for this Makey</p>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="comments_empty_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-info">There are no comments right now. Click below to add a comment about the Makey.</p>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="comments_login_template">
+<div class="row">
+    <div class="col-xs-12">
+        <p class="text-danger">Please login to add a comment about the Makey.</p>
+    </div>
+</div>
+</script>
+
+<!-- Tools template -->
+<script type="text/template" id="tool_template">
+    <p>{{#if link}} <a href="{{link}}">{{name}}</a>{{else}} {{name}} {{/if}}</p>
+</script>
+
+<!-- Doc template -->
+<script type="text/template" id="doc_template">
+    <p><a href="{{url}}">{{url}}</a></p>
+</script>
+
+<!-- Comment template -->
+<script type="text/template" id="comment_template">
+<div id="comment_{{id}}"class ="row comment_item">
+    <div class="col-xs-2">
+        <center>
+        <a href="/maker/{{user.username}}"><img class="img-circle" height="auto" style="max-width:50px; max-height:50px;" src="{{user.profile_url}}" altname="{{user.name}}" /></a>
+        </center>
+    </div>
+    <div class ="col-xs-10">
+        <h5><a href="/maker/{{user.username}}">{{user.first_name}}</a> :</h5>
+        <p>{{body}}</p>
+        <p class="pull-left">
+            {{likes_count}}
+
+            {{#if cur_user_likes}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+                    <i class="like_comment fa fa-thumbs-up fa-lg text-success" id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{else}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+                    <i class="like_comment fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{/if}}
+        </p>
+    </div>
+</div>
+<hr>
+</script>
+                <!-- <img id="img_{{id}}" class="img-responsive" src="{{large_url}}" alt="Image"> -->
+
+<!-- Image template -->
+<script type="text/template" id="image_template">
+    <div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design" style="padding:2px;padding-bottom:0px;">
+        <a href="" class="preventDefault">
+            <div class="square-thumbnail img makey_image " id="img_{{id}}" style="background-image:url('{{large_url}}');">
+            </div>
+        </a>
+    </div>
+</script>
+
+<script type="text/template" id="image_delete_template">
+    <div class="col-xs-3 col-sm-3">
+        <div class="thumbnail">
+            <a class="img makey_image_delete preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img id="img_edit_{{id}}" src="{{large_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="image_add_modal_template">
+<div class="modal-dialog">
+    <div class="modal-content col-sm-offset-1">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+            <h4 class="modal-title" id="add_image_label">Add/Edit Images and Videos</h4>
+        </div>
+        <div class="modal-body">
+            <ul class="nav nav-tabs add_image_tabs" role="tablist">
+              <li class="active add-image-tab-btn"><a href="javascript:void();">Add Image</a></li>
+              <li class="add-video-tab-btn"><a href="javascript:void();">Add Video</a></li>
+            </ul>
+            <div id="add_images_form">
+                <center><b>Provide link to image</b></center>
+                <div class="input-group">
+                    <input type="url" class="form-control" id="img_url_v2" name="img_url" placeholder="Link to the image">
+                    <span class="input-group-btn">
+                        <button type="button" class="btn btn-info" id="save_image_v2">Add</button>
+                    </span>
+                </div>
+                <center style="padding: 10px;"><b>OR</b></center>
+                <center><b>Upload image</b></center>
+                <input type="file" class="form-control" id="up_images_v2" name="up_images"/>
+                <input type="hidden" id="upload_img_url_v2" name="upload_img_url" value="" />
+                <p class="text-danger" id="upload_error_v2" style="display:none;">There was an error. Please try again!</p>
+                <p class="text-warning" id="upload_error_v2_retry" style="display:none;">Retrying ... Please wait ...</p>
+                <div class="progress progress-striped" id="progress_bar_v2" style="display:none;">
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">0%</div>
+                </div>
+                <div class="alert alert-warning" id="waiting_add_v2" style="display:none;">
+                    Saving ... Please wait!
+                </div>
+                <div class="alert alert-success" id="success_add_v2" style="display:none;">
+                    Saved!
+                </div>
+                <div class="alert alert-danger" id="failed_add_v2" style="display:none;">
+                    Error in the link! Please check it again before submitting it.
+                </div>
+                <div class="alert alert-danger" id="error_add_v2" style="display:none;">
+                    There was some error! Please try later.
+                </div>
+            </div>
+            <div class="image_sub" id="add_videos_form" style="display:none;">
+                <h5>Provide link to youtube or vimeo video</h5>
+                <div class="input-group">
+                    <input type="url" class="form-control" id="vid_url_v2" name="vid_url" placeholder="Link to the video">
+                    <span class="input-group-btn">
+                    <button type="button" class="btn btn-info" id="save_video_v2">Add</button>
+                    </span>
+                </div>
+                <div class="alert alert-warning" id="waiting_add_vid_v2" style="display:none;">
+                    Saving ... Please wait!
+                </div>
+                <div class="alert alert-success" id="success_add_vid_v2" style="display:none;">
+                    Saved!
+                </div>
+                <div class="alert alert-danger" id="failed_add_vid_v2" style="display:none;">
+                    Error in the link! Please check it again before submitting it.
+                </div>
+                <div class="alert alert-danger" id="error_add_vid_v2" style="display:none;">
+                    There was some error! Please try later.
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="close_image_edit_v2">Close</button>
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="image_remove_template">
+    <span class="btn-group">
+        <span data-toggle="dropdown" class="btn btn-danger btn-alt btn-sm dropdown-toggle">
+            <span><i class="fa fa-trash-o"></i>&nbsp;Delete {{type}}</span>
+        </span>
+        <ul class="dropdown-menu text-left">
+            <li class="dropdown-header">Are you sure?</li>
+           <li><a href="javascript:void(0)">
+                <i class="fa fa-times"></i>&nbsp;Cancel
+            </a></li>
+            <li><a href="javascript:void(0)" class="{{type}}-delete-btn" data-id="{{id}}">
+                <i class="fa fa-check"></i>&nbsp;Delete
+            </a></li>
+        </ul>
+    </span>
+</script>
+
+<script type="text/template" id="gallery_move_template">
+    <button type="button" class="btn btn-success gallery-move-start-btn" data-type="{{type}}" data-id="{{id}}"><i class="fa fa-arrows-h"></i>&nbsp;Move to another Makey</button>
+</script>
+
+<script type="text/template" id="gallery_move_start_template">
+    <button type="button" class="btn btn-success"><i class="fa fa-arrows-h"></i>&nbsp;Move to another Makey</button>
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <b>Move this {{type}} to another Makey</b><br/>
+            <input type="text" class="form-control gallery-move-input-name" placeholder="Enter name of your Makey" value=""/>
+            <input type="hidden" class="form-control gallery-move-makey-id" value=""/>
+            <input type="hidden" class="form-control gallery-move-item-id" value="{{id}}"/>
+        </div>
+    </div>
+    <div class="row" style="margin-top: 5px;">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button type="button" class="btn btn-primary pull-right gallery-move-save-btn" data-type="{{type}}" style="margin-left: 10px;">Move</button>
+            <button type="button" class="btn btn-default pull-right gallery-move-cancel-btn" data-type="{{type}}" >Cancel</button>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="image_coverpic_btn_template">
+    {{#if cover_pic}}
+        <button type="button" class="btn btn-success btn-sm disabled"><i class="fa fa-check"></i>&nbsp;Cover Picture</button>
+    {{else}}
+        <button type="button" id="image-set-cover-pic" class="btn btn-sm btn-primary btn-alt" data-id={{id}}><i class="fa fa-save"></i>&nbsp;Set as cover pic</button>
+    {{/if}}
+</script>
+
+<script type="text/template" id="image_upload_preview_template">
+<div class="col-sm-3 col-md-3">
+    <div class="thumbnail">
+        <img src="{{source}}" alt="{{title}}" title="{{title}}" />
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="image_empty_line">
+    <div class='row images_row' style="padding:0px;padding-left:10px; padding-right:10px;"></div>
+</script>
+
+<!-- Video template -->
+<script type="text/template" id="video_image_template">
+<div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design"
+        style="padding:2px;padding-bottom:0px;">
+    <a href="" class="preventDefault">
+        <div class="square-thumbnail img makey_video " id="vid_{{id}}" style="background-image:url('{{thumb_url}}');">
+            <div class="content2 img " id="vid_{{id}}" >
+                <div class="table2 img " id="vid_{{id}}" >
+                    <div class="table-cell2 img " id="vid_{{id}}" >
+                        <center class=" img "  id="vid_{{id}}" >
+                            <i class="fa fa-play-circle fa-3x img" style="color:#ffffff" id="vid_{{id}}"></i>
+                        </center>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </a>
+</div>
+</script>
+<!-- video delete template -->
+<script type="text/template" id="video_delete_template">
+    <div class="col-sm-3 col-xs-3">
+        <div class="thumbnail">
+            <a class="img makey_video_delete preventDefault" href="" title="Video" data-lightbox-gallery="gallery1">
+                <img id="vid_edit_{{id}}" src="{{thumb_url}}" alt="Video">
+            </a>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="gallery_like_template">
+<center>
+    {{#if cur_user_likes}}
+        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+            <i class="like_{{type}} fa fa-thumbs-up fa-lg text-success" id="like_{{id}}_{{like_id}}"></i>
+        </a>
+    {{else}}
+        <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+            <i class="like_{{type}} fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i>
+        </a>
+    {{/if}}
+
+    &nbsp;&nbsp;
+
+    {{likes_string}}
+</center>
+</script>
+
+<script type="text/template" id="gallery_description_template">
+<h4>Description</h4>
+<div id="gallery_description_text">
+    {{description}}
+</div>
+<div id="edit_gallery_description" style="display:none;">
+    <div class="input-group">
+        <textarea class="form-control" id="img_description" imgId="{{type}}_{{id}}" name="img_description" placeholder="Write {{type}} description here ..">{{description}}</textarea>
+        <!--
+        <input type="text" class="form-control" id="img_description" name="img_description" imgId="{{type}}_{{id}}" placeholder="Image description" value="{{description}}">
+        -->
+        <span class="input-group-btn">
+        <button type="button" class="btn btn-info" id="save_description">Save</button>
+        </span>
+    </div>
+</div>
+{{#if can_edit}}
+<p class="pull-right" id="edit_description">Edit</p>
+<p class="pull-right" id="cancel_edit_description" style="display:none;">Cancel</p>
+{{/if}}
+<hr/>
+</script>
+
+<script type="text/template" id="gallery_note_template">
+<h4>Related Note</h4>
+<div id="note_text">
+{{note_body}}
+</div>
+<hr/>
+</script>
+
+<script type="text/template" id="gallery_pager_template">
+<ul class="pager">
+    <li class="{{prev_class}}"><a href="" class="preventDefault gallery" id="{{prev_content}}">Previous</a></li>
+    <li class="{{next_class}}"><a href="" class="preventDefault gallery" id="{{next_content}}">Next</a></li>
+</ul>
+</script>
+
+<!-- Comment template -->
+<script type="text/template" id="gallery_comments_template">
+{{#each comments}}
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{user.username}}">
+            <img class="img-circle" height="auto" style="max-width:40px; max-height:40px;" src="{{user.profile_url}}" altname="{{user.first_name}}" />
+        </a>
+    </div>
+    <div class="col-md-10 col-sm-10">
+        <h5><a href="/maker/{{user.username}}">{{user.first_name}} {{user.last_name}}</a></h5>
+        <p>{{body}}</p>
+    </div>
+</div>
+{{/each}}
+</script>
+
+<script type="text/template" id="new_img_comment_template">
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{username}}"><img class="img-circle" height="auto" style="max-width:30px; max-height:30px;" src="{{profile_url}}" altname="{{first_name}}" /></a>
+    </div>
+
+    <div class="col-md-10 col-sm-10">
+        <textarea class="form-control" id="new_comment_body" imgId="{{imgId}}" name="new_comment_body" placeholder="Write comment here .."></textarea>
+        <a href="" class="preventDefault submit_comment_img">Submit</a>&nbsp;&nbsp;<a href="" class="preventDefault cancel_comment_img" id="cancel_comment_{{id}}">Cancel</a>
+        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="new_vid_comment_template">
+<div class="row">
+    <div class="col-md-2 col-sm-2">
+        <a href="/maker/{{username}}"><img class="img-circle" height="auto" style="max-width:30px; max-height:30px;" src="{{profile_url}}" altname="{{first_name}}" /></a>
+    </div>
+
+    <div class="col-md-10 col-sm-10">
+        <textarea class="form-control" id="new_comment_body" vidId="{{vidId}}" name="new_comment_body" placeholder="Write comment here .."></textarea>
+        <a href="" class="preventDefault submit_comment_vid">Submit</a>&nbsp;&nbsp;<a href="" class="preventDefault cancel_comment_vid" id="cancel_comment_{{id}}">Cancel</a>
+        <div class="alert alert-warning" id="waiting_new_comment" style="display:none;">Saving ... Please wait!</div>
+        <div class="alert alert-success" id="success_new_comment" style="display:none;">Saved!</div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="reorder_image_template">
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <a class="img preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img src="{{large_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <input type="text" class="form-control" id="order_img_{{id}}" name="order_{{id}}" value="{{order}}">
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="reorder_video_template">
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <a class="img preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img src="{{thumb_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <input type="text" class="form-control" id="order_vid_{{id}}" name="order_{{id}}" value="{{order}}">
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="select_cover_template">
+<div class="row">
+    <div class="col-md-9">
+        <div class="thumbnail">
+            <a class="img preventDefault" title="Image" data-lightbox-gallery="gallery1" href="">
+                <img src="{{large_url}}" alt="Image">
+            </a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <input type="radio" class="form-control" name="cover_pic_id" value="{{id}}">
+    </div>
+</div>
+</script>
+
+<!-- SUGGESTIONS TEMPLATES -->
+<script type="text/template" id="makey_suggestions_template_old">
+<div class="row">
+    <div class="col-md-12 col-sm-12">
+        <div class="thumbnail">
+            <div class="">
+                <a href="/makey/{{id}}"><img src="{{images.0.large_url}}"></a>
+            </div>
+            <h5><a href="/makey/{{id}}">{{name}}</a></h5>
+            haha
+            <hr style="margin:0px;">
+            <p style="margin:0px; color:#aaaaaa;">Made by</p>
+            <div class="row">
+                <div class="col-xs-12" >
+                    <table><tr>
+                    {{#each collaborators}}
+                        <td style="padding:1px">
+                        <a href="/maker/{{username}}">
+                        <img style="max-height:30px;max-width:30px;" src="{{profile_url}}" border="0"></a>
+                        </td>
+                    {{/each}}
+                    </tr></table>
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="makey_suggestions_template">
+    <div class="widget themed-background-dark">
+        <a href="/makey/{{id}}" class="suggested_makey">
+            {{#if cover_pic}}
+                <div style="background-image: url('{{cover_pic.large_url}}');" class="landscape-img"></div>
+            {{else}}
+                <div style="background-image: url('{{images.0.large_url}}');" class="landscape-img"></div>
+            {{/if}}
+        </a>
+        <div class="widget-extra">
+            <div class="row">
+                <div class="col-xs-12">
+                    <h3 style="margin:10px;"><a href="/makey/{{id}}" style="color:#ffffff;">{{name}}</a></h3>
+                </div>
+            </div>
+            <hr style="margin:0px;">
+            <!-- showing makey stats-->
+            <div class="row text-center">
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{images.length}}</strong><br>
+                        <small>Images</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{notes.length}}</strong><br>
+                        <small>Insights</small>
+                    </h3>
+                </div>
+                <div class="col-xs-4">
+                    <h3 style="margin:10px;" class="widget-content-light">
+                        <strong>{{parts.length}}</strong><br>
+                        <small>Parts</small>
+                    </h3>
+                </div>
+            </div>
+            <!-- showing user images-->
+            <div class="row">
+                <div class="col-xs-12"  >
+                    <!-- <p style="margin:0px;" class="text-primary themed-color">Made by</p> -->
+                    <div class="table-responsive">
+                        <table class="table" style="margin:0px; padding:0px; border:none;">
+                        <tbody>
+                        <tr>
+                        {{#each collaborators}}
+                            <td style="padding:2px">
+                            <a href="/maker/{{username}}">
+                            <img style="max-height:56px;max-width:56px; border-top-left-radius: 9px; border-top-right-radius: 9px; border-bottom-right-radius: 9px; border-bottom-left-radius: 9px;" src="{{profile_url}}" border="0" class="tooltips" data-toggle="tooltip" data-placement="auto top" title="{{first_name}} {{last_name}}"></a>
+                            </td>
+                        {{/each}}
+                        </tr
+                        </tbody>
+                        </table>
+                    </div>
+                    </br>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+
+<script type="text/template" id="makey_suggestions_template2">
+    <div class="col-sm-12 col-md-12">
+        <div class="thumbnail">
+            <div class="">
+                <a href="/makey/{{id}}"><img src="{{images.0.large_url}}"></img></a>
+            </div>
+            <h5><a href="/makey/{{id}}">{{name}}</a></h5>
+            <hr style="margin:0px;">
+            <p style="margin:0px; color:#aaaaaa;">Made by</p>
+            <div class="row">
+                <div class="col-xs-12" >
+                    <table><tr>
+                    {{#each collaborators}}
+                        <td style="padding:1px">
+                        <a href="/maker/{{username}}">
+                        <img style="max-height:30px; max-width:30px;" src="{{profile_url}}" border="0"></a>
+                        </td>
+                    {{/each}}
+                    </tr></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+
+
+<script type="text/template" id="like_template">
+    <button rel="like_button" type="button" class="btn btn-sm like_makey {{like_btn_cls}}" id="like_{{like_id}}">
+        <span class="glyphicon glyphicon-heart" id="like_{{like_id}}"></span> {{like_status}}
+    </button>
+    <small class="likes_string"><a style="color:#ffffff;" href="" class="preventDefault">{{likes_string}}</a></small>
+</script>
+
+<script type="text/template" id="liker_template">
+{{#each likes}}
+<div class ="row">
+    <div class="col-xs-3">
+        <div class = "thumbnail tooltips" data-toggle="tooltip" data-placement="bottom">
+            <a href="/maker/{{liker.username}}"><img height="auto" style="max-width:75px; max-height:75px;" src="{{liker.profile_url}}" altname="{{liker.first_name}}" /></a>
+        </div>
+    </div>
+    <div class ="col-xs-9">
+        <h3><a href="/maker/{{liker.username}}">{{liker.first_name}} {{liker.last_name}}</a></h3>
+    </div>
+</div>
+{{/each}}
+</script>
+
+<script type="text/template" id="tt-makey-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+
+<script type="text/template" id="tt-makey-suggestion-template">
+    <p>{{name}} <small>by {{user_name}}</small></p>
+</script>
+
+<script type="text/template" id="tt-part-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+
+<script type="text/template" id="tt-part-suggestion-footer-template">
+    <div class="tt-suggestion-empty">
+        <hr align="center" color="#000000" size="2" width="70%">
+        <span>Cant find your part?</span>
+        <button id="btn_add_new_part" type="button" class="btn btn-sm btn-primary pull-right" style="display: inline">
+            Add new part
+        </button>
+    </div>
+</script>
+
+<script type="text/template" id="steps-tabs-template">
+<li class="{{#if first}}active{{/if}}"><a class="stepMixpanel" id="step_{{id}}" href="#step-{{id}}">{{step}}. {{title}}</a></li>
+</script>
+
+<script type="text/template" id="steps-content-template">
+<div class='tab-pane {{#if first}}active{{/if}}' id="step-{{id}}">
+    <p>{{{body}}}</p>
+</div>
+</script>
+
+<script type="text/template" id="tt-tags-suggestion-empty-template">
+    <div class="tt-suggestion-empty">
+        <span>No results</span>
+    </div>
+</script>
+<script type="text/template" id="tt-tags-suggestion-footer-template">
+    <div class="tt-suggestion-empty">
+        <hr align="center" color="#000000" size="2" width="70%">
+        <span>Cant find your tag?</span>
+        <button id="btn_add_new_tag" type="button" class="btn btn-sm btn-primary pull-right" style="display: inline">
+            Create new tag
+        </button>
+    </div>
+</script>
+
+{% endverbatim %}

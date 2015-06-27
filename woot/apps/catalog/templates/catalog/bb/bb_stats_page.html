@@ -1,0 +1,1816 @@
+<script>
+var app = {};
+
+//Extending Date
+Date.prototype.getWeekNumber = function(){
+    var d = new Date(+this);
+    d.setHours(0,0,0);
+    d.setDate(d.getDate()+4-(d.getDay()||7));
+    return Math.ceil((((d-new Date(d.getFullYear(),0,1))/8.64e7)+1)/7);
+};
+
+Date.prototype.getWeekStarting = function(){
+	return new Date(this.getTime() - this.getDay()*8.64e7);
+};
+
+Date.prototype.getWeekEnding = function(){
+	return new Date(this.getTime() + (7-this.getDay()-1)*8.64e7);
+};
+
+app.curPage = "#weekly";
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot: "/api/v1/user/",
+    idAttribute: "id",
+
+    url: function(){
+        if(this.get("id") == undefined){
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.UserList = Backbone.Tastypie.Collection.extend({
+	model: app.User,
+	urlRoot: "/api/v1/user/?limit=2",
+	timeDuration: "",
+	timeSet: "",
+
+	url: function(){
+		if(this.customRange){
+			if(this.userSegment == 'dateJoined'){
+				return this.urlRoot + "&date_joined__gte=" + getDateString(this.startDate) + "&date_joined__lte=" + getDateString(this.endDate);
+			} else if(this.userSegment == 'lastLogin'){
+				return this.urlRoot + "&last_login__gte=" + getDateString(this.startDate) + "&last_login__lte=" + getDateString(this.endDate);
+			}
+		} else if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					
+					break;
+				case "weekly": 
+					if(this.weekNumber >=1 || this.weekNumber <= 52){
+						if(this.weekNumber != endDate.getWeekNumber()){
+							var startOfYear = new Date(endDate.getFullYear(),0,0);
+							endDate = new Date(startOfYear.getTime() + (this.weekNumber-1)*7*oneDay).getWeekEnding();
+						}
+					} else{
+						if(this.timeSet == "previous"){
+							endDate = new Date(endDate.getTime() - 7*oneDay);
+						}
+					}
+
+					var endTime = endDate.getTime();
+					var dayOfWeek = endDate.getDay();
+					startTime = endTime - dayOfWeek*oneDay;
+					
+					break;
+				case "monthly":
+					if(this.monthNumber >=0 || this.monthNumber <= 11){
+						if(this.monthNumber != endDate.getMonth){
+							endDate = new Date(endDate.getFullYear(), this.monthNumber+1, 0);
+						}
+					} else{
+						if(this.timeSet == "previous"){
+							endDate = new Date(endDate.getTime() - 30*oneDay);
+						}
+					}
+					
+					var endTime = endDate.getTime();
+					var dayOfMonth = endDate.getDate();
+					startTime = endTime - (dayOfMonth-1)*oneDay;
+
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					
+					var endTime = endDate.getTime();
+					var startOfYear = new Date(endDate.getFullYear(), 0, 0);
+					var quarter = Math.floor((endDate-startOfYear)/90/oneDay)
+					startTime = startOfYear.getTime() + quarter*90*oneDay;
+					
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+
+			if(this.userSegment){
+				if(this.userSegment == 'dateJoined'){
+					return this.urlRoot + "&date_joined__gte=" + startDateString + "&date_joined__lte=" + endDateString;
+				} else if(this.userSegment == 'lastLogin'){
+					return this.urlRoot + "&last_login__gte=" + startDateString + "&last_login__lte=" + endDateString;
+				}
+			} else {
+				return this.urlRoot + "&date_joined__gte=" + startDateString + "&date_joined__lte=" + endDateString;
+			}
+		}
+	},
+
+	getTimeDuration: function(){
+		return this.timeDuration;
+	},
+
+	/*
+	*	timeDuration takes values - 'daily', 'weekly', 'monthly', 'quarterly'
+	*	and 'vanity'.
+	*/
+	setTimeDuration: function(timeDuration){
+		if(timeDuration  != 'daily' && timeDuration != 'weekly' && 
+				timeDuration != 'monthly' && timeDuration != 'quarterly' && 
+				timeDuration != 'vanity') {
+			alert('wrong time duration!');
+		}
+
+		this.timeDuration = timeDuration;
+	},
+
+	getTimeSet: function(){
+		return this.timeSet;
+	},
+
+	/*
+	*	timeSet takes values - 'current', 'previous'
+	*/
+	setTimeSet: function(timeSet){
+		if(timeSet  != 'current' && timeSet != 'previous') {
+			alert('wrong time set!');
+		}
+
+		this.timeSet = timeSet;
+	},
+
+	getUserSegment: function(){
+		return this.userSegment;
+	},
+
+	/*
+	*	userSegment takes values - 'lastLogin', 'dateJoined'
+	*/
+	setUserSegment: function(userSegment){
+		if(userSegment  != 'lastLogin' && userSegment != 'dateJoined') {
+			alert('wrong user segment!');
+		}
+
+		this.userSegment = userSegment;
+	},
+
+	getWeekNumber: function(){
+		return this.weekNumber;
+	},
+
+	/*
+	*	weekNumber takes values between 1 and 52
+	*/
+	setWeekNumber: function(weekNumber){
+		if(weekNumber<1 && weekNumber>52){
+			alert('wrong week number');
+		}
+
+		this.weekNumber = weekNumber;
+	},
+
+	getMonthNumber: function(){
+		return this.monthNumber;
+	},
+
+	setMonthNumber: function(monthNumber){
+		if(monthNumber<0 && monthNumber>11){
+			alert('wrong month number');
+		}
+
+		this.monthNumber = monthNumber;
+	},
+
+	getCustomRange: function(){
+		return [this.startDate, this.endDate];
+	},
+
+	setCustomRange: function(startDate, endDate){
+		this.customRange = true;
+		this.startDate = startDate;
+		this.endDate = endDate;
+	},
+});
+
+app.ProductLike = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/likes/product_p/",
+	idAttribute: "id",
+
+	url: function(){
+		if(this.get("id")!=undefined){
+			return this.urlRoot + this.get("id") + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+function getDateString (date){
+	return date.getFullYear() + "-" + (date.getMonth()+1) + "-" + date.getDate();
+}
+
+app.ProductLikeList = Backbone.Tastypie.Collection.extend({
+	model: app.ProductLike,
+	urlRoot: "/api/v1/likes/product_p/?limit=2",
+	timeDuration: "",
+	timeSet: "",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.ProductReview = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/review_p/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.ProductReviewList = Backbone.Tastypie.Collection.extend({
+	model: app.ProductReview,
+	urlRoot: "/api/v1/review_p/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.StoreLike = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/likes/shop/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.StoreLikeList = Backbone.Tastypie.Collection.extend({
+	model: app.StoreLike,
+	urlRoot: "/api/v1/likes/shop/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.StoreReview = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/shop_review/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.StoreReviewList = Backbone.Tastypie.Collection.extend({
+	model: app.StoreReview,
+	urlRoot: "/api/v1/shop_review/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.Makey = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/makey_p/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.MakeyList = Backbone.Tastypie.Collection.extend({
+	model: app.Makey,
+	urlRoot: "/api/v1/makey_p/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.Tutorial = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/tutorial_p/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.TutorailList = Backbone.Tastypie.Collection.extend({
+	model: app.Tutorial,
+	urlRoot: "/api/v1/tutorial_p/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.StoreLinkClick = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/shop_url_clicks/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.StoreLinkClickList = Backbone.Tastypie.Collection.extend({
+	model: app.StoreLinkClick,
+	urlRoot: "/api/v1/shop_url_clicks/?limit=2",
+
+	url: function(){
+		if(this.timeDuration == "" || this.timeDuration == "vanity"){
+			return this.urlRoot;
+		} else {
+			var oneDay = 3600*24*1000; //Milliseconds
+			var endDate = new Date((new Date()).getTime() + oneDay);
+			var startTime = 0;
+			switch(this.timeDuration){
+				case "daily":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - oneDay;
+					break;
+				case "weekly": 
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 7*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 7*oneDay;
+					break;
+				case "monthly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 30*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 30*oneDay;
+					break;
+				case "quarterly":
+					if(this.timeSet == "previous"){
+						endDate = new Date(endDate.getTime() - 90*oneDay);
+					}
+					var endTime = endDate.getTime();
+					startTime = endTime - 90*oneDay;
+					break;
+			}
+			var startDate = new Date(startTime);
+
+			var endDateString = getDateString(endDate);
+			var startDateString = getDateString(startDate);
+			return this.urlRoot + "&added_time__gte=" + startDateString + "&added_time__lte=" + endDateString;
+		}
+	},
+
+	setTimeDuration: function(timeDuration){
+		this.timeDuration = timeDuration;
+	},
+
+	setTimeSet: function(timeSet){
+		this.timeSet = timeSet;
+	},
+});
+
+app.Store = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/shop/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.StoreList = Backbone.Tastypie.Collection.extend({
+	model: app.Store,
+	urlRoot: "/api/v1/shop/?limit=2",
+
+	url: function(){
+		return this.urlRoot;
+	},
+});
+
+app.Product = Backbone.Tastypie.Model.extend({
+	urlRoot: "/api/v1/product_p/",
+	idAttribute: "id",
+
+	url: function (){
+		if(this.get('id') != undefined){
+			return this.urlRoot + this.get('id') + "/";
+		} else {
+			return this.urlRoot;
+		}
+	},
+});
+
+app.ProductList = Backbone.Tastypie.Collection.extend({
+	model: app.Product,
+	urlRoot: "/api/v1/product_p/?limit=2",
+
+	url: function(){
+		return this.urlRoot;
+	},
+});
+
+app.initializeUser = function(){
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined){
+        if(!cur_user_details.id){
+            alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id': cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success: function(model, response){
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+app.ProductLikesView = Backbone.View.extend({
+	template: Handlebars.compile($('#product_likes').html()),
+	template_vanity: Handlebars.compile($('#total_product_likes').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initLikes();
+	},
+
+	initLikes: function(){
+		// this.total_likes = new app.ProductLikeList();
+		// this.total_likes.setTimeDuration("vanity");
+
+		this.current_likes = new app.ProductLikeList();
+		this.current_likes.setTimeDuration(this.timeDuration);
+		this.current_likes.setTimeSet("current");
+		this.current_likes.fetch();
+
+		this.previous_likes = new app.ProductLikeList();
+		this.previous_likes.setTimeDuration(this.timeDuration);
+		this.previous_likes.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_likes.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_likes.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_likes.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_likes.meta.total_count;
+		var count_present = this.current_likes.meta.total_count;
+		var count_previous = this.previous_likes.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.ProductReviewsView = Backbone.View.extend({
+	template: Handlebars.compile($('#product_reviews').html()),
+	template_vanity: Handlebars.compile($('#total_product_reviews').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initReviews();
+	},
+
+	initReviews: function(){
+		// this.total_reviews = new app.ProductReviewList();
+		// this.total_reviews.setTimeDuration("vanity");
+
+		this.current_reviews = new app.ProductReviewList();
+		this.current_reviews.setTimeDuration(this.timeDuration);
+		this.current_reviews.setTimeSet("current");
+
+		this.previous_reviews = new app.ProductReviewList();
+		this.previous_reviews.setTimeDuration(this.timeDuration);
+		this.previous_reviews.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_reviews.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_reviews.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_reviews.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_reviews.meta.total_count;
+		var count_present = this.current_reviews.meta.total_count;
+		var count_previous = this.previous_reviews.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == 'vanity'){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.StoreLikesView = Backbone.View.extend({
+	template: Handlebars.compile($('#store_likes').html()),
+	template_vanity: Handlebars.compile($('#total_store_likes').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initLikes();
+	},
+
+	initLikes: function(){
+		// this.total_likes = new app.StoreLikeList();
+		// this.total_likes.setTimeDuration("vanity");
+
+		this.current_likes = new app.StoreLikeList();
+		this.current_likes.setTimeDuration(this.timeDuration);
+		this.current_likes.setTimeSet("current");
+
+		this.previous_likes = new app.StoreLikeList();
+		this.previous_likes.setTimeDuration(this.timeDuration);
+		this.previous_likes.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_likes.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_likes.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_likes.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_likes.meta.total_count;
+		var count_present = this.current_likes.meta.total_count;
+		var count_previous = this.previous_likes.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == 'vanity'){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.StoreReviewsView = Backbone.View.extend({
+	template: Handlebars.compile($('#store_reviews').html()),
+	template_vanity: Handlebars.compile($('#total_store_reviews').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initReviews();
+	},
+
+	initReviews: function(){
+		// this.total_reviews = new app.StoreReviewList();
+		// this.total_reviews.setTimeDuration("vanity");
+
+		this.current_reviews = new app.StoreReviewList();
+		this.current_reviews.setTimeDuration(this.timeDuration);
+		this.current_reviews.setTimeSet("current");
+
+		this.previous_reviews = new app.StoreReviewList();
+		this.previous_reviews.setTimeDuration(this.timeDuration);
+		this.previous_reviews.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_reviews.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_reviews.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_reviews.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_reviews.meta.total_count;
+		var count_present = this.current_reviews.meta.total_count;
+		var count_previous = this.previous_reviews.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.MakeysView = Backbone.View.extend({
+	template: Handlebars.compile($('#new_makeys').html()),
+	template_vanity: Handlebars.compile($('#total_makeys').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initMakeys();
+	},
+
+	initMakeys: function(){
+		// this.total_makeys = new app.MakeyList();
+		// this.total_makeys.setTimeDuration("vanity");
+
+		this.current_makeys = new app.MakeyList();
+		this.current_makeys.setTimeDuration(this.timeDuration);
+		this.current_makeys.setTimeSet("current");
+
+		this.previous_makeys = new app.MakeyList();
+		this.previous_makeys.setTimeDuration(this.timeDuration);
+		this.previous_makeys.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_makeys.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_makeys.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_makeys.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_makeys.meta.total_count;
+		var count_present = this.current_makeys.meta.total_count;
+		var count_previous = this.previous_makeys.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.TutorialsView = Backbone.View.extend({
+	template: Handlebars.compile($('#new_tutorials').html()),
+	template_vanity: Handlebars.compile($('#total_tutorials').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initTutorials();
+	},
+
+	initTutorials: function(){
+		// this.total_tutorials = new app.TutorailList();
+		// this.total_tutorials.setTimeDuration("vanity");
+
+		this.current_tutorials = new app.TutorailList();
+		this.current_tutorials.setTimeDuration(this.timeDuration);
+		this.current_tutorials.setTimeSet("current");
+
+		this.previous_tutorials = new app.TutorailList();
+		this.previous_tutorials.setTimeDuration(this.timeDuration);
+		this.previous_tutorials.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_tutorials.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_tutorials.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_tutorials.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_tutorials.meta.total_count;
+		var count_present = this.current_tutorials.meta.total_count;
+		var count_previous = this.previous_tutorials.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+
+app.StoreLinkClicksView = Backbone.View.extend({
+	template: Handlebars.compile($('#store_link_clicks').html()),
+	template_vanity: Handlebars.compile($('#total_clicks').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initClicks();
+	},
+
+	initClicks: function(){
+		// this.total_clicks = new app.StoreLinkClickList();
+		// this.total_clicks.setTimeDuration("vanity");
+
+		this.current_clicks = new app.StoreLinkClickList();
+		this.current_clicks.setTimeDuration(this.timeDuration);
+		this.current_clicks.setTimeSet("current");
+
+		this.previous_clicks = new app.StoreLinkClickList();
+		this.previous_clicks.setTimeDuration(this.timeDuration);
+		this.previous_clicks.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_clicks.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_clicks.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_clicks.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_clicks.meta.total_count;
+		var count_present = this.current_clicks.meta.total_count;
+		var count_previous = this.previous_clicks.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+
+app.NewUsersView = Backbone.View.extend({
+	template: Handlebars.compile($('#new_users').html()),
+	template_vanity: Handlebars.compile($('#total_users').html()),
+
+	initialize: function(options){
+		this.counter = 0;
+		this.mainEl = options.mainEl;
+		this.timeDuration = options.timeDuration;
+
+		this.initUsers();
+	},
+
+	initUsers: function(){
+		// this.total_users = new app.UserList();
+		// this.total_users.setTimeDuration("vanity");
+
+		this.current_users = new app.UserList();
+		this.current_users.setTimeDuration(this.timeDuration);
+		this.current_users.setTimeSet("current");
+
+		this.previous_users = new app.UserList();
+		this.previous_users.setTimeDuration(this.timeDuration);
+		this.previous_users.setTimeSet("previous");
+
+		var that = this;
+
+		// this.total_users.fetch({
+		// 	success: function(){
+		// 		that.render();
+		// 		that.renderMain();
+		// 	},
+		// });
+
+		this.current_users.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+
+		this.previous_users.fetch({
+			success: function(){
+				that.render();
+				that.renderMain();
+			},
+		});
+	},
+
+	renderMain: function(){
+		this.counter++;
+
+		// if(this.counter == 3){
+		if(this.counter == 2){
+			this.mainEl.append(this.output);
+		}
+	},
+
+	render: function(){
+		// var count_total = this.total_users.meta.total_count;
+		var count_present = this.current_users.meta.total_count;
+		var count_previous = this.previous_users.meta.total_count;
+
+		var change_value = count_present-count_previous;
+		var change_percentage = (count_present-count_previous)/(count_previous)*100;
+		var change_class = "";
+		if(count_previous > count_present){
+			change_class = "text-danger";
+		} else {
+			change_class = "text-success";
+			change_value = "+" + change_value.toString();
+		}
+
+		if(this.timeDuration == "vanity"){
+			this.output = this.template_vanity({
+				'value': count_present,
+			});
+		} else {
+			this.output = this.template({
+				// 'value': count_total,
+				'value': count_present,
+				'change_percentage': change_percentage,
+				'change_class': change_class,
+				'change_value': change_value,
+			});
+		}
+
+		return this;
+	},
+});
+
+app.DailyView = Backbone.View.extend({
+	el: '#daily',
+
+	initialize: function(){
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.productLikesView = new app.ProductLikesView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.productReviewsView = new app.ProductReviewsView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeLikesView = new app.StoreLikesView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeReviewsView = new app.StoreReviewsView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.makeysView = new app.MakeysView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.tutorialsView = new app.TutorialsView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeClicksView = new app.StoreLinkClicksView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.usersView = new app.NewUsersView({
+			timeDuration: 'daily',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+	},
+});
+
+
+app.WeeklyView = Backbone.View.extend({
+	el: '#weekly',
+
+	initialize: function(){
+		this.$el.append('<div class="row admin_row"></div>');
+
+		// this.productLikesView = new app.ProductLikesView({
+		// 	timeDuration: 'weekly',
+		// 	mainEl: this.$el.find('.admin_row').last(),
+		// });
+
+		// this.productReviewsView = new app.ProductReviewsView({
+		// 	timeDuration: 'weekly',
+		// 	mainEl: this.$el.find('.admin_row').last(),
+		// });
+
+		// this.storeLikesView = new app.StoreLikesView({
+		// 	timeDuration: 'weekly',
+		// 	mainEl: this.$el.find('.admin_row').last(),
+		// });
+
+		// this.storeReviewsView = new app.StoreReviewsView({
+		// 	timeDuration: 'weekly',
+		// 	mainEl: this.$el.find('.admin_row').last(),
+		// });
+
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.makeysView = new app.MakeysView({
+			timeDuration: 'weekly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		// this.tutorialsView = new app.TutorialsView({
+		// 	timeDuration: 'weekly',
+		// 	mainEl: this.$el.find('.admin_row').last(),
+		// });
+
+		this.storeClicksView = new app.StoreLinkClicksView({
+			timeDuration: 'weekly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.usersView = new app.NewUsersView({
+			timeDuration: 'weekly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+	},
+});
+
+
+app.MonthlyView = Backbone.View.extend({
+	el: '#monthly',
+
+	initialize: function(){
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.productLikesView = new app.ProductLikesView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.productReviewsView = new app.ProductReviewsView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeLikesView = new app.StoreLikesView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeReviewsView = new app.StoreReviewsView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.makeysView = new app.MakeysView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.tutorialsView = new app.TutorialsView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeClicksView = new app.StoreLinkClicksView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.usersView = new app.NewUsersView({
+			timeDuration: 'monthly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+	},
+});
+
+
+app.QuarterlyView = Backbone.View.extend({
+	el: '#quarterly',
+
+	initialize: function(){
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.productLikesView = new app.ProductLikesView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.productReviewsView = new app.ProductReviewsView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeLikesView = new app.StoreLikesView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeReviewsView = new app.StoreReviewsView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.makeysView = new app.MakeysView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.tutorialsView = new app.TutorialsView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeClicksView = new app.StoreLinkClicksView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.usersView = new app.NewUsersView({
+			timeDuration: 'quarterly',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+	},
+});
+
+app.VanityView = Backbone.View.extend({
+	el: '#vanity',
+
+	initialize: function(){
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.productLikesView = new app.ProductLikesView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.productReviewsView = new app.ProductReviewsView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeLikesView = new app.StoreLikesView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeReviewsView = new app.StoreReviewsView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.$el.append('<div class="row admin_row"></div>');
+
+		this.makeysView = new app.MakeysView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.tutorialsView = new app.TutorialsView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.storeClicksView = new app.StoreLinkClicksView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+
+		this.usersView = new app.NewUsersView({
+			timeDuration: 'vanity',
+			mainEl: this.$el.find('.admin_row').last(),
+		});
+	},
+});
+
+
+app.MonthlyActiveUsersView = Backbone.View.extend({
+	initialize: function(){
+		// active_user_chart
+
+		var curDate = new Date();
+		var categories = new Array();
+		var points = new Array();
+
+		var users = new Array();
+
+		for(var i=0; i<=curDate.getMonth(); i++) {
+			users[i] = new app.UserList();
+			users[i].setTimeDuration('monthly');
+			users[i].setTimeSet('current');
+			users[i].setUserSegment('lastLogin');
+			users[i].setMonthNumber(curDate.getMonth()-i);
+
+			// categories.unshift(parseInt(users[i].getMonthNumber()+1) + '/12');
+			users[i].fetch({
+				success: function(collection, response){
+					categories.unshift(parseInt(collection.getMonthNumber()+1))
+					points.unshift(collection.meta.total_count);
+					active_user_chart.series[0].setData(points);
+					active_user_chart.axes[0].setCategories(categories);
+
+					// console.log(points);
+					// console.log(categories);
+					// console.log('\n');
+				},
+			});
+		}
+
+		var startOfYear = new Date(curDate.getFullYear(),0,0);
+		users[curDate.getMonth()+1] = new app.UserList();
+		users[curDate.getMonth()+1].setTimeDuration('monthly');
+		users[curDate.getMonth()+1].setTimeSet('current');
+		users[curDate.getMonth()+1].setUserSegment('lastLogin');
+		users[curDate.getMonth()+1].setCustomRange(new Date(2000,0,0), startOfYear);
+		users[curDate.getMonth()+1].fetch({
+			success: function(collection, response){
+				categories.unshift('Rest');
+				points.unshift(collection.meta.total_count);
+				
+				active_user_chart.series[0].setData(points);
+				active_user_chart.axes[0].setCategories(categories);
+				// console.log(points);
+				// console.log(categories);
+			},
+		});
+
+		
+	}
+});
+
+/* INITIALIZE */
+app.initializeUser();
+
+app.mau = new app.MonthlyActiveUsersView();
+
+// app.daily = new app.DailyView();
+// app.weekly = new app.WeeklyView();
+// app.monthly = new app.MonthlyView();
+// app.quarterly = new app.QuarterlyView();
+// app.vanity = new app.VanityView();
+</script>

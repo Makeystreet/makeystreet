@@ -1,0 +1,161 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet| {{ product.name }}{% endblock %}
+{% block extra_js %}
+
+    <!-- light box for showing images -->
+    <link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+    <script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+    <script>
+        
+        $(document).ready(function(){
+        });
+    </script>
+
+    <!-- end of block extra_js -->
+
+{% endblock %}
+
+
+
+{% block content_top %}
+    <center>
+        <h2>Sponsor Makeystreet</h2>
+        <!-- <h2>Most awesome people in the world</h2> -->
+        <!-- <p>They support MakeyStreet</p> -->
+    </center>
+{% endblock %}
+
+
+{% block content_full %}
+<div class="row">
+    <div class="col-sm-4 col-md-4">
+        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+        <input type="hidden" name="cmd" value="_s-xclick" class="form-control">
+        <input type="hidden" name="hosted_button_id" value="R4KSZGSJDWS5Y" class="form-control">
+        <table>
+        <tbody><tr><td><input type="hidden" name="on0" value="Choose your sponsorship value" class="form-control">Choose your sponsorship value</td></tr><tr><td><select name="os0">
+            <option value="a -">$25.00 USD</option>
+            <option value="b -">$50.00 USD</option>
+            <option value="c -">$100.00 USD</option>
+            <option value="d -">$250.00 USD</option>
+            <option value="e -">$500.00 USD</option>
+            <option value="f -">$1,000.00 USD</option>
+            <option value="g -">$2,500.00 USD</option>
+            <option value="h -">$5,000.00 USD</option>
+            <option value="i -">$10,000.00 USD</option>
+        </select> </td></tr>
+        </tbody></table>
+        <input type="hidden" name="currency_code" value="USD" class="form-control">
+        <div class="row">
+            <div class="col-sm-5">
+                <input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_buynow_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online." class="form-control">
+                <img alt="" border="0" src="https://www.paypalobjects.com/en_GB/i/scr/pixel.gif" width="1" height="1">
+            </div>
+        </div>
+        </form>
+        <h5>or</h5>
+        <p>Wire transfer to our Bank.<br>   Contact alex@makeystreet.com</p>
+    </div>
+    <div class="col-sm-4 col-md-4">
+    </div>
+    <div class="col-sm-4 col-md-4">
+    </div>
+</div>
+<center>
+    <h2>Our Awesome Sponsors</h2>
+    <!-- <h2>Most awesome people in the world</h2> -->
+    <!-- <p>They support MakeyStreet</p> -->
+</center>
+
+<div class="row">
+    <!-- Sample Alex -->
+    <!-- <div class="thumbnail span3">
+        <img alt="Alex" src="http://graph.facebook.com/100000198174701/picture?width=300&height=300">
+        
+        <center><h5>
+            Alex J V
+        </h5>
+        @alexjv89</center>
+
+        <p>This the awesomeness that exists in the world. </p>
+    </div>
+     -->
+
+    <!-- Dr. Sandipan Bandyopadhyay -->
+    <div class=" col-xs-3">
+        <div class="thumbnail">
+            <img alt="Dr. Sankara J Subramanian" src="http://ed.iitm.ac.in/files/sandipan.JPG">
+            
+            <center><h5>
+                <a href="http://ed.iitm.ac.in/~sandipan/" target="blank">Dr. Sandipan Bandyopadhyay</a>
+            </h5>
+                <p>Asst. Prof IIT Madras</p>
+            </center>
+            
+
+            <p>Students waste way too much time at procuring parts for projects. Makeystreet can help students spend more time at making rather than at finding.</p>
+            <p><strong>Sponsored:</strong> $100</p>
+        </div>
+    </div>
+
+    <!-- Dr. Sankara J Subramanian -->
+    <div class=" col-sm-3 col-xs-3">
+        <div class="thumbnail">
+            <img alt="Dr. Sankara J Subramanian" src="http://ed.iitm.ac.in/files/sjs.jpg">
+            
+            <center>
+                <h5>
+                <a href="http://ed.iitm.ac.in/~shankar_sj/" target="blank">Dr. Sankara J Subramanian</a>
+                </h5>
+                <p>Asst. Prof IIT Madras</p>
+            </center>
+            
+
+            <p> Reliable prototyping services and parts procurement is the need of the day. Too much time is wasted with random logistics. We cannot be world class without the support infrastructure. Makeystreet is building that infrastructure.</p>
+            <p><strong>Sponsored:</strong> $100</p>
+        </div>
+    </div>
+
+    <!-- Slinky -->
+    <div class=" col-sm-3 col-md-3">
+        <div class="thumbnail">
+        <img alt="Arun Tejasvi C" src="{% static 'img/arun.jpg' %}">
+        
+        <center><h5>
+            <a href="http://arun.chagantys.org/" target="blank">Arun Tejasvi C</a>
+        </h5>
+            <p>PhD student at Stanford</p>
+        </center>
+        
+
+        <p> We're in an excited era for professional hobbyists. Makeystreet can
+become pivotal in the ecosystem, breaking down yet another barrier of
+entry to building things at home.</p>
+        <p><strong>Sponsored:</strong> $300</p>
+        </div>
+    </div>
+
+    <!-- Ajit Narayanan -->
+    <div class="col-sm-3 col-md-3">
+        <div class="thumbnail">
+        <img alt="Ajit Narayanan" src="http://graph.facebook.com/ajit.narayanan.5/picture?width=300&amp;height=300">
+        <center><h5>
+            <a href="http://www.avazapp.com/" target="blank">Ajit Narayanan</a>
+        </h5>
+            <p>CEO, Inventions Labs</p>
+        </center>
+        <p> I think seeing something you imagined come to life through engineering is one of the greatest joys of human existence, and I support any system that will help make that process more fun.</p>
+        <p><strong>Sponsored:</strong> $100</p>
+        
+
+        </div>
+    </div>
+
+
+</div>
+
+    
+{% endblock %}

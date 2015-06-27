@@ -1,0 +1,185 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Maker Signup {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+<style type="text/css">
+.block {
+    padding-bottom: 15px;
+}
+
+.btn {
+    margin-left: 10px;
+}
+
+.wizard-steps {
+    border: none;
+    margin: 0;
+}
+
+.wizard-steps span {
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    border-radius: 25px;
+    margin: 0 10px;
+    margin-bottom: 20px;
+}
+
+.wizard-steps span.active {
+    background-color: #1bbae1;
+}
+
+#space-search-box {
+    width: 100%;
+}
+
+.space-card {
+    padding: 10px;
+    font-weight: bold;
+    color: #1bbae1;
+    background-color: white;
+    border: 1px solid #1bbae1;
+}
+
+.space-card.selected {
+    padding: 10px;
+    font-weight: bold;
+    color: white;
+    background-color: #1bbae1;
+}
+
+.space-card-container {
+    margin-bottom: 20px;
+}
+
+#tag-search-box {
+    width: 100%;
+}
+
+.tag-card {
+    padding: 10px;
+    font-weight: bold;
+    color: #1bbae1;
+    background-color: white;
+    border: 1px solid #1bbae1;
+}
+
+.tag-card.selected {
+    padding: 10px;
+    font-weight: bold;
+    color: white;
+    background-color: #1bbae1;
+}
+
+.tag-card-container {
+    margin-bottom: 20px;
+}
+
+#user-search-box {
+    width: 100%;
+}
+
+.user-card {
+    padding: 10px;
+    font-weight: bold;
+    color: #1bbae1;
+    background-color: white;
+    border: 1px solid #1bbae1;
+}
+
+.user-card.selected {
+    padding: 10px;
+    font-weight: bold;
+    color: white;
+    background-color: #1bbae1;
+}
+
+.user-card-container {
+    margin-bottom: 20px;
+}
+
+#what-space {
+    margin-top: 5px;
+}
+
+</style>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_reco_subscribe.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_reco_subscribe.html" %}
+{% endblock %}
+
+{% block content_full %}
+    <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+        <div id="step-1" class="onboard-steps" style="display:none">
+            <center>
+                <div class="wizard-steps">
+                    <span class="active">&nbsp;</span>
+                    <span class="">&nbsp;</span>
+                </div>
+            </center>
+            <div class="row block">
+            <h4 class="pull-left">Select channels you want to follow</h4>
+            <button class="pull-right btn btn-primary" id="step-1-next">Next</button>
+            <button class="pull-right btn btn-warning" id="step-1-skip">Skip</button>
+            </div>
+            <div class="row block">
+                <div class="row">
+                    <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding: 0 15px 15px 15px;">
+                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                        <input type="text" id="tag-search-box" class="form-control" placeholder="Search for your interests, or, select from the popular ones below" />
+                    </div>
+                </div>
+                <div class="row" id="tag-search-result">
+                    <center><i class="fa fa-circle-o-notch fa-spin"></i></center>
+                </div>
+            </div>
+        </div>
+        <div id="step-2" class="onboard-steps" style="display:none">
+            <center>
+                <div class="wizard-steps">
+                    <span class="active">&nbsp;</span>
+                    <span class="active">&nbsp;</span>
+                </div>
+            </center>
+            <div class="row block">
+            <h4 class="pull-left">Follow popular users and friends</h4>
+            <button class="pull-right btn btn-success" id="step-2-finish">Finish</button>
+            <button class="pull-right btn btn-default" id="step-2-prev">Previous</button>
+            </div>
+            <div class="row block">
+                <div class="row">
+                    <div class="input-group col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding: 0 15px 15px 15px;">
+                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                        <input type="text" id="user-search-box" class="form-control" placeholder="Search for your friends, or, select from the popular users below" />
+                    </div>
+                </div>
+                <div class="row" id="user-search-result">
+                    <center><i class="fa fa-circle-o-notch fa-spin"></i></center>
+                </div>
+            </div>
+        </div>
+        <div style="display:none">
+            <form method="POST" action="#" id="subscribe-form">
+                <input type="text" name="email_id" value="{{email_id}}"/>
+                <input type="text" name="temp_id" value="{{temp_id}}"/>
+                <input type="text" name="tags"/>
+                <input type="text" name="users"/>
+                <input type="text" name="step" value="complete"/>
+                <input type="text" name="redirect" value="{{redirect}}"/>
+                {% csrf_token %}
+            </form>
+        </div>
+    </div>
+    <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2"></div>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% verbatim %}
+<!-- New row -->
+<script type="text/template" id="new_row">
+    <div class='row new_row'></div></br>
+</script>
+
+<script type="text/template" id="product_review_template">
+<div id="product_review_{{id}}" class="row">
+    <div class ="col-xs-12">
+        <p class=""><b>{{title}}</b></p>
+
+        <p class="show_product_review_id" style="display:none;">{{id}}</p>
+
+        <p>{{{review}}}</p>
+
+        <p class="pull-right">
+            By <a href="/maker/{{user.username}}">{{user.first_name}}</a> on <a href="/product/{{product_id}}">{{product_name}}</a>
+        </p>
+
+        <!--
+        <p class="pull-left">
+            {{likes_count}}
+            {{#if cur_user_likes}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+                    <i class="like_product_review fa fa-thumbs-up fa-lg text-success " id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{else}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+                    <i class="like_product_review fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{/if}}
+        </p>
+        -->
+
+        <br/><hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="store_review_template">
+<div id="store_review_{{id}}" class="row">
+    <div class ="col-xs-12">
+        <p class=""><b>{{title}}</b></p>
+
+        <p class="show_store_review_id" style="display:none;">{{id}}</p>
+
+        <p>{{{review}}}</p>
+
+        <p class="pull-right">
+            By <a href="/maker/{{user.username}}">{{user.first_name}}</a> on <a href="/store/{{store_name}}">{{store_name}}</a>
+        </p>
+
+        <!--
+        <p class="pull-left">
+            {{likes_count}}
+            {{#if cur_user_likes}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this">
+                    <i class="like_store_review fa fa-thumbs-up fa-lg text-success " id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{else}}
+                <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this">
+                    <i class="like_store_review fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{id}}_{{like_id}}"></i>
+                </a>
+            {{/if}}
+        </p>
+        -->
+
+        <br/><hr>
+    </div>
+</div>
+</script>
+
+<script type="text/template" id="user_follow_template">
+{{#if is_cur_user}}
+{{else}}
+    {{#if cur_user_follows}}
+        <button class="btn btn-info unfollow_user" id="unfollow_{{id}}"><i class="fa fa-check"></i> Following</button>
+    {{else}}
+        <button class="btn btn-default follow_user" id="follow_{{id}}"><i class="fa fa-users"></i> Follow</button>
+    {{/if}}
+{{/if}}
+</script>
+{% endverbatim %}

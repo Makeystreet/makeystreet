@@ -1,0 +1,1453 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet | {{ makey.name }}{% endblock %}
+{% block contentmeta %}
+    <meta property="og:title"  content="{{makey.name}}" />
+    <meta property="og:type"   content="makey_street:makey" />
+    <meta property="og:url"    content="{{makey_url}}" />
+    {% if makey.cover_pic %}
+    <meta property="og:image"  content="{{makey.cover_pic}}"/>
+    <meta property="og:image:url" content="{{makey.cover_pic}}" />
+    {% else %}
+    <meta property="og:image"  content="{{makey.images.all.0}}"/>
+    <meta property="og:image:url"  content="{{makey.images.all.0}}"/>
+    {% endif %}
+
+    <meta name="og:description" content="{{makey.about}}">
+    <meta name="og:author" content="{{makey.user}}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.userPopover{
+    max-width : 500px !important;
+    width : 350px !important;
+    padding: 1px;
+    margin: 1px;
+}
+.notePopover{
+    width: 275px !important;
+
+}
+.cn {
+    position: absolute;
+    display: table;
+    z-index: 2;
+    opacity: 0;
+    left: 10;
+    top: 10;
+    width:50px; /*replace this width programatically*/
+    height:50px;
+    vertical-align: middle;
+    text-align: center;
+    margin: auto;
+    opacity:1;
+    background:rgba(0,0,0,0) center no-repeat;
+}
+div.inner {
+    xdisplay: block;
+    display:table-cell;
+    vertical-align:middle;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<!-- light box for showing images -->
+<link rel="stylesheet" href="{% static 'lightbox/nivo-lightbox.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'lightbox/themes/default/default.css' %}" type="text/css">
+<link rel="stylesheet" href="{% static 'css/introjs.min.css' %}" type="text/css">
+
+<script src="{% static 'lightbox/nivo-lightbox.min.js' %}"></script>
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script src="{% static 'js/jquery.backstretch.min.js' %}"></script>
+<script src="{% static 'js/jquery.cookie.js' %}"></script>
+<script src="{% static 'js/jquery.color-2.1.2.min.js' %}"></script>
+<script src="{% static 'js/autogrow.min.js' %}"></script>
+<!-- NPROGRESS Stuff -->
+<link rel="stylesheet" href="{% static 'css/nprogress.css' %}" type="text/css">
+<script src="{% static 'js/nprogress.js' %}"></script>
+<script src="{% static 'js/notify-combined.min.js' %}"></script>
+<script src="{% static 'js/s3upload.js' %}"></script>
+
+<!-- D3 Stuff -->
+<script src="{% static 'js/d3.min.js' %}"></script>
+<script src="{% static 'js/d3-tip.js' %}"></script>
+
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+
+<script type="text/javascript">
+    $(document).ready(function(){
+        mixpanel.track_links("a[rel=topbar]", "NavbarTop", function(target){
+        var details = {};
+
+        if(app.cur_fb_user == undefined) {
+            curUser = "NotLoggedIn";
+        } else {
+            curUser = app.cur_fb_user.facebook_name;
+        }
+
+        details.btn = target.innerText;
+        details.user = curUser;
+
+        return details;
+        });
+    });
+</script>
+
+
+<!-- D3 Stuff -->
+<style>
+    .d3-tip {
+        line-height: 1;
+        padding: 12px;
+        background: rgba(249, 250, 252, 1);
+        color: black;
+        border-radius: 2px;
+    }
+
+    .d3-tip strong {
+        color: #1BBAE1;
+    }
+
+</style>
+<style>
+
+.node {
+  cursor: pointer;
+}
+
+.node circle {
+  fill: #fff;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font: 10px sans-serif;
+}
+
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 1.5px;
+}
+
+#content-tabs > li > a {
+    background-color: white;
+}
+
+#content-tabs > li {
+    padding-left: 3px;
+    padding-right: 3px;
+}
+
+#content-tabs > li.active > a {
+    background-color: #1bbae1;
+    color: white;
+}
+
+#content-tabs > li > a:hover {
+    background-color: #1bbae1;
+    color: white;
+}
+
+.sidebar-separator {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+#insights-comments-wrapper {
+    position: relative;
+}
+#insights-comments-wrapper:after {
+    right: 100%;
+    top: 9%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+    border-color: rgba(136, 183, 213, 0);
+    border-right-color: #F9FAFC;
+    border-width: 15px;
+    margin-top: -15px;
+}
+
+</style>
+{% endblock %}
+
+
+{% block templates %}
+    {% include "catalog/t/t_makey_page_new.html" %}
+{% endblock %}
+
+
+{% block backbone %}
+    {% include "catalog/bb/bb_makey_page_new.html" %}
+{% endblock %}
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Makey header -->
+<div class ="row" itemscope itemtype="http://schema.org/CreativeWork/Makey">
+    <div class="col-xs-12">
+        <div id="bg" class="row">
+            <div style="background:rgba(255,255,255,0.1);">
+                <div class="jumbotron" style="background:rgba(0,0,0,0.6);padding-bottom:5px;padding-top:10px;margin-bottom:10px;padding-right:10px" id="jumbo">
+                    <!-- Section: Title -->
+                    <div id="makey_info" style="display:block; width:100%; min-height=100px;color:#ffffff;">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                <h1 id="makey_name" itemprop="name">
+                                    {{makey.name}}
+                                </h1>
+                            </div>
+
+                        </div>
+                        <meta itemprop="url" content="{{makey_url}}" />
+                        {% if makey.cover_pic %}
+                        <meta itemprop="image"  content="{{makey.cover_pic}}"/>
+                        {% else %}
+                        <meta itemprop="image"  content="{{makey.images.all.0}}"/>
+                        {% endif %}
+
+                        <!-- Section: Likes -->
+                        <div class="row" style="position: relative">
+                            <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+                                <div class="row" style="margin-bottom: 5px;">
+                                    <div class="col-xs-12" id="makey-{{makey.id}}-likes">
+                                        <span class="likes" style="display:inline-block">
+                                            <button class="btn btn-sm btn-info" type="button">Like</button>
+                                            <small>Be the first one to like this!</small>
+                                        </span>
+                                        <div class="modal fade col-sm-12" id="all_likes_modal" tabindex="-1" role="dialog" aria-labelledby="all_likes_label" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content col-sm-offset-1">
+                                                    <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 style="color:black;" class="modal-title" id="all_likes_label">People who like this</h4>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        List of likers
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default close_likes_modal" data-dismiss="modal" id="close_likes_modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10" id="collaborators">
+                                        Made by:&nbsp;
+                                        {% for user in makey.collaborators.all %}
+                                            {% if forloop.last %}
+                                                <a href="/maker/{{user.username}}/" target="_blank" class="collaborator-name" style="color: white;">
+                                                    {{ user.first_name }} {{ user.last_name }}
+                                                </a>
+                                            {% else %}
+                                                <a href="/maker/{{user.username}}/" target="_blank" class="collaborator-name" style="color: white;">
+                                                    {{ user.first_name }} {{ user.last_name }}
+                                                </a>,
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class='col-md-2' id="search-container">
+                                        <input type="text" class="form-control makey-search-input" placeholder="Search this project">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2" style="position: absolute; bottom: 0; right: 0;">
+                                {% if can_edit %}
+                                <button type="button" class="btn btn-primary btn-block btn-alt" id="makey-edit-btn"><i class="fa fa-pencil"></i> Edit Makey</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<br/>
+
+<div class="row">
+    <!-- Nav tabs -->
+    <ul class="nav nav-justified nav-pills" id="content-tabs">
+        <li><a id="overview-tab-pill">Overview</a></li>
+        <li><a id="documentation-tab-pill">
+            Documentation
+            {% if makey.text_documentations.count %}
+                <span class="badge">{{makey.text_documentations.count}}</span>
+            {% endif %}
+            </a>
+        </li>
+        <li><a id="files-tab-pill">
+            Files
+            {% if makey.files.count %}
+                <span class="badge">{{makey.files.count}}</span>
+            {% endif %}
+            </a>
+        </li>
+        <li><a id="gallery-tab-pill">
+            Gallery
+            {% if gallery_length %}
+                <span class="badge">{{gallery_length}}</span>
+            {% endif %}
+            </a>
+        </li>
+        <li><a id="insights-tab-pill">
+            Insights
+            {% if approved_notes.count %}
+                <span class="badge">{{approved_notes.count}}</span>
+            {% endif %}
+            </a>
+        </li>
+        <li><a id="discussions-tab-pill">
+            Discussion
+            {% if makey.question_set.count %}
+                <span class="badge">{{makey.question_set.count}}</span>
+            {% endif %}
+            </a>
+        </li>
+    </ul>
+
+    <!-- Tab panes -->
+    <div class="tab-content" style="margin-top: 6px;">
+        <!-- Overview Tab Content-->
+        <div class="tab-pane" id="overview-tab">
+
+            <!-- Section: Current status of the project -->
+            <div class="row">
+                <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+                    <!-- About this makey -->
+                    <div class="row" id="about">
+                        <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+                            <div class="row">
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                    <div class="block-content">
+                                        <div class="thumbnail">
+                                            <img class="img-responsive" src="{{ makey.cover_pic.large_url }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-7 col-md-7">
+                            <div class="row">
+                                <div class="block">
+                                    <div class="block-title">
+
+                                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Modular hierarchy"><strong>What is this?</strong></h2>
+                                    </div>
+                                    <div class="block-content">
+                                        <div id="makey_about" class="">
+                                            <p>{{makey.about}}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="row hierarchy-group" id='hierarchy-container'>
+                                    <div class="col-sm-12 col-md-12">
+                                        <div class="block" id="hierarchy">
+                                            <div class="block-title">
+                                                {% if can_edit %}
+                                                <div class="block-options pull-right">
+                                                    <button type="button" class="btn btn-alt btn-primary btn-sm" onclick="document.location.href = '{% url 'catalog:makey_add_submodule' makey.id %}'"><i class="fa fa-plus"></i>&nbsp;Add sub-assembly</button>
+                                                </div>
+                                                {% endif %}
+                                                <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Modular hierarchy"><strong>Sub-assemblies</strong></h2>
+                                            </div>
+                                            <div class="block-content">
+                                                <div class="row">
+                                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                                        <div id="d3-container"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="row">
+                                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                                        <div id="d3-container-prev"></div>
+                                                    </div>
+                                                </div>
+                                                <div class="row" id="empty-hierarchy" style="display:none; margin-bottom: 15px;">
+                                                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                                        <center><b>No hierarchy data available</b></center>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if activities %}
+                            <div class="row">
+                                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding-left: 0;padding-right: 0;">
+                                    <div class="block">
+                                        <div class="block-title">
+                                            <h2 class="tooltips" data-placement="right" data-toggle="tooltip" title="Updates on this makey"><strong>Updates</strong></h2>
+                                        </div>
+                                        <div class="block-content">
+                                            <div class="timeline">
+                                                <ul class="timeline-list">
+                                                    {% for activity in activities %}
+                                                        <li class="active">
+                                                            <div class="timeline-icon">
+                                                                <i class="fa fa-plus"></i>
+                                                            </div>
+                                                            <div class="timeline-time">
+                                                                <small>{{activity.added_time|timesince}} ago</small>
+                                                            </div>
+                                                            <div class="timeline-content">
+                                                                {% load catalog_tags %}
+                                                                {% with activity|activity_type as act_type %}
+                                                                    {% if act_type == "activity_insight_created" %}
+                                                                        <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created an <a href="{{activity.makey.get_absolute_url}}#/insights/{{activity.event_id}}">Insight</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                                                    {% elif act_type == "activity_question_created" %}
+                                                                        <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created a <a href="{% url 'catalog:question' activity.event_id %}">Question</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                                                    {% elif act_type == "activity_answer_created" %}
+                                                                        <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created an <a href="{% url 'catalog:question' activity.answer.question.id %}">Answer</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                                                    {% endif %}
+                                                                {% endwith %}
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% comment %}
+                            <div class="row">
+                                <div class="block">
+                                    <div class="block-title">
+                                        <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Modular hierarchy"><strong>Collaborators</strong></h2>
+                                    </div>
+                                    <div class="block-content">
+                                        <div class="row">
+                                            {% for collab in makey.collaborators.all %}
+                                            <div class = "col-xs-3" itemprop="contributor" itemtype="http://schema.org/Person">
+                                                <div class="thumbnail">
+                                                    <a id="collab_{{collab.id}}" href="/maker/{{collab.username}}/" class="collaborator" itemprop="url">
+                                                        <img class="img-responsive" height="auto" src="{{collab.profile.profile_img_url}}" imgId="collab_{{collab.id}}" itemprop="image" />
+                                                        <span itemprop="name">{{collab.first_name}}</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                            {% for collab in makey.new_users.all %}
+                                            <div class = "col-xs-3" style="padding: 0.5px; margin: 0.5px; margin-bottom:0px; width:110px;" itemprop="contributor" itemtype="http://schema.org/Person">
+                                                <div class="thumbnail tooltips" data-toggle="tooltip" data-placement="auto bottom" title="{{collab.name}}">
+                                                    <a href="" class="preventDefault">
+                                                        <img height="auto" src="https://makeystatic.s3.amazonaws.com/images/newuser.gif" altname="{{collab.name}}" style="height:100px;width:100px;" />
+                                                        <span itemprop="name">{{collab.name}}</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endcomment %}
+
+                        </div>
+                    </div>
+
+                    <!-- Hierarchy -->
+                    {% comment %}
+
+                    <div class="row hierarchy-group" id='hierarchy-container'>
+                        <div class="col-sm-12 col-md-12">
+                            <div class="block" id="hierarchy">
+                                <div class="block-title">
+                                    <div class="block-options pull-right">
+                                        <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                                    </div>
+                                    <h2 class="tooltips" data-placement="left" data-toggle="tooltip" title="Modular hierarchy"><strong>Hierarchy</strong></h2>
+                                </div>
+                                <div class="block-content">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <div id="d3-container"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <div id="d3-container-prev"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row" id="empty-hierarchy" style="display:none; margin-bottom: 15px;">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <center><b>No hierarchy data available</b></center>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endcomment %}
+
+
+                </div>
+                <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                    <div class="row block" style="padding-bottom: 20px;">
+                        <div class="row">
+                            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                {% if makey.status %}
+                                    <center><small>Status: </small><b style="display: block;">{{makey.status}}</b></center>
+                                {% else %}
+                                    <center><small>Status: </small><b style="display: block;">Completed</b></center>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if makey.as_part %}
+                        <hr class="sidebar-separator" />
+                        <div class="row">
+                            <center><small>Available as a part: </small><a href="{% url 'catalog:product' makey.as_part.id %}" target="_blank" style="display: block"><b>{{makey.as_part.name}}</b></a></center>
+                        </div>
+                        {% endif %}
+                        {% if makey.as_part_new %}
+                        <hr class="sidebar-separator" />
+                        <div class="row">
+                            <center><small>Available as a part: </small><a href="{{makey.as_part_new.url}}" target="_blank" style="display: block"><b>{{makey.as_part_new.name}}</b></a></center>
+                        </div>
+                        {% endif %}
+                        {% if makey.derived_from %}
+                        <hr class="sidebar-separator" />
+                        <div class="row">
+                            <center><small>Derived from: </small><a href="{{makey.derived_from.get_absolute_url}}" target="_blank" style="display: block"><b>{{makey.derived_from.name}}</b></a></center>
+                        </div>
+                        {% endif %}
+                        {% if makey.made_in %}
+                        <hr class="sidebar-separator" />
+                        <div class="row">
+                            <center><small>Made in: </small><a href="/space/{{makey.made_in.id}}" target="_blank" style="display: block"><b>{{makey.made_in.name}}</b></a></center>
+                        </div>
+                        {% endif %}
+                        {% if makey.tags.all %}
+                        <hr class="sidebar-separator" />
+                        <div class="row">
+                            <center><small>Tags: </small>
+                                <span style="display: block">
+                                {% for tag in makey.tags.all %}
+                                    {% if forloop.last %}
+                                        <b>{{ tag.name }}</b>
+                                    {% else %}
+                                        <b>{{ tag.name }}</b>,
+                                    {% endif %}
+                                {% endfor %}
+                                </span>
+                            </center>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="documentation-tab">
+            <div class="row block">
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3" id="doc-modal-sidebar">
+                    <div id="textdoc-sidebar">
+                        <ul class="nav nav-pills nav-stacked">
+                            {% for doc in makey.text_documentations.all|dictsort:"order" %}
+                                <li><a href="#textdoc-{{doc.id}}" style="display: block">{{doc.title}}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                    <div>
+                        {% for doc in makey.text_documentations.all|dictsort:"order" %}
+                        <div data-id="{{doc.id}}" id="textdoc-{{doc.id}}">
+                            <h4><b>{{doc.title}}</b></h4>
+                            {% load catalog_tags %}
+                            <p>{{doc.body|safe}}</p>
+                            <br/>
+                        </div>
+                        {% empty %}
+                            No documentation
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="clearfix"></div>
+            </div>
+        </div>
+        <div class="tab-pane" id="files-tab">
+            <div class="row block">
+                <div class="table-responsive">
+                    <table class="table table-vcenter table-striped">
+                        <thead>
+                            <tr>
+                                <th class="text-center"></th>
+                                <th>File name</th>
+                                <th>Annotation</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for file in makey.files.all %}
+                            <tr>
+                                <td class="text-center">
+                                    <a href="{{file.url}}" target="blank">
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                <td>
+                                    {{file.filename}}
+                                </td>
+                                <td>{{file.description}}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td class="text-center">
+                                <td>
+                                    No files
+                                </td>
+                                <td></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="gallery-tab">
+            <!-- Section: Gallery -->
+            <div class="row show_gallery" id="images">
+                <div class="col-sm-9 col-md-9">
+                    <div class="block">
+                        <div class="block-title">
+                            {% if user in makey.collaborators.all %}
+                            <div class="block-options pull-right">
+                                <button type="button" class="btn btn-alt btn-primary btn-sm add-images" data-toggle="modal" data-target="#add_gallery_modal"><i class="fa fa-plus"></i>&nbsp;Add image / video</button>
+                            </div>
+                            {% endif %}
+                            <h2><strong>Gallery</strong></h2>
+                        </div>
+
+                        <div class="block-content" style="display: block;">
+                            <div class="image" id="makey_images">
+                                <div id="video_list" class="">
+                                {% if vids|length %}
+                                    <h5><strong>Videos</strong></h5>
+                                    {% for vid in vids %}
+                                    {% cycle '<div class="row images_row" style="padding:0px;padding-left:10px; padding-right:10px;">' '' '' '' %}
+                                    <div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design" style="padding:2px;padding-bottom:0px;">
+                                        <a href="" class="preventDefault">
+                                            <div class="square-thumbnail img makey_video " id="{{vid.id}}" style="background-image:url('{{vid.thumb_url}}');">
+                                                <div class="content2 img " id="{{vid.id}}" >
+                                                    <div class="table2 img " id="{{vid.id}}" >
+                                                        <div class="table-cell2 img " id="{{vid.id}}" >
+                                                            <center class=" img "  id="{{vid.id}}" >
+                                                                <i class="fa fa-play-circle fa-3x img" style="color:#ffffff" id="{{vid.id}}"></i>
+                                                            </center>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    </div>
+
+                                    {% cycle '' '' '' '</div>' %}
+                                    {% endfor %}
+                                    {% if not vids|length|divisibleby:"4" %}
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+                                <div id="image_list" class="">
+                                {% if imgs|length %}
+                                    <h5><strong>Images</strong></h5>
+                                    {% for img in imgs %}
+                                    {% cycle '<div class="row images_row" style="padding:0px;padding-left:10px; padding-right:10px;">' '' '' '' %}
+                                    <div class="col-xs-3 portfolio-item animation-fadeInQuick" data-category="design" style="padding:2px;padding-bottom:0px;">
+                                        <a href="" class="preventDefault">
+                                            <div class="square-thumbnail img makey_image " id="{{img.id}}" style="background-image:url('{{img.url}}');">
+                                            </div>
+                                        </a>
+                                    </div>
+                                    {% cycle '' '' '' '</div>' %}
+                                    {% endfor %}
+                                    {% if not imgs|length|divisibleby:"4" %}
+                                    </div>
+                                    {% endif %}
+                                {% endif %}
+                                </div>
+
+                                <div class="row" id="empty_images" style="display:none;">
+                                    <div class="col-sm-12 col-md-12">
+                                        <p class="text-info">There are no images right now.</p>
+                                    </div>
+                                </div>
+                                <div class="modal fade col-sm-12" id="images_modal" tabindex="-1" role="dialog" aria-labelledby="images_modal_label" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content col-sm-offset-1">
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-sm-8 col-md-8">
+                                                        <div class="row">
+                                                            <div class="col-sm-12 col-md-12">
+                                                                <div class="thumbnail" id="main_image">
+                                                                    <img alt="Makey Image" width="450">
+                                                                </div>
+                                                                <div class="thumbnail"  id="main_video">
+                                                                    <iframe width="100%" height="300" src="" frameborder="0"></iframe>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-sm-12 col-md-12">
+                                                                <div id='gallery_like'>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-sm-12 col-md-12" id="gallery_pager">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-sm-4 col-md-4">
+                                                        <div class="row">
+                                                            <div class="col-md-12" id="gallery_description">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row" id="image_note_row" style="display:none;">
+                                                            <div class="col-md-12" id="image_note_body">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                <h4>Comments</h4>
+                                                                <div id="gallery_comments_list">
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br/>
+                    </div>
+                </div>
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                </div>
+                <div class="modal fade col-sm-12" id="add_gallery_modal" tabindex="-1" role="dialog" aria-labelledby="add_gallery_label" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content col-sm-offset-1">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                <h4 class="modal-title" id="add_image_label">Add/Edit Images and Videos</h4>
+                            </div>
+                            <div class="modal-body">
+                                <ul class="nav nav-tabs add_image_tabs" role="tablist">
+                                  <li class="active add-image-tab-btn"><a href="javascript:void();">Add Image</a></li>
+                                  <li class="add-video-tab-btn"><a href="javascript:void();">Add Video</a></li>
+                                </ul>
+                                <div id="add_images_form">
+                                    <center><b>Provide link to image</b></center>
+                                    <div class="input-group">
+                                        <input type="url" class="form-control" id="img_url_v2" name="img_url" placeholder="Link to the image">
+                                        <span class="input-group-btn">
+                                            <button type="button" class="btn btn-info" id="save_image_v2">Add</button>
+                                        </span>
+                                    </div>
+                                    <center style="padding: 10px;"><b>OR</b></center>
+                                    <center><b>Upload image</b></center>
+                                    <input type="file" class="form-control" id="up_images_v2" name="up_images"/>
+                                    <input type="hidden" id="upload_img_url_v2" name="upload_img_url" value="" />
+                                    <p class="text-danger" id="upload_error_v2" style="display:none;">There was an error. Please try again!</p>
+                                    <p class="text-warning" id="upload_error_v2_retry" style="display:none;">Retrying ... Please wait ...</p>
+                                    <div class="progress progress-striped" id="progress_bar_v2" style="display:none;">
+                                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">0%</div>
+                                    </div>
+                                    <div class="alert alert-warning" id="waiting_add_v2" style="display:none;">
+                                        Saving ... Please wait!
+                                    </div>
+                                    <div class="alert alert-success" id="success_add_v2" style="display:none;">
+                                        Saved!
+                                    </div>
+                                    <div class="alert alert-danger" id="failed_add_v2" style="display:none;">
+                                        Error in the link! Please check it again before submitting it.
+                                    </div>
+                                    <div class="alert alert-danger" id="error_add_v2" style="display:none;">
+                                        There was some error! Please try later.
+                                    </div>
+                                </div>
+                                <div class="image_sub" id="add_videos_form" style="display:none;">
+                                    <h5>Provide link to youtube or vimeo video</h5>
+                                    <div class="input-group">
+                                        <input type="url" class="form-control" id="vid_url_v2" name="vid_url" placeholder="Link to the video">
+                                        <span class="input-group-btn">
+                                        <button type="button" class="btn btn-info" id="save_video_v2">Add</button>
+                                        </span>
+                                    </div>
+                                    <div class="alert alert-warning" id="waiting_add_vid_v2" style="display:none;">
+                                        Saving ... Please wait!
+                                    </div>
+                                    <div class="alert alert-success" id="success_add_vid_v2" style="display:none;">
+                                        Saved!
+                                    </div>
+                                    <div class="alert alert-danger" id="failed_add_vid_v2" style="display:none;">
+                                        Error in the link! Please check it again before submitting it.
+                                    </div>
+                                    <div class="alert alert-danger" id="error_add_vid_v2" style="display:none;">
+                                        There was some error! Please try later.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal" id="close_image_edit_v2">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="insights-tab">
+            <div class="row" id="notes">
+
+                <div class="col-sm-7 col-md-7">
+                    <div class="block" id="insights-wrapper">
+                        {% comment %}
+
+                        <div class="block-title">
+                            <div class="block-options pull-right">
+                                <a href="javascript:void(0)" class="btn btn-alt btn-sm btn-primary" data-toggle="block-toggle-content"><i class="fa fa-arrows-v"></i></a>
+                            </div>
+                            <h3 class="tooltips" data-toggle="tooltip" data-placement="left" title="Specific things that the collaborators learned while doing this project"><strong>What did we learn? (Insights)</strong></h3>
+                        </div>
+                        {% endcomment %}
+                        <div class="block-content">
+                            <div id="makey_notes">
+                                {% for note in notes %}
+                                    {% if not note.is_pending_approval %}
+                                        <div id="note_{{note.id}}" class="row note_item" data-id="{{note.id}}">
+                                            <div class ="col-xs-12">
+                                                <p class=""><b>{{note.title}}</b>&nbsp;<a href="#insights/{{note.id}}"><i class="fa fa-link pull-right"></i></a></p>
+                                                {% load catalog_tags %}
+                                                <p>{{note.body|linebreaksbr|urlize_target_blank:None}}</p>
+
+                                                <p class="pull-right">
+                                                By <a href="/maker/{{note.user.username}}">{{note.user.first_name}}</a>
+                                                </p>
+
+                                                <p class="pull-left">
+                                                    {{note.likes_count}}
+                                                    {% if note.cur_user_likes %}
+                                                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                                    {% else %}
+                                                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                                    {% endif %}
+
+                                                    &nbsp;&nbsp;
+                                                    <span class="insight-comments-count" data-id="{{note.id}}">{{note.comments.count}}</span>
+                                                    <a href="javascript:void()" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="insights-comments-btn fa fa-comments-o fa-lg text-primary-inverse" data-id="{{note.id}}"></i></a>
+
+                                                    &nbsp;&nbsp;
+                                                    {% if note.image %}
+                                                        <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{note.image_id}}"></i>
+                                                    {% endif %}
+                                                </p>
+                                                <br/>
+                                                <hr>
+                                            </div>
+                                        </div>
+                                    {% elif user in makey.collaborators.all or user == note.user %}
+                                        <div id="note_{{note.id}}" class="row note_item">
+                                            <div class ="col-xs-12">
+                                                <p class=""><b>{{note.title}}</b></p>
+                                                {% load catalog_tags %}
+                                                <p>{{note.body|linebreaksbr|urlize_target_blank:None}}</p>
+
+                                                <p class="pull-right">
+                                                By <a href="/maker/{{note.user.username}}">{{note.user.first_name}}</a>
+                                                </p>
+
+                                                <p class="pull-left">
+                                                    {{note.likes_count}}
+                                                    {% if note.cur_user_likes %}
+                                                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="You like this"><i class="like_note fa fa-thumbs-up fa-lg text-success " id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                                    {% else %}
+                                                    <a href="" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Like this"><i class="like_note fa fa-thumbs-o-up fa-lg text-primary-inverse" id="like_{{note.id}}_{{note.like_id}}"></i></a>
+                                                    {% endif %}
+
+                                                    &nbsp;&nbsp;
+                                                    <span class="insight-comments-count" data-id="{{note.id}}">{{note.comments.count}}</span>
+                                                    <a href="javascript:void()" class="preventDefault tooltips" data-toggle="tooltip" data-placement="auto top" title="Leave a comment"><i class="insights-comments-btn fa fa-comments-o fa-lg text-primary-inverse" data-id="{{note.id}}"></i></a>
+
+                                                    &nbsp;&nbsp;
+                                                    {% if note.image %}
+                                                        <i class="fa fa-picture-o fa-lg text-success show_image" id="note_image_{{note.image_id}}"></i>
+                                                    {% endif %}
+
+                                                    &nbsp;&nbsp;
+                                                        <i class="fa fa-clock-o text-warning"></i><span class="text-warning">&nbsp;pending approval</span>
+                                                </p>
+                                                <br/>
+                                                <hr>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% empty %}
+                                    No insights.
+                                {% endfor %}
+                            </div>
+                            <div id="makey-notes-v2-add"></div>
+                        </div>
+                    </div>
+                    <div class="modal fade col-sm-12" id="images_modal_insight" tabindex="-1" role="dialog" aria-labelledby="images_note_modal_label" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content col-sm-offset-1">
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-8 col-md-8">
+                                            <div class="row">
+                                                <div class="col-sm-12 col-md-12">
+                                                    <div class="thumbnail" id="main_image">
+                                                        <img alt="Makey Image" width="450">
+                                                    </div>
+                                                    <div class="thumbnail"  id="main_video">
+                                                        <iframe width="100%" height="300" src="" frameborder="0"></iframe>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-12 col-md-12">
+                                                    <div id='gallery_like'>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-sm-12 col-md-12" id="gallery_pager">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-sm-4 col-md-4">
+                                            <div class="row">
+                                                <div class="col-md-12" id="gallery_description">
+                                                </div>
+                                            </div>
+                                            <div class="row" id="image_note_row" style="display:none;">
+                                                <div class="col-md-12" id="image_note_body">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <h4>Comments</h4>
+                                                    <div id="gallery_comments_list">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+                    <div class="block" id="insights-comments-wrapper" style="display: none">
+                        <div class="block-title">
+                            <h3><strong>Comments</strong></h3>
+                        </div>
+                        <div class="block-content">
+                            <div id="insights-comments-container">
+
+                            </div>
+                            <div id="insights-comments-add">
+                                {% if user.is_authenticated %}
+                                <div id="add-insight-comment-form-container" style="margin-bottom:10px;">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <textarea id="add-insight-comment-input" row="1" class="form-control" placeholder="Add comment"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <button type="button" class="btn btn-primary btn-sm pull-right" id="add-insight-comment-save">Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+
+        </div>
+        <div class="tab-pane" id="discussions-tab">
+            <div class="row show_questions">
+                <div class="col-sm-12 col-md-12">
+                    <div class="block" id="questions">
+                        <div class="block-content">
+                            <table class="table table-borderless table-striped table-vcenter">
+                                <thead>
+                                    <tr>
+                                        <th>Questions</th>
+                                        <th class="text-center hidden-xs hidden-sm" style="width: 100px;">Replies</th>
+                                        <th class="text-center hidden-xs hidden-sm" style="width: 100px;">Views</th>
+                                        <th class="hidden-xs hidden-sm" style="width: 200px;">Latest Answer</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for question in makey.question_set.all %}
+                                    <tr>
+                                        <td>
+                                            <h4><a href="{% url 'catalog:question' question.id %}"><strong>{{question.name}}</strong></a> <br><small><a href="{% url 'catalog:maker' question.creator %}">{{question.creator.first_name}}</a> on <em>{{question.created}}</em></small></h4>
+                                        </td>
+                                        <td class="text-center hidden-xs hidden-sm"><a href="javascript:void(0)">{{question.num_answers}}</a></td>
+                                        <td class="text-center hidden-xs hidden-sm"><a href="javascript:void(0)">{{question.views}}</a></td>
+                                        {% if question.num_answers > 0 %}
+                                        <td class="hidden-xs hidden-sm">by <a href="{% url 'catalog:maker' question.latest_answer.creator %}">{{question.latest_answer.creator.first_name}}</a><br><small>{{question.latest_answer.created}}</small></td>
+                                        {% else %}
+                                        <td class="hidden-xs hidden-sm">No answers yet.</td>
+                                        {% endif %}
+                                    </tr>
+                                    {% endfor %}
+                                    <tr>
+                                        <td colspan="4" class="text-center text-danger">
+                                            <i class="gi gi-pin_flag fa-2x"></i>&nbsp;&nbsp;&nbsp;
+                                            <a
+                                                {% if user.is_authenticated %}
+                                                href="{% url 'catalog:ask_question' makey.id %}"
+                                                {% else %}
+                                                href="#login-modal"
+                                                data-toggle="modal"
+                                                onclick="setLoginNext('{% url 'catalog:ask_question' makey.id %}');"
+                                                {% endif %}
+                                            >
+                                                    <strong>Have a question? Ask it here.</strong>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            {% comment %}
+                            <div id="makey_questions_add_container">
+                                {% if user.is_authenticated %}
+                                <div id="add-question-form-container" style="margin-bottom:10px;">
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <textarea id="add-question-input" row="1" class="form-control" placeholder="Add question"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                                            <button type="button" class="btn btn-primary btn-sm pull-right" id="add-question-save">Add</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js_end %}
+<script>
+var margin = {top: 20, right: 20, bottom: 20, left: 20},
+    width = 500 - margin.right - margin.left,
+    height = 300 - margin.top - margin.bottom,
+    offsetX = 0,
+    offsetY = 100,
+    depthSeparation = 100,
+    fontSize = "12px",
+    nodeRadius = 5;
+
+var i = 0,
+    duration = 700,
+    root;
+
+var tree1 = d3.layout.tree()
+    .size([height, width]);
+
+var tree2 = d3.layout.tree()
+    .size([height, width]);
+
+var diagonal = d3.svg.diagonal()
+    .projection(function(d) { return [d.y, d.x]; });
+
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>" + d.insights_count + "</strong> <span> insights,</span>" + 
+            "<strong> " + d.discussions_count + "</strong> <span> discussions,</span>" +
+            "<strong> " + d.files_count + "</strong> <span> files,</span>" +
+            "<strong> " + d.gallery_count + "</strong> <span> media</span>";
+  });
+
+var svg1 = d3.select("#d3-container").append("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var svg2 = d3.select("#d3-container-prev").append("svg")
+    .attr("width", width + margin.right + margin.left)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg1.call(tip);
+svg2.call(tip);
+
+d3.json("/api/v1/makey/hierarchy/?q={{makey.id}}", function(error, response) {
+    root1 = undefined;
+    if(response) {
+        root1 = response
+        root1.x0 = height / 2;
+        root1.y0 = offsetY;
+    }
+
+    root2 = undefined;
+    if(response && response.versions && response.versions.prev) {
+        root2 = response.versions.prev;
+        root2.x0 = height / 2;
+        root2.y0 = offsetY;
+    }
+
+
+  function toggleAll(d) {
+    if (d.children) {
+      d.children.forEach(toggleAll);
+      toggle(d);
+    }
+  }
+
+  // if(root1 && root2 || root1 && root1.children) {
+  //       update1(root1);
+  //       if(root2) {
+  //           update2(root2);
+  //       } else {
+  //           $('#d3-container-prev').hide();
+  //       }
+  // } else {
+  //   $('#d3-container').hide();
+  //   $('.hierarchy-group').hide();
+  // }
+
+    if(root1 && root1.children) {
+        update1(root1);
+  } else {
+    $('#d3-container').hide();
+    $('.hierarchy-group').hide();
+  }
+    $('#d3-container-prev').hide();
+
+
+});
+
+
+function update1(source) {
+
+  // Compute the new tree layout.
+  var nodes = tree1.nodes(root1).reverse();
+
+  // Normalize for fixed-depth.
+  nodes.forEach(function(d) { d.y = d.depth * depthSeparation + offsetY; });
+
+  // Update the nodes…
+  var node = svg1.selectAll("g.node")
+      .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+  // Enter any new nodes at the parent's previous position.
+  var nodeEnter = node.enter().append("svg:g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
+
+  nodeEnter.append("svg:circle")
+      .attr("r", 1e-6)
+      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+      .on("click", function(d) { toggle(d); update1(d); });
+
+  nodeEnter
+    .append("a")
+      .attr("xlink:target","_blank")
+      .attr("xlink:href", function(d) {
+        if (d.makey_id != root1.makey_id)
+            return "/makey/" + d.makey_id;
+        else
+            return "javascript:void()";
+      })
+    .append("svg:text")
+      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+      .attr("dy", function(d) { return d.children || d._children ? "-1em" : ".35em"; })
+      .attr("text-anchor", function(d) { return d.children || d._children ? "middle" : "start"; })
+      .text(function(d) { return d.name; })
+      .style("fill-opacity", 1e-6)
+      .on('mouseover', tip.show)
+      .on('mouseout', tip.hide);
+
+  // Transition nodes to their new position.
+  var nodeUpdate = node.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+  nodeUpdate.select("circle")
+      .attr("r", nodeRadius)
+      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+  nodeUpdate.select("text")
+      .style("fill-opacity", 1)
+      .style("font-size", fontSize);
+
+  // Transition exiting nodes to the parent's new position.
+  var nodeExit = node.exit().transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+      .remove();
+
+  nodeExit.select("circle")
+      .attr("r", 1e-6);
+
+  nodeExit.select("text")
+      .style("fill-opacity", 1e-6);
+
+  // Update the links…
+  var link = svg1.selectAll("path.link")
+      .data(tree1.links(nodes), function(d) { return d.target.id; });
+
+  // Enter any new links at the parent's previous position.
+  link.enter().insert("svg:path", "g")
+      .attr("class", "link")
+      .attr("d", function(d) {
+        var o = {x: source.x0, y: source.y0};
+        return diagonal({source: o, target: o});
+      })
+    .transition()
+      .duration(duration)
+      .attr("d", diagonal);
+
+  // Transition links to their new position.
+  link.transition()
+      .duration(duration)
+      .attr("d", diagonal);
+
+  // Transition exiting nodes to the parent's new position.
+  link.exit().transition()
+      .duration(duration)
+      .attr("d", function(d) {
+        var o = {x: source.x, y: source.y};
+        return diagonal({source: o, target: o});
+      })
+      .remove();
+
+  // Stash the old positions for transition.
+  nodes.forEach(function(d) {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+}
+
+function update2(source) {
+
+  // Compute the new tree layout.
+  var nodes = tree2.nodes(root2).reverse();
+
+  // Normalize for fixed-depth.
+  nodes.forEach(function(d) { d.y = d.depth * depthSeparation + offsetY; });
+
+  // Update the nodes…
+  var node = svg2.selectAll("g.node")
+      .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+  // Enter any new nodes at the parent's previous position.
+  var nodeEnter = node.enter().append("svg:g")
+      .attr("class", "node")
+      .attr("transform", function(d) { return "translate(" + source.y0 + "," + source.x0 + ")"; });
+
+  nodeEnter.append("svg:circle")
+      .attr("r", 1e-6)
+      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; })
+      .on("click", function(d) { toggle(d); update2(d); });
+
+  nodeEnter
+      .append("a")
+      .attr("xlink:target","_blank")
+      .attr("xlink:href", function(d) { return "/makey/" + d.makey_id; })
+      .append("svg:text")
+      .attr("x", function(d) { return d.children || d._children ? -10 : 10; })
+      .attr("dy", function(d) { return d.children || d._children ? "-1em" : ".35em"; })
+      .attr("text-anchor", function(d) { return d.children || d._children ? "end" : "start"; })
+      .text(function(d) { return d.name; })
+      .style("fill-opacity", 1e-6);
+
+  // Transition nodes to their new position.
+  var nodeUpdate = node.transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+  nodeUpdate.select("circle")
+      .attr("r", nodeRadius)
+      .style("fill", function(d) { return d._children ? "lightsteelblue" : "#fff"; });
+
+  nodeUpdate.select("text")
+      .style("fill-opacity", 1)
+      .style("font-size", fontSize);
+
+  // Transition exiting nodes to the parent's new position.
+  var nodeExit = node.exit().transition()
+      .duration(duration)
+      .attr("transform", function(d) { return "translate(" + source.y + "," + source.x + ")"; })
+      .remove();
+
+  nodeExit.select("circle")
+      .attr("r", 1e-6);
+
+  nodeExit.select("text")
+      .style("fill-opacity", 1e-6);
+
+  // Update the links…
+  var link = svg2.selectAll("path.link")
+      .data(tree2.links(nodes), function(d) { return d.target.id; });
+
+  // Enter any new links at the parent's previous position.
+  link.enter().insert("svg:path", "g")
+      .attr("class", "link")
+      .attr("d", function(d) {
+        var o = {x: source.x0, y: source.y0};
+        return diagonal({source: o, target: o});
+      })
+    .transition()
+      .duration(duration)
+      .attr("d", diagonal);
+
+  // Transition links to their new position.
+  link.transition()
+      .duration(duration)
+      .attr("d", diagonal);
+
+  // Transition exiting nodes to the parent's new position.
+  link.exit().transition()
+      .duration(duration)
+      .attr("d", function(d) {
+        var o = {x: source.x, y: source.y};
+        return diagonal({source: o, target: o});
+      })
+      .remove();
+
+  // Stash the old positions for transition.
+  nodes.forEach(function(d) {
+    d.x0 = d.x;
+    d.y0 = d.y;
+  });
+}
+
+// Toggle children.
+function toggle(d) {
+  if (d.children) {
+    d._children = d.children;
+    d.children = null;
+  } else {
+    d.children = d._children;
+    d._children = null;
+  }
+}
+
+</script>
+
+
+<script type="text/javascript">
+    $("#makey-edit-btn").on("click", function(){
+        var url = "{% url 'catalog:edit_makey' makey.id %}";
+        window.open(url, '_self');
+    });
+</script>
+
+<script type="text/javascript">
+    $('[data-toggle="tabs"]').on('shown.bs.tab', function (e) {
+
+        var tabId = $(e.target).attr('href');
+
+        if(tabId == "#documentation") {
+            $('body').scrollspy('refresh');
+            $('#textdoc-sidebar').affix({
+                offset: {
+                    top: function(e) {
+                        return (this.top = $(e).offset().top - 10);
+                    }
+                }
+            });
+
+            var sideBarNavWidth = $('#textdoc-sidebar').width()
+                                    - parseInt($('#textdoc-sidebar').css('paddingLeft'))
+                                    - parseInt($('#textdoc-sidebar').css('paddingRight'));
+            $('#textdoc-sidebar').css('width', sideBarNavWidth);
+        }
+    });
+</script>
+
+<style type="text/css">
+    body {
+        position: relative;
+    }
+
+    .affix {
+        position: fixed !important;
+        top: 10px;
+    }
+</style>
+
+<script type="text/javascript">
+    $(function(){
+        $('body').scrollspy({
+            target: '#textdoc-sidebar'
+        });
+    });
+</script>
+
+
+{% endblock %}

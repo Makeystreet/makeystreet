@@ -1,0 +1,266 @@
+<script>
+
+var app = {};
+app.space_id = {{space.id}};
+
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+    },
+
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+app.Space = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/space/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.MembersView = Backbone.View.extend({
+    el : "#members",
+    template : Handlebars.compile($("#members_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.space, 'add', this.addAll);
+        this.listenTo(app.space, 'change', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        this.options.cur_item_count = 0;
+        var space = app.space.toJSON();
+        for(var i=0;i<space.members.length;i++) {
+            if(i%app.row_count == 0) {
+                this.$el.append(this.new_row);
+            }
+            this.$el.find('.new_row').last().append(this.template(space.members[i]));
+        }
+    },
+});
+
+app.SpaceMembersSelectView = Backbone.View.extend({
+    el : $('#edit_members'),
+
+    events : {
+        'click #save_new_member': 'saveNewMember',
+        'keydown #val_member_email': 'preventEnter',
+        'click #btn_add_new_member' : 'showNewMember',
+        'click #btn_cancel_new_members' : 'hideNewMember',
+        'click #btn_submit_new_members' : 'saveNewMember',
+        'click #btn_refresh_list' : 'resetTagsInput',
+        'click #btn_submit_members' : 'saveMembers'
+    },
+
+    initialize : function() {
+        var users = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                remote: {
+                    url: '/api/v1/user/search?q=%QUERY',
+                        filter: function(list) {
+                            return $.map(list.users, function(user) {
+                                return { name: user.first_name + " " + user.last_name, id: "/api/v1/user/"+user.id+"/" };
+                            });
+                        }
+                }
+        });
+        users.initialize();
+
+        $('#val_members').tagsinput({
+            itemText : 'name',
+            itemValue : 'id',
+            typeaheadjs: {
+                hint: false,
+                highlight: true,
+                minLength: 1,
+                name: 'users',
+                displayKey: 'name',
+                source: users.ttAdapter(),
+                templates: {
+                    empty: Handlebars.compile($('#tt-member-suggestion-empty-template').html()),
+                    // footer: Handlebars.compile($('#tt-member-suggestion-footer-template').html()),
+                }
+            }
+        });
+
+        this.listenTo(app.space, 'change', this.resetTagsInput);
+    },
+
+    resetTagsInput: function() {
+        $('#val_members').tagsinput('removeAll');
+        var space = app.space.toJSON();
+        for(var i=0;i<space.members.length;i++) {
+            $('#val_members').tagsinput( 'add',
+                { name: space.members[i].first_name + " " + space.members[i].last_name,
+                    id: "/api/v1/user/"+space.members[i].id+"/" });
+        }
+        $('#val_members').tagsinput('refresh');
+    },
+
+    showNewMember: function(){
+        this.$("#val_member").tagsinput('input').typeahead('close');
+        this.$('#val_member').tagsinput('input').typeahead('val', '');
+        this.$("#new_member_form").slideDown();
+        this.$('#new_member_name').val('');
+        this.$('#new_member_email').val('');
+        this.$("#val_member_name").focus();
+    },
+
+    hideNewMember: function(){
+        this.$("#new_member_form").slideUp();
+        this.$("#val_members").tagsinput('focus');
+    },
+
+    preventEnter: function(event){
+        if(event.keyCode == 13){
+            event.preventDefault();
+            return false;
+        }
+    },
+
+    hideLocalHelps: function(selector){
+        this.$('#val_' + selector).closest('.form-group').removeClass('has-success has-warning has-error');
+
+        this.$('#success_' + selector).hide();
+        this.$('#waiting_' + selector).hide();
+        this.$('#error_' + selector).hide();
+
+        return this;
+    },
+
+    showSuccess: function(){
+        this.$('#btn_submit_members').button('reset');
+    },
+
+    showWaiting: function(){
+        this.$('#btn_submit_members').button('loading');
+    },
+
+    showError: function(){
+        this.$('#btn_submit_members').button('reset');
+    },
+
+    saveNewMember: function(){
+        var new_user_name = $('#val_member_name').val();
+        var new_user_email = $('#val_member_email').val();
+
+        var user = new app.NewUser({
+            'name' : new_user_name,
+            'email' : new_user_email,
+        });
+
+        var that = this;
+        this.showWaiting();
+        user.save(null, {
+            success : function(model, response) {
+                that.showSuccess('new_member', that);
+                that.$('#val_members').tagsinput('add',{
+                    'id': 'new_' + model.get('id'),
+                    'name': model.get('name'),
+                });
+                that.hideNewMember();
+            },
+
+            error : function(model, response) {
+                that.showError();
+            },
+        });
+    },
+
+    saveMembers: function(){
+        new_member_list = $("#val_members").tagsinput('items');
+        var patchReq = { members : [] };
+        for(var i=0; i<new_member_list.length; ++i) {
+            patchReq.members.push(new_member_list[i].id);
+        }
+        var that = this;
+        that.showWaiting();
+        $.ajax({
+            headers : {
+                'Accept' : 'application/json',
+                'Content-Type' : 'application/json'
+            },
+            url : "/api/v1/space/" + app.space.get('id') + "/",
+            type : 'PATCH',
+            data : JSON.stringify(patchReq),
+            error : function(jqXHR, textStatus, errorThrown) {
+                console.log("The following error occured: " + textStatus, errorThrown);
+            },
+            complete : function() {
+                app.space.fetch();
+                that.showSuccess();
+            }
+        });
+    }
+});
+
+/* INITIALIZE */
+app.initializeUser();
+// app.initializeMaker();
+app.space = new app.Space({'id' : app.space_id});
+app.space.fetch();
+app.membersView = new app.MembersView();
+app.spaceMembersSelectView = new app.SpaceMembersSelectView();
+</script>

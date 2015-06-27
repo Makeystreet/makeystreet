@@ -1,0 +1,264 @@
+{% extends "catalog/base_landing.html" %}
+{% load static from staticfiles %}
+
+{% block title %}Makeystreet| Engage with makers around you. {% endblock %}
+{% block extra_js %}
+    <script>
+        $('document').ready(function(){
+            $('#page-content').hide();
+            // $('#loginModal').modal();
+            // alert("hello");
+        });
+    </script>
+    <style type="text/css">
+    blockquote:before {
+        display: none;
+    }
+    </style>
+{% endblock %}
+{% block extra_css %}
+    <style type="text/css">
+    .emphasize{
+        color:yellow;
+        /*font-size: 150%;*/
+    }
+    body {
+    font-family: "Open Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+    }
+    </style>
+{% endblock %}
+{% block templates %}
+    {% include "catalog/t/t_landing_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_landing_page.html" %}
+{% endblock %}
+
+{% block no_container %}
+    <section class="site-section site-section-light site-section-top themed-background-dark-night">
+        <div class="container">
+            <br>
+            <br>
+            <br>
+            <div class ="row">
+
+                <div class = "col-xs-9 col-sm-9">
+                    <h1 style="color:white; font-size: 400%;"><strong><span style=" font-size: 150%;">Build hardware</span><br> better, faster, together </strong></h1>
+                    <!-- <p style="color:white; font-size: 200%;">A powerful modular approach to system design. Structured approach to tech documentation that your entire team can adopt.</p> -->
+                    <p style="color:white; font-size: 150%;">Makeystreet is a <span class="themed-color">developer tool </span>for <span class="themed-color">hardware companies/startups</span><br/> that helps you <span class="themed-color">innovate faster</span> and <span class="themed-color">reduces time to market</span></p>
+                </div>
+                <div class = "col-xs-3 col-sm-3">
+                    <!-- <h2 style="color:white; font-size: 400%;"><strong><span style=" font-size: 150%;">Build hardware</span><br> better, faster, together. </strong></h1>
+                    <p style="color:white; font-size: 200%;">A powerful modular approach to system design. We help you document and version hardware well.</p> -->
+                    <br>
+                    <br>
+                    <br>
+                    <br>
+                    <a href="{% url 'account_signup' %}">
+                    <button class="btn btn-success btn-lg"> Signup for Makeystreet</button>
+                    </a>
+                </div>
+            </div>
+            <br>
+            <br>
+            <br>
+
+
+        </div>
+    </section>
+    <section class="site-section site-content themed-background-modern" style="color:white;">
+        <div class="container">
+            <div class ="row">
+
+                <div class = "col-xs-12 col-sm-12">
+                    <h1 class = "text-center" style="font-size: 400%;"><strong> Why you will love makeystreet? </strong></h1>
+                    <!-- <p style="font-size: 200%;">A powerful modular approach to system design. Structured approach to tech documentation that your entire team can adopt.</p> -->
+                    <br/>
+                    <br/>
+                    <!-- feature 1 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 site-block slide-right visibility-none animation-fadeInRight">
+                                    <img src="{% static 'images/1.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                                <div class="col-sm-6 col-md-5 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong>Modular approach</strong> to system design</h3>
+                                    <p class="promo-content">When you brain storm your product you modularize it. Why is your documentation still a linear pdf file.<!--  <a href="features.html">Learn More..</a> --></p>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+                    <!-- feature 2 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 col-md-5 site-block slide-right visibility-none animation-fadeInRight">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong> Structured tech doc </strong>for your entire team</h3>
+                                    <p class="promo-content">Does each team of your product come up with different structure for your documentation? Are you spending time mearging all the different documentation</p>
+                                </div>
+                                <div class="col-sm-6 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <img src="{% static 'images/6.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+                    <!-- feature 3 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 site-block slide-right visibility-none animation-fadeInRight">
+                                    <img src="{% static 'images/2.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                                <div class="col-sm-6 col-md-5 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong>Find information</strong> from your documentation really fast.</h3>
+                                    <p class="promo-content">
+                                    Are you going though long pdf files or a document structure trying to find the relevant information? Modular documentation helps your identify the correct section really fast. Plus the common stucture for the tech documentation makes it easy for the team to find the relevant information<!--  <a href="features.html">Learn More..</a> --></p>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+                    <!-- feature 4 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 col-md-5 site-block slide-right visibility-none animation-fadeInRight">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong> Prevent information loss </strong>when your team changes</h3>
+                                    <p class="promo-content">
+                                    As a startup you are hiring interns. They are coming and doing amazing work. But when they leave are you ending up calling them up every now and then asking for information? </p>
+                                </div>
+                                <div class="col-sm-6 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <img src="{% static 'images/3.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+                    <!-- feature 5 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 site-block slide-right visibility-none animation-fadeInRight">
+                                    <img src="{% static 'images/4.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                                <div class="col-sm-6 col-md-5 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong>Return easily</strong> to a project done in the past</h3>
+                                    <p class="promo-content">Want to pause your project for a year and come back later? Frustrated that you dont remember critical details for your project? Our structure of tech documentation makes it possible to save non-technical information in the documentation without making it overwhelming<!--  <a href="features.html">Learn More..</a> --></p>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+                    <!-- feature 6 -->
+                    <section class="site-content site-section site-slide-content">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-sm-6 col-md-5 site-block slide-right visibility-none animation-fadeInRight">
+                                    <h3 class="h2 site-heading site-heading-promo"><strong>Version Hardware</strong> super easy</h3>
+                                    <p class="promo-content">When you go from version 1 of your project to v2 of your product, only some of your modules change. Does that mean that you have to write a seperate documentation? No you dont. Just update the modules that changed, documentation tree for your new version of product is auto generated, saving you massive amounts of time. </p>
+                                </div>
+                                <div class="col-sm-6 col-md-offset-1 site-block slide-left visibility-none animation-fadeInLeft">
+                                    <img src="{% static 'images/5.png' %}" alt="Promo #1" class="img-responsive">
+                                </div>
+                            </div>
+                            <!-- <hr> -->
+                        </div>
+                    </section>
+                    <br/>
+                    <br/>
+
+
+
+                </div>
+            </div>
+            <br>
+            <br>
+            <br>
+
+
+        </div>
+    </section>
+     <section class="site-section ">
+        <div class="container">
+            <br>
+            <br>
+            <br>
+            <div class ="row">
+                <div class = "col-xs-12 col-sm-12">
+                    <h1 style=" font-size: 400%;"><strong>Firefly unicycle - Open Source hardware project.  </strong></h1>
+                    <h1 style=" font-size: 200%;"><strong>We want to make large scale open source hardware projects happen. </strong></h1>
+                    <!-- <p style="font-size: 150%;">We are product designers ourself. We love building products. There is so many interesting open source software projects to get involved. But there is not enough large scale open source hardware projects. This is our attempt to build the largest open source hardware project to date. In hardware open source is opening up source codes. In software that might be enough, but in open hardware projects we want open insights.</p> -->
+
+                    <p style= "font-size:150%" >Firefly unicycle is an open source personal transportation device. We love building products. It is an attempt to build a kickass hardware community in India. Would you not like to meet other kickass hardware developers just like you? </p>
+                </div>
+            </div>
+            <div class ="row">
+                <div class = "col-xs-6 col-sm-6">
+                    <img src="http://makeymedia.s3.amazonaws.com/2014/11/395cd5be-befd-451e-b1f5-ea732cf3dd50_full.png" alt="Promo #1" class="img-responsive">
+
+                </div>
+                <div class = "col-xs-6 col-sm-6">
+                    <iframe src="/embed/makey_hierarchy/3187/" width="100%" height="515" frameborder="0" style="border:0"></iframe>
+
+                </div>
+            </div>
+
+            <br>
+            <br>
+            <br>
+
+
+        </div>
+    </section>
+
+
+            </div>
+{% endblock %}
+
+{% block content_full %}
+
+    {% if errors %}
+        <div class="row">
+            <div class="text_center col-lg-offset-2 col-sm-8 col-md-8">
+                {% for error in errors %}
+                    <div class="alert alert-danger alert-dismissable">
+                        <button type="button" class="close" data-dismiss="alert">×</button>
+                        <center> <strong>Error!</strong> {{ error }} </center>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+
+    <!-- <div class="row">
+        <div class="col-sm-12">
+            <h1>Featured Makeys
+
+            <a href="/makey/all/"><button type="button" class=" pull-right btn btn-success btn-sm"> See more </button></a></h1>
+        </div>
+    </div> -->
+
+
+
+
+{% endblock %}
+
+{% block extra_js_end %}
+    <script>
+    </script>
+{% endblock %}

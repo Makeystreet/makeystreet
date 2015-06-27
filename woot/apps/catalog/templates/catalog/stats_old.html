@@ -1,0 +1,95 @@
+{% extends "catalog/base.html" %} 
+
+{% load static from staticfiles %} 
+
+{% block title %}MakeyStreet | CFI Store{% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block templates %}
+    {% include "catalog/t/t_stats_page_old.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_stats_page_old.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %} 
+
+
+{% block content_full %}
+<div class="row">
+    <div class="col-xs-12">
+        <ul class ="nav nav-tabs">
+            <li><a href="#current" data-toggle="tab">Current</a></li>
+            <li><a href="#daily" data-toggle="tab">Daily</a></li>
+            <li class="active"><a href="#weekly" data-toggle="tab">Weekly</a></li>
+            <li><a href="#monthly" data-toggle="tab">Monthly</a></li>
+            <li><a href="#quarterly" data-toggle="tab">Quarterly</a></li>
+            <li><a href="#vanity" data-toggle="tab">Vanity</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane" id="current">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Current Metrics <small>( Total )</small></h1>
+                        <p>Number of users on the site right now</p>
+                        <p>Number of requests per sec</p>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane" id="daily">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Daily Metrics <small>( Last 24 Hrs )</small></h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-pane active" id="weekly">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Weekly Metrics <small>( Last 7 Days )</small></h1>
+                    </div>
+                </div>
+            </div>
+           
+            <div class="tab-pane" id="monthly">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Monthly Metrics <small>( Last 30 Days )</small></h1>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane" id="quarterly">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Quarterly Metrics <small>( Last Quarter )</small></h1>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-pane" id="vanity">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h1>Vanity Metrics <small>( Total )</small></h1>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

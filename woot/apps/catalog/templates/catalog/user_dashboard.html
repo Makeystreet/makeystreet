@@ -1,0 +1,100 @@
+{% extends "catalog/base.html" %}
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | User Dashboard{% endblock %}
+
+{% block extra_js %}
+<link rel="stylesheet" href="{% static 'css/nprogress.css' %}" type="text/css">
+<script src="{% static 'js/nprogress.js' %}"></script>
+<script src="{% static 'js/jquery.sticky.js' %}"></script>
+<script type="text/javascript">
+    // var cur_user_details = {{user_details|safe}};
+</script>
+<style type="text/css">
+    .block {
+        padding-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block templates %}
+    {# {% include "catalog/t/t_makey_search.html" %} #}
+{% endblock %}
+
+
+{% block backbone %}
+    {# {% include "catalog/bb/bb_makey_search.html" %} #}
+{% endblock %}
+
+{% block content_full %}
+<div id="top-container">
+    <div class="row">
+        <div class="col-xs-1 col-sm-1 col-md-1 col-lg-1">
+
+        </div>
+        <div class="col-xs-7 col-sm-7 col-md-7 col-lg-7">
+            <div class="block">
+                <div class="block-title"><h2>Activity Feed</h2></div>
+                <div class="block-content">
+                {% if activities %}
+                    <div class="timeline">
+                        <ul class="timeline-list">
+                            {% for activity in activities %}
+                                <li class="active">
+                                    <div class="timeline-icon">
+                                        <i class="fa fa-plus"></i>
+                                    </div>
+                                    <div class="timeline-time">
+                                        <small>{{activity.added_time|timesince}} ago</small>
+                                    </div>
+                                    <div class="timeline-content">
+                                        {% load catalog_tags %}
+                                        {% with activity|activity_type as act_type %}
+                                            {% if act_type == "activity_insight_created" %}
+                                                <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created an <a href="{{activity.makey.get_absolute_url}}/insights/{{activity.event_id}}">Insight</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                            {% elif act_type == "activity_question_created" %}
+                                                <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created a <a href="{% url 'catalog:question' activity.event_id %}">Question</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                            {% elif act_type == "activity_answer_created" %}
+                                                <p><a href="{% url 'catalog:maker' activity.user.username %}">{{activity.user.first_name}} {{activity.user.last_name}}</a> created an <a href="{% url 'catalog:question' activity.answer.question.id %}">Answer</a> in <a href="{{activity.makey.get_absolute_url}}">{{activity.makey.name}}</a></p>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% else %}
+                    <p>No activities yet. Watch or Contribute to makeys to receive updates here</p>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="block">
+                <div class="block-title">
+                    <h2>Makeys watched</h2>
+                </div>
+                <div class="block-content">
+                    No makeys watched yet.
+                </div>
+            </div>
+            <div class="block">
+                <div class="block-title">
+                    <div class="block-options pull-right">
+                        <button type="button" class="btn btn-alt btn-primary btn-sm" onclick="document.location.href = '{% url 'catalog:create_makey' %}'"><i class="fa fa-plus"></i>&nbsp;Create new makey</button>
+                    </div>
+                    <h2>Your makeys</h2>
+                </div>
+                <div class="block-content">
+                    {% for makey in makeys %}
+                        <p><i class="fa fa-briefcase"></i> <a href="{{makey.get_absolute_url}}">{{makey.name}}</a></p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+{% endblock %}

@@ -1,0 +1,135 @@
+    <div class="widget">
+        <div class="widget-advanced widget-advanced-alt">
+            <!-- Widget Header -->
+            <div class="widget-header text-center themed-background-dark-flatie">
+                <div class="widget-options-left">
+                    <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" title="" data-original-title="Edit"><i class="fa fa-pencil"></i></button> -->
+                </div>
+                <div class="widget-options">
+                    <!-- <button class="btn btn-xs btn-default" data-toggle="tooltip" title="" data-original-title="Settings"><i class="fa fa-cog"></i></button> -->
+                </div>
+                    <br/>
+                <a href="{{ maker.profile.profile_img_url }}">
+                    <img src="{{ maker.profile.profile_img_url }}" alt="avatar" class="widget-image img-circle">
+                </a>
+                <h4 class="widget-content-light">
+                    <a href="{{ maker.profile.profile_url }}" class="themed-color-flatie">{{maker.first_name}} {{maker.last_name}}</a><br>
+                   <div id="maker_location" class="show_location" style="display:none">
+                            <span id="location"><small><i class="gi gi-pin"></i> {{maker.profile.location}}</small><br/></span>
+                            {% if can_edit %}
+                            <a class="preventDefault edit  hide_when_editing" href="#"><small>| edit</small></a>
+                            <a class="preventDefault save show_when_editing" href="#" style="display:none"><small>save</small></a>
+                            {% endif %}
+                            <!-- <div class="themed-color-autumn"><small>Hint: Enter your motivation for doign this project here.</small> </div> -->
+                        </div>
+                    <small s><i class="fa fa-clock-o"></i> Joined {{maker.date_joined|date:'M, Y'}}</small><br/><br/>
+                    <div id="cur_maker_follow">
+                        <button class="btn btn-default follow_user" id="follow_{{maker.profile.id}}"><i class="fa fa-users"></i> Follow</button>
+                    </div>
+                    {% if is_admin and maker.email %}
+                        <span style="font-size: 12px;">Email: {{maker.email}}</span>
+                    {% endif %}
+                </h4>
+            </div>
+            <!-- END Widget Header -->
+
+            <!-- Widget Main -->
+            <div class="widget-main">
+                <div class="list-group remove-margin">
+                    <a href="/maker/{{maker.username}}/profile/" class="list-group-item">
+                        <!-- <span class="pull-right"><strong>160</strong></span> -->
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-file fa-fw"></i> Profile</h4>
+                    </a>
+                    <a href="/maker/{{maker.username}}/makeys/" class="list-group-item">
+                        <span class="pull-right"><strong class="no_makeys">{{maker.no_makeys}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-briefcase fa-fw"></i> Makeys</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="/maker/{{maker.username}}/insights/" class="list-group-item">
+                        <span class="pull-right"><strong class="no_insights">{{maker.no_insights}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Insights</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="/maker/{{maker.username}}/followers/" class="list-group-item">
+                        <span class="pull-right"><strong class="no_followers">{{maker.no_followers}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-users fa-fw"></i> Followers</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="/maker/{{maker.username}}/following" class="list-group-item">
+                        <span class="pull-right"><strong class="no_following">{{maker.no_following}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Following</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="/maker/{{maker.username}}/reviews" class="list-group-item">
+                        <span class="pull-right"><strong class="no_reviews">{{maker.no_reviews}}</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Reviews</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+
+                    <!-- Introduct this later -->
+                    <!-- these should go on the wall -->
+                    <!-- <a href="javascript:void(0)" class="list-group-item">
+                        <span class="pull-right"><strong>15.325</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Likes</h4>
+                        <p class="list-group-item-text"></p>
+                    </a>
+                    <a href="javascript:void(0)" class="list-group-item">
+                        <span class="pull-right"><strong>15.325</strong></span>
+                        <h4 class="list-group-item-heading remove-margin"><i class="fa fa-heart fa-fw"></i> Comments</h4>
+                        <p class="list-group-item-text"></p>
+                    </a> -->
+
+                </div>
+                <br/>
+
+            </div>
+            <!-- END Widget Main -->
+        </div>
+    </div>
+    {% if maker.space_members.all|length%}
+    <h4><strong>Member of:</strong></h4>
+    {% endif %}
+    {% for space in maker.space_members.all %}
+        <div class="widget themed-background-dark">
+            <div class="widget-extra">
+                {% if space.logo %}
+                <div class="col-xs-12" style="padding: 0; padding-top: 15px;">
+                <a href="/space/{{space.id}}/">
+                <div style="background-image: url('{{space.logo}}');" class="landscape-img"></div>
+                </a>
+                </div>
+                {% endif %}
+                <div class="row">
+                    <div class="col-xs-12">
+                        <h3 style="margin:10px;"><a href="/space/{{space.id}}" style="color:#ffffff;">{{space.name}}</a></h3>
+                    </div>
+                </div>
+                <hr style="margin:0px;">
+                <!-- showing space stats-->
+                <div class="row text-center">
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <a href="/space/{{space.id}}/members" style="color:#ffffff;">
+                                <strong>{{space.members.all|length}}</strong><br>
+                                <small>Members</small>
+                            </a>
+                        </h3>
+                    </div>
+                    <div class="col-xs-6">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <a href="/space/{{space.id}}/makeys" style="color:#ffffff;">
+                                <strong>{{space.makeys_made_in.all|length}}</strong><br>
+                                <small>Makeys</small>
+                            </a>
+                        </h3>
+                    </div>
+                    <!-- <div class="col-xs-4">
+                        <h3 style="margin:10px;" class="widget-content-light">
+                            <strong>{{space.tools.all|length}}</strong><br>
+                            <small>Tools</small>
+                        </h3>
+                    </div> -->
+                </div>
+            </div>
+        </div>
+    {% endfor %}

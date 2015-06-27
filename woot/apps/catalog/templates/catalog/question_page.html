@@ -1,0 +1,276 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Question - {{question.title}} {% endblock %}
+
+{% comment %}
+{% block templates %}
+     {% include "catalog/t/t_listing_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+     {% include "catalog/bb/bb_listing_page.html" %}
+{% endblock %}
+{% endcomment %}
+
+{% block content_full %}
+<div class="col-sm-9 col-md-9">
+    <div class="row">
+        <div class="col-xs-12">
+            <div class="block">
+
+                <div class="row">
+                    <div class ="col-xs-12">
+                        <h3 style="margin-top: 0px;">{{question.name}}</h3>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-xs-12">
+                        <table class="table table-borderless table-striped" style="margin-bottom:0px;">
+                            <tbody>
+                                <tr>
+                                    <td class="text-center"><a href="{% url 'catalog:maker' question.creator %}"><strong>{{question.creator.first_name}}</strong></a></td>
+                                    <td>on <em><a href="{% url 'catalog:makey' question.makey.id %}">{{question.makey.name}}</a></em>, <small>at {{question.created}}</small></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width: 12%;">
+                                        <div class="push-bit">
+                                            <a href="{% url 'catalog:maker' question.creator %}">
+                                                <img src="{{ question.creator.profile.profile_img_url }}" alt="{{question.creator.first_name}}" class="img-circle" style="height:64px;">
+                                            </a>
+                                        </div>
+                                        {# <small>123 posts</small> #}
+                                    </td>
+                                    <td>
+                                        <p>{{question.description|safe}}</p>
+                                        <hr/>
+                                        <div class="col-xs-11 col-xs-offset-1">
+                                            <table class="table  table-striped table-condensed" style="margin-bottom:0px;">
+                                                <tbody>
+                                                    {% for comment in question.comments.reverse %}
+                                                    <tr>
+                                                        <td>
+                                                            {{comment.body|safe}} - <small><a href="{% url 'catalog:maker' comment.user %}" target="_blank">{{comment.user.first_name}}</a> {{comment.added_time}}</small>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr>
+                                                        <td><small>
+                                                            <a
+                                                                {% if user.is_authenticated %}
+                                                                href="#new-comment"
+                                                                data-toggle="modal"
+                                                                data-comment-owner="q-{{question.id}}"
+                                                                {% else %}
+                                                                href="#login-modal"
+                                                                data-toggle="modal"
+                                                                onclick="setLoginNext('{% url 'catalog:question' question.id %}');"
+                                                                {% endif %}
+                                                            >Add Comment</a>
+                                                        </small></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="modal fade" id="new-comment" role="dialog" aria-labelledby="newCommentLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal">
+                                            <span aria-hidden="true">&times;</span>
+                                            <span class="sr-only">Close</span>
+                                        </button>
+                                        <h4 class="modal-title" id="newCommentLabel">New comment</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="{% url 'catalog:add_comment' %}" method="POST" class="form form-horizontal">
+                                            <div class="form-group">
+                                                <textarea class="form-control" id="id_body" name="body" placeholder="Enter comment details here ..."></textarea>
+                                            </div>
+                                            <input type="hidden" id="id_owner" name="owner">
+                                            <input type="hidden" id="id_question" name="question" value="{{question.id}}">
+                                            <div class="form-group form-actions">
+                                                <button type="submit" class="btn btn-sm btn-primary"<i class="fa fa-angle-right"></i> Submit</button>
+                                                <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-repeat"></i> Reset</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border-top: dotted 1px #DDD;" />
+
+                <div class="row" style="margin-bottom: 10px;">
+                    <div class="col-xs-12">
+                        <table class="table table-borderless table-striped">
+                            <thead>
+                                <tr>
+                                    <th colspan="2">{{ question.num_answers }} Answer{{question.num_answers|pluralize}}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if question.num_answers > 0 %}
+                                {% for answer in question.answer_set.all %}
+                                <tr>
+                                    <td class="text-center"><a href="{% url 'catalog:maker' answer.creator %}"><strong>{{answer.creator.first_name}}</strong></a></td>
+                                    <td><small>{{answer.created|timesince}} ago</small></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width: 12%;">
+                                        <div class="push-bit">
+                                            <a href="{% url 'catalog:maker' answer.creator %}">
+                                                <img src="{{answer.creator.profile.profile_img_url}}" alt="{{answer.creator.first_name}}" class="img-circle" style="height:64px;">
+                                            </a>
+                                        </div>
+                                        {# <small>1253 Posts</small> #}
+                                    </td>
+                                    <td>
+                                        <p>{{answer.description|safe}}</p>
+                                        <hr/>
+                                        <div class="col-xs-11 col-xs-offset-1">
+                                            <table class="table table-striped table-condensed table-borderless">
+                                                <tbody>
+                                                    {% for comment in answer.comments.reverse %}
+                                                    <tr>
+                                                        <td>
+                                                            {{comment.short_description|safe}} - <small><a href="{% url 'catalog:maker' comment.user %}" target="_blank">{{comment.user.first_name}}</a> {{comment.added_time}}</small>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                    <tr>
+                                                        <td><small>
+                                                            <a
+                                                                {% if user.is_authenticated %}
+                                                                href="#new-comment"
+                                                                data-toggle="modal"
+                                                                data-comment-owner="a-{{answer.id}}"
+                                                                {% else %}
+                                                                href="#login-modal"
+                                                                data-toggle="modal"
+                                                                onclick="setLoginNext('{% url 'catalog:question' question.id %}');"
+                                                                {% endif %}
+                                                            >Add Comment</a>
+                                                        </small></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr>
+                                    <td colspan="2">Be the first one to answer this!</td>
+                                </tr>
+                                {% endif %}
+                                {% if user.is_authenticated %}
+                                <tr>
+                                    <td class="text-center"><strong>You</strong></a></td>
+                                    <td><em>Now</em></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width: 12%;">
+                                        <div class="push-bit">
+                                            <a href="{% url 'catalog:maker' user %}">
+                                                <img src="{{user.profile.profile_img_url}}" alt="{{user.first_name}}" class="img-circle" style="height:64px;">
+                                            </a>
+                                        </div>
+                                        <small>1253 Posts</small>
+                                    </td>
+                                    <td>
+                                        <form action="" method="post" class="form-horizontal">
+                                            <textarea id="val_description" name="description" rows="10" class="form-control textarea-editor" placeholder="Describe your here."></textarea>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" style="width: 12%;"></td>
+                                    <td>
+                                        <button type="submit" class="btn btn-sm btn-primary" onclick="return checkLogin();"><i class="fa fa-angle-right"></i> Submit</button>
+                                        <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-repeat"></i> Reset</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="2"><h4><a href="#login-modal" data-toggle="modal" onclick="setLoginNext('{% url 'catalog:question' question.id %}');">Submit an answer!</h4></a></td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <br/>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="col-sm-3 col-md-3" >
+    <div id="sticker_leftcolumn">
+        <div class="mini-layout-sidebar" style="width:250px;">
+            <table class="table table-borderless table-striped table-condensed">
+                <thead>
+                    <tr>
+                        <th colspan="2">More Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>asked</td>
+                    <td><b>{{question.created|timesince}}</b> ago</td>
+                </tr>
+                <tr>
+                    <td>viewed</td>
+                    <td><b>{{question.views}} time{{question.views|pluralize}}</b></td>
+                </tr>
+                <tr>
+                    <td>active</td>
+                    <td><b>{{question.updated|timesince}}</b> ago</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+    $('.textarea-editor').wysihtml5();
+
+    function checkLogin() {
+        {% if user.is_authenticated %}
+        return true;
+        {% else %}
+        $('#login-modal').modal('toggle');
+        return false;
+        {% endif %}
+    }
+
+    $("hr").css("margin-bottom", "10px");
+    $("hr").css("margin-top", "10px");
+</script>
+
+<script type="text/javascript">
+    $('#new-comment').on('show.bs.modal', function(event){
+        var link = $(event.relatedTarget);
+        var owner = link.data('comment-owner');
+
+        var modal = $(this);
+        modal.find('.modal-body #id_owner').val(owner);
+    });
+</script>
+{% endblock %}

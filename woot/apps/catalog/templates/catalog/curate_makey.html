@@ -1,0 +1,370 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | Create a Makey {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<script>
+    App.datatables();
+
+    $('#makeys-table').dataTable({
+        "aaSorting": [[0,'asc']],
+        "aLengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        "bPaginate" : true,
+        "bLengthChange": true
+    });
+
+    $('.dataTables_filter input').attr('placeholder', 'Search');
+</script>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_create_makey.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_create_makey.html" %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-8 col-md-8 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Curate makey</h2>
+        </div>
+        You can curate the makeys here.
+        <!-- <form id="new_makey_wizard" action="#" method="POST" class="form-horizontal form-bordered ui-formwizard" novalidate="novalidate">
+            <div id="first" class="step ui-formwizard-content" style="display:block;">
+                <div class="wizard-steps">
+                    <div class="row">
+                        <div class="col-xs-4 active">
+                            <span>About</span>
+                        </div>
+                        <div class="col-xs-4">
+                            <span>Inventory</span>
+                        </div>
+                        <div class="col-xs-4">
+                            <span>Credits</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_name">Name<span class="text-danger">&nbsp;*</span></label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_name" name="val_name" class="form-control ui-wizard-content" placeholder="Name of the Makey.." required="">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_about">Description<span class="text-danger">&nbsp;*</span></label>
+                    <div class="col-md-8">
+                        <textarea id="val_about" name="val_about" class="form-control ui-wizard-content" placeholder="Briefly describe the Makey.." required="" rows="3" maxlength="200"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_why">Motivation</label>
+                    <div class="col-md-8">
+                        <textarea id="val_why" name="val_why" class="form-control ui-wizard-content" placeholder="Motivation / Inspiration for this Makey (optional)" rows="3" maxlength="200"></textarea>
+                    </div>
+                </div>
+                <div class="form-group" id="how-to">
+                    <label class="col-md-4 control-label" for="val_how" name="val_how_name">
+                        <span>Documentation</span>
+                        <span for="val_how_name" id="waiting_how_temp" class="help-block animation-slideDown" style="display:none;">
+                            Adding... Please wait!
+                        </span>
+                        <span for="val_how_name" id="error_how_temp" class="help-block animation-slideDown" style="display:none;">
+                            There was some error! Please try again.
+                        </span>
+                        <span for="val_how_name" id="success_how_temp" class="help-block animation-slideDown" style="display:none;">
+                            Saved!
+                        </span>
+                    </label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_how" name="val_how" class="form-control ui-wizard-content" data-role="tagsinput" style="display:none;">
+
+                        <input type="text" id="val_how_temp" name="val_how_temp" class="form-control ui-wizard-content" value="http://" placeholder="Add links containing build instructions (websites, blogs, etc..)" style="display:none;">
+
+                        <span class="pull-right">
+                            <button id="submit_how" type="button" class="btn btn-sm btn-primary" style="display:none;">
+                                <i class="fa fa-angle-right"></i> Add
+                            </button>
+                            <button id="cancel_how" type="button" class="btn btn-sm btn-warning" style="display:none;">
+                                <i class="fa fa-repeat"></i> Cancel
+                            </button>
+                        </span>
+                        <br/>
+                        <p id="add_how">
+                            <a href="" class="preventDefault">
+                                <span class="glyphicon glyphicon-plus"></span> Add Documentations
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="form-group" id="space">
+                    <label class="col-md-4 control-label" for="space_chosen">Makerspace</label>
+                    <div class="col-md-8">
+                        <select id="space_chosen" name="space_chosen" class="select-chosen" data-placeholder="Select a Makerspace, if this Makey was made in one" style="display:none;" required>
+                            <option></option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div id="second" class="step ui-formwizard-content" style="display:none;">
+                <div class="wizard-steps">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <span>About</span>
+                        </div>
+                        <div class="col-xs-4 active">
+                            <span>Inventory</span>
+                        </div>
+                        <div class="col-xs-4">
+                            <span>Credits</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_status">Current Status <span class="text-danger">*</span></label>
+                    <div class="col-md-8">
+                        <select id="status_chosen" name="status_chosen" class="select-chosen" data-placeholder="Select current status of the Makey" style="display:none;" required>
+                            <option></option>
+                            <option value="Idea">Idea</option>
+                            <option value="Work In Progress">Work In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" id="parts_v2">
+                    <label class="col-md-4 control-label" for="parts_bh">Parts</label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_parts_v2" name="val_parts_v2" class="" data-role="tagsinput" placeholder="Enter name of part">
+                    </div>
+                    <div class="form-group" id="new_part_form" style="display: none">
+                        <span class="col-md-4">
+                        </span>
+                        <span class="col-md-8">
+                            <hr align="center" color="#000000" size="2" width="70%">
+                            <p><strong>Add new part</strong></p>
+                        </span>
+                        <label class="col-md-4 control-label" for="val_part_name">Part Name<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="text" id="val_part_name_v2" name="val_part_name_v2" class="form-control ui-wizard-content" placeholder="Enter Part Name" required="">
+                        </div>
+                        <label class="col-md-4 control-label" for="val_part_url_v2">Part URL<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="url" id="val_part_url_v2" name="val_part_url_v2" class="form-control ui-wizard-content" placeholder="http://example.com" required="">
+                        </div>
+                        <span class="col-md-4"></span>
+                        <span class="col-md-8">
+                        <button id="btn_cancel_new_parts" type="button" class="btn btn-sm btn-warning">
+                            <i class="fa fa-times"></i> Cancel
+                        </button>
+                        <button id="btn_submit_new_parts" type="button" class="btn btn-sm btn-primary" data-loading-text="Adding...">
+                            <i class="fa fa-plus"></i> Add
+                        </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group" id="tools_v2">
+                    <label class="col-md-4 control-label" for="tools_bh">Tools</label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_tools_v2" name="val_tools_v2" class="" data-role="tagsinput" placeholder="Enter name of tool">
+                    </div>
+                    <div class="form-group" id="new_tool_form" style="display: none; border-bottom: none;">
+
+                        <span class="col-md-4">
+                        </span>
+                        <span class="col-md-8">
+                            <hr align="center" color="#000000" size="2" width="70%">
+                            <p><strong>Add new tool</strong></p>
+                        </span>
+                        <label class="col-md-4 control-label" for="val_tool_name">Tool Name<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="text" id="val_tool_name_v2" name="val_tool_name_v2" class="form-control ui-wizard-content" placeholder="Enter tool Name" required="">
+                        </div>
+                        <label class="col-md-4 control-label" for="val_tool_url_v2">Tool URL<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="url" id="val_tool_url_v2" name="val_tool_url_v2" class="form-control ui-wizard-content" placeholder="http://example.com" required="">
+                        </div>
+
+                        <span class="col-md-4">
+                        </span>
+                        <span class="col-md-8">
+                            <button id="btn_cancel_new_tools" type="button" class="btn btn-sm btn-warning">
+                            <i class="fa fa-times"></i> Cancel
+                        </button>
+                        <button id="btn_submit_new_tools" type="button" class="btn btn-sm btn-primary" data-loading-text="Adding...">
+                            <i class="fa fa-plus"></i> Add
+                        </button>
+                        </span>
+                    </div>
+                </div>
+                
+            </div>
+            <div id="fourth" class="step ui-formwizard-content" style="display:none;">
+                <div class="wizard-steps">
+                    <div class="row">
+                        <div class="col-xs-4">
+                            <span>About</span>
+                        </div>
+                        <div class="col-xs-4">
+                            <span>Inventory</span>
+                        </div>
+                        <div class="col-xs-4 active">
+                            <span>Credits</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" id="collaborators_v2">
+                    <label class="col-md-4 control-label" for="collabs_bh">Collaborators</label>
+                    <div class="col-md-8">
+                        <input type="text" id="val_collabs_v2" name="val_collabs_v2" class="" data-role="tagsinput" placeholder="Enter name of collaborator">
+                    </div>
+                    <div class="form-group" id="new_collab_form" style="display: none; border-bottom: none;">
+
+                        <span class="col-md-4">
+                        </span>
+                        <span class="col-md-8">
+                            <hr align="center" color="#000000" size="2" width="70%">
+                            <p><strong>Add new collaborator</strong></p>
+                        </span>
+                        <label class="col-md-4 control-label" for="val_collab_name">Collaborator Name<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="text" id="val_collab_name_v2" name="val_collab_name_v2" class="form-control ui-wizard-content" placeholder="Enter collaborator's Name" required="">
+                        </div>
+                        <label class="col-md-4 control-label" for="val_collab_email_v2">Collaborator Email<span class="text-danger">*</span></label>
+                        <div class="col-md-8">
+                            <input type="email" id="val_collab_email_v2" name="val_collab_email_v2" class="form-control ui-wizard-content" placeholder="collaborator@example.com" required="">
+                        </div>
+
+                        <span class="col-md-4">
+                        </span>
+                        <span class="col-md-8">
+                            <button id="btn_cancel_new_collabs" type="button" class="btn btn-sm btn-warning">
+                            <i class="fa fa-times"></i> Cancel
+                        </button>
+                        <button id="btn_submit_new_collabs" type="button" class="btn btn-sm btn-primary" data-loading-text="Adding...">
+                            <i class="fa fa-plus"></i> Add
+                        </button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_mentors">Mentors </label>
+                    <div class="col-md-8">
+                        <textarea id="val_mentors" name="val_mentors" class="form-control ui-wizard-content" placeholder="Who are the Mentors who helped you with this Makey?" rows="3" maxlength="200"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label" for="val_credits">Credits </label>
+                    <div class="col-md-8">
+                        <textarea id="val_credits" name="val_credits" class="form-control ui-wizard-content" placeholder="Are there organisations or people who you want to credit for helping you out, say financially for testing your project, etc.?" rows="3" maxlength="200"></textarea>
+                    </div>
+                </div>
+                {% if is_admin_user %}
+                <div class="form-group" id="user-override-container">
+                    <label class="col-md-4 control-label">User override </label>
+                    <div class="col-md-8" style="padding-top:7px;">
+                        <span id="current-user-selection">{{request.user.first_name}} {{request.user.last_name}}</span>
+                        <span><a id="user-override-change">(Change user)</a></span>
+                        <div id="user-override-input-container">
+                            <input id="user-override-input" class="form-control typeahead" placeholder="Enter name" />
+                        </div>
+                        <input id="user-override-form-input" name="user_override" style="display: none;"/>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="form-group form-actions">
+                <div class="col-md-8 col-md-offset-4">
+                    <input type="reset" class="btn btn-sm btn-warning ui-wizard-content ui-formwizard-button" id="back2" value="Back" disabled="disabled">
+                    <input type="submit" class="btn btn-sm btn-primary ui-wizard-content ui-formwizard-button" id="next2" value="Next">
+                </div>
+            </div>
+            {% csrf_token %}
+        </form> -->
+    </div>
+</div>
+<div class="col-sm-12 col-md-12 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Data tables comes here</h2>
+        </div>
+        <table id="makeys-table" class="table table-bordered table-condensed table-vcenter">
+            <thead>
+                <tr>
+                    <th>Makey</th>
+                    <th class='text-center'>About</th>
+                    <th class='text-center'>Score</th>
+                    <th class='text-center'>Tags</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Cover Picture">CP</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Number of documentation">D</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Gallery">G</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Files">F</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Insights">I</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Available as a part">As a part</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Collaborators">Made in</th>
+                    <th class='text-center' class="tooltips" data-placement="top" data-toggle="tooltip" title="Collaborators">Collabs</th>
+                    <th class='text-center'>Date added</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for makey in makeys %}
+                <tr>
+                    <td><a href="/makey/{{makey.id}}" data-part-makey-count="{{inventory.part.makeys.count}}" class="part-pop-trigger" data-part-name="{{makey.name}}">{{makey.name}}</a> <a href="/makey/{{makey.id}}/edit/">(edit)</a></td>
+                    <td class='text-center'>{{makey.about}}</td>
+                    <td class='text-center'>{{makey.score}}</td>
+                    <td class='text-center'>
+                        {% for tag in makey.tags.all %}
+                            {% if forloop.last %}
+                                <b>{{ tag.name }}</b>
+                            {% else %}
+                                <b>{{ tag.name }}</b>,
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class='text-center'>
+                        {% if makey.cover_pic %}
+                        <i class="fa fa-check-square-o"></i>
+                        {% else %}
+                        <i class="fa fa-square-o"></i>
+                        {% endif%}
+                    </td>
+                    <td class='text-center'>{{makey.text_documentations.count}}</td>
+                    <td class='text-center'>{{makey.images.count}},{{makey.videos.count}}</td>
+                    <td class='text-center'>{{makey.files.count}}</td>
+                    <td class='text-center'>{{makey.notes.count}}</td>
+                    <td class='text-center'>
+                        {% if makey.as_part%}
+                            <a href = "/product/{{makey.as_part.id}}">{{makey.as_part}}</a>
+                        {% elif makey.as_part_new %}
+                            <a href = "{{makey.as_part_new.url}}">{{makey.as_part_new.name}}</a>
+                        {% endif %}
+                    </td>
+                    <td class='text-center'>
+                        <a href="/space/{{makey.made_in.id}}">{{makey.made_in}}</a>
+                    </td>
+                    <td class='text-center'>
+                        {% for collab in makey.collaborators.all %}
+                            {% if forloop.last %}
+                                <b><a href="/maker/{{collab.username}}" >{{collab.first_name}} {{collab.last_name}}</a></b>
+                            {% else %}
+                                <b><a href="/maker/{{collab.username}}" >{{collab.first_name}} {{collab.last_name}}</a></b>,
+                            {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td class='text-center'>{{makey.added_time}}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

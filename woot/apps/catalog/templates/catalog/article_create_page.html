@@ -1,0 +1,308 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} Makeystreet | New Article {% endblock %}
+
+{% block extra_js %}
+<script type="text/javascript">
+    var cur_user_details = {{user_details|safe}};
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+.bootstrap-tagsinput {
+    width: 100%;
+}
+
+.article-user .twitter-typeahead {
+    width: 100%;
+}
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 400px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+</style>
+<style type="text/css">
+blockquote:before {
+    display: none;
+}
+
+.list-group-item {
+    padding: 5px 10px;
+}
+
+.block {
+    padding-bottom: 15px;
+}
+
+.btn {
+    margin-left: 10px;
+}
+
+.wizard-steps {
+    border: none;
+    margin: 0;
+}
+
+.wizard-steps span {
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    border-radius: 25px;
+    margin: 0 10px;
+    margin-bottom: 20px;
+}
+
+.wizard-steps span.active {
+    background-color: #1bbae1;
+}
+</style>
+{% endblock %}
+
+{% block templates %}
+   {% include "catalog/t/t_article_create.html" %}
+{% endblock %}
+
+{% block backbone %}
+    {% include "catalog/bb/bb_article_create.html" %}
+{% endblock %}
+
+{% block content_full %}
+
+{% if not user.is_authenticated %}
+    {% load socialaccount %}
+    {% load static %}
+<div class="row">
+    <div class="col-xs-12">
+        <div class="modal fade col-sm-12" id="login_modal" tabindex="-1" role="dialog" aria-labelledby="login_modal_label" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content col-sm-offset-1">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="login_modal_label">Please Login or Register</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'facebook' next=request.get_full_path %}"><img src="{% static 'images/facebook.png' %}"/></a>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-xs-12">
+                                <a href="{% provider_login_url 'google' next=request.get_full_path %}"><img src="{% static 'images/google.png' %}" /></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+    <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+    </div>
+    <div class="col-xs-7 col-sm-7 col-md-7 col-lg-7" id="article-create">
+        <div id="step-1" class="article-create-steps" style="display:none">
+            <center>
+                <div class="wizard-steps">
+                    <span class="active">&nbsp;</span>
+                    <span class="">&nbsp;</span>
+                    <span class="">&nbsp;</span>
+                </div>
+            </center>
+            <div class="row block">
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                        <label style="padding-top: 7px;" class="pull-right">Enter Article URL: </label>
+                    </div>
+                    <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                        <input type="text" id="article-url" class="form-control" placeholder="http://example.com" />
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding-right: 15px;">
+                        <button class="pull-right btn btn-primary" id="step-1-next" data-loading-text="Fetching article...">Next</button>
+                        <span class="pull-right" style="color:red; padding: 7px 5px 0 0" id="step-1-msg"></span>
+                    </div>
+                </div>
+                <!-- <div class="row" id="space-search-result">
+                    <center><i class="fa fa-circle-o-notch fa-spin"></i></center>
+                </div> -->
+            </div>
+        </div>
+        <div id="step-2" class="article-create-steps" style="display:none">
+            <center>
+                <div class="wizard-steps">
+                    <span class="active">&nbsp;</span>
+                    <span class="active">&nbsp;</span>
+                    <span class="">&nbsp;</span>
+                </div>
+            </center>
+            <div class="row block">
+                <div class="block-title">
+                    <h4>Edit article</h4>
+                </div>
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                    <label style="padding-top: 7px;" class="pull-right">Title</label>
+                </div>
+                <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                    <input type="text" id="article-title" class="form-control" placeholder="Sample title" />
+                </div>
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                    <label style="padding-top: 7px;" class="pull-right">Description</label>
+                </div>
+                <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                    <textarea id="article-desc" class="form-control" placeholder="Sample description" rows="3" ></textarea>
+                </div>
+                <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                    <label style="padding-top: 7px;" class="pull-right">Recommendation</label>
+                </div>
+                <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                    <textarea id="article-reco" class="form-control" placeholder="Sample recommendation" rows="3" ></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <h4>Preview</h4>
+                </div>
+            </div>
+            <div class="block" id="article-preview">
+            </div>
+            <div class="row block">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding-right: 15px;">
+                    <button class="pull-right btn btn-primary" id="step-2-next">Next</button>
+                    <button class="pull-right btn btn-default" id="step-2-prev">Previous</button>
+                    <span class="pull-right" style="color:red; padding: 7px 5px 0 0" id="step-2-msg"></span>
+                </div>
+            </div>
+        </div>
+        <div id="step-3" class="article-create-steps" style="display:none">
+            <center>
+                <div class="wizard-steps">
+                    <span class="active">&nbsp;</span>
+                    <span class="active">&nbsp;</span>
+                    <span class="active">&nbsp;</span>
+                </div>
+            </center>
+            <div class="row block">
+                <div class="block-title">
+                    <h4>Almost done</h4>
+                </div>
+                <div class="row">
+                    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                        <label style="padding-top: 7px;" class="pull-right">Tag the article</label>
+                    </div>
+                    <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                        <input id="article-tags" class="form-control" placeholder="Enter tags" data-role="tagsinput" />
+                    </div>
+                </div>
+                {% if is_admin_user %}
+                    <div class="row article-user">
+                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                            <label style="padding-top: 7px;" class="pull-right">Select user</label>
+                        </div>
+                        <div class=" col-xs-9 col-sm-9 col-md-9 col-lg-9" style="padding: 0 15px 15px 15px;">
+                            <input id="article-user" class="form-control typeahead" placeholder="Enter name" />
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <h4>Preview</h4>
+                </div>
+            </div>
+            <div class="block" id="article-preview-2">
+            </div>
+            <div class="row block">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" style="padding-right: 15px;">
+                    <button class="pull-right btn btn-primary" id="step-3-finish">Finish</button>
+                    <button class="pull-right btn btn-default" id="step-3-prev">Previous</button>
+                    <span class="pull-right" style="color:red; padding: 7px 5px 0 0" id="step-3-msg"></span>
+                </div>
+            </div>
+        </div>
+        <div style="display:none">
+            <form method="POST" action="#" id="article-create-form">
+                <input type="text" name="title"/>
+                <input type="text" name="desc"/>
+                <input type="text" name="reco"/>
+                <input type="text" name="image_url"/>
+                <input type="text" name="url"/>
+                <input type="text" name="tags"/>
+                <input type="text" name="user"/>
+                {% csrf_token %}
+            </form>
+        </div>
+    </div>
+    <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3"></div>
+{% endblock %}

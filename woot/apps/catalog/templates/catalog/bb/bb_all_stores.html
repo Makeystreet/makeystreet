@@ -1,0 +1,219 @@
+<script>
+var app = {};
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.LikeShop = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/likes/shop/',
+    idAttribute : "id",
+    defaults : {
+        'added_time' : 'Now',
+        'liked_time' : 'Now',
+    },
+
+    saveLike : function() {
+        this.set({'shop' : '/api/v1/shop/' + app.shop_id + "/"});
+        this.set({'liker' : app.cur_fb_user});
+    },
+
+    url : function() {
+        if(this.get("id") == undefined) {
+        	if(this.get("likerId")!=undefined && this.get("shopId")!=undefined) 
+        		return this.urlRoot + "?shop=" + this.get("shopId") + "&liker=" + this.get("likerId");
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.LikeShopList = Backbone.Tastypie.Collection.extend({
+    model : app.LikeShop,
+    urlRoot : "/api/v1/likes/shop/",
+
+    url : function() {
+        return this.urlRoot + "?limit=2&shop=" + this.shop_id;
+    },
+
+    setShopId : function(shopId) {
+    	this.shop_id = shopId;
+    },
+});
+
+app.Shop = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/shop_p/",
+    idAttribute : "id",
+
+    initialize : function() {
+    	var all_likes = new app.LikeShopList();
+    	all_likes.setShopId(this.id);
+    	this.set({
+    		'all_likes' : all_likes,
+    	});
+
+    	this.likes_count = 0;
+    	this.getCurUserLikeStatus();
+
+    	this.listenTo(this.get('all_likes'), 'change', this.getLikeString);
+    	this.listenTo(this.get('all_likes'), 'add', this.getLikeString);
+    	this.on('change : cur_user_likes', this.getLikeString);
+    },
+
+    getCurUserLikeStatus : function() {
+    	var curUserLike = new app.LikeShop({
+    		'likerId' : cur_user_details.id,
+    		'shopId' : this.id,
+    	});
+    	
+    	var that = this;
+    	curUserLike.fetch({
+    		success : function(model, response) {
+    			if(response.meta.total_count != 0) {
+    				that.set({'cur_user_likes' : true});
+    			} else {
+    				that.set({'cur_user_likes' : false});
+    			}
+		    	that.fetchAllLikes();
+    		},
+    	});
+    },
+
+    fetchAllLikes : function() {
+		var all_likes = this.get('all_likes');
+		var that = this;
+    	all_likes.fetch({
+    		success : function(collection, response) {
+    			that.likes_count = response.meta.total_count;
+    			that.getLikeString();
+    		},
+    	});
+
+    },
+
+    getLikeString : function() {
+    	var all_likes = this.get('all_likes');
+    	var likes_count = this.likes_count;
+
+		var likes_string = "";
+        if(this.get('cur_user_likes')) {
+            if(likes_count == 0 || likes_count == 1) {
+                likes_string = "You like this!";
+            } else if (likes_count == 2) {
+            	if(all_likes.models[0].get('liker').id == cur_user_details.id)
+                	likes_string = "You and " + all_likes.models[1].get('liker').facebook_name + " like this!";
+                else
+                	likes_string = "You and " + all_likes.models[0].get('liker').facebook_name + " like this!";
+            } else {
+            	if(all_likes.models[0].get('liker').id == cur_user_details.id)
+                	likes_string = "You, " + all_likes.models[1].get('liker').facebook_name + " and " + (likes_count-2) + " other people like this!";
+                else 
+                	likes_string = "You, " + all_likes.models[0].get('liker').facebook_name + " and " + (likes_count-2) + " other people like this!";
+            }
+        } else {
+            if(!likes_count) {
+	            likes_string = "Be the first one to like this!";
+	        } else if(likes_count == 1) {
+	            likes_string = all_likes.models[0].get('liker').facebook_name + " likes this!";
+	        } else if(likes_count == 2) {
+	            likes_string = all_likes.models[0].get('liker').facebook_name + " and " + all_likes.models[1].get('liker').facebook_name + " like this!";
+	        } else {
+	            likes_string = all_likes.models[0].get('liker').facebook_name + " and " + (likes_count - 1) + " other people like this!";
+	        }
+        }
+
+        this.set({'likes_string' : likes_string,});
+    },
+});
+
+app.ShopList = Backbone.Tastypie.Collection.extend({
+	model : app.Shop,
+	url : function() { return "/api/v1/shop_p/?limit=0";},
+});
+
+app.ShopView = Backbone.View.extend({
+	el : "#all_stores",
+	template : Handlebars.compile($('#store_template').html()),
+
+	render : function(model) {
+		this.$el.append(this.template(model.toJSON()));
+		this.$el.find('.tooltips').tooltip();
+        return this;
+	},
+
+	events : {
+		'click .like_store' : "likeStore",
+	},
+
+	initialize : function() {
+		this.listenTo(app.shopList, 'add', this.addAll);
+		this.listenTo(app.shopList, 'change', this.addAll);
+		app.shopList.bind('reset', this.addAll, this);
+	},
+
+	addAll : function() {
+		this.$el.html('');
+		app.shopList.each(this.render, this);
+	},
+
+	likeStore : function(event) {
+		var shop_id = parseInt(event.target.id.substring(5));
+		var newLike = new app.LikeShop({
+			'liker' : app.cur_fb_user,
+			'shop' : '/api/v1/shop/' + shop_id + '/',
+		});
+
+		var curShop = app.shopList.get(shop_id);
+
+		newLike.save(null, {
+			success : function(model, response) {
+				// app.shopList.get(shop_id).get('all_likes').add(response);
+				app.shopList.get(shop_id).likes_count++;
+				app.shopList.get(shop_id).set({'cur_user_likes' : true});
+			},
+			error : function(model, response) {
+				app.shopList.get(shop_id).likes_count--;
+				app.shopList.get(shop_id).set({'cur_user_likes' : false});
+			},
+		});
+		$(".fade").remove()
+	}
+});
+
+
+//--------------
+// Initializers
+//-------------- 
+app.initializeUser();
+
+app.shopList = new app.ShopList();
+app.shopView = new app.ShopView();
+
+app.shopList.fetch();
+
+</script>

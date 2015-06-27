@@ -1,0 +1,92 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %}MakeyStreet | Upload Image{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/s3upload.js' %}"></script>
+<script type="text/javascript">
+    // var cur_user_details = {{user_details|safe}};
+</script>
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-10 col-md-10 col-centered">
+    <div class="block">
+        <div class="block-title">
+            <h2>Upload Image</h2>
+        </div>
+
+        <form action="#" method="post" class="form-horizontal form-bordered" enctype="multipart/form-data">
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="val_file">Image<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <input type="file" id="val_file" name="val_file" class="form-control" placeholder="Image" required="">
+                </div>
+            </div>
+            <div class="form-group">
+
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="val_status">Status<span class="text-danger">&nbsp;*</span></label>
+                <div class="col-md-9">
+                    <p id="val_status" name="val_status" class="form-control" placeholder="Status">Select a file</p>
+                    <div class="progress progress-striped" id="progress_bar" style="display:none;">
+                        <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;">0%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label" for="val_preview">Preview</label>
+                <div class="col-md-9">
+                    <div id="val_preview" name="val_preview" placeholder="Preview"><img src="/static/images/newpart.png" style="width:50px;" /></div>
+                </div>
+            </div>
+
+            <hr />
+            <div class="form-group form-actions">
+                <div class="col-xs-12">
+                    <button type="submit" class="btn btn-sm btn-primary"><i class="fa fa-angle-right"></i> Submit</button>
+                    <button type="reset" class="btn btn-sm btn-warning"><i class="fa fa-repeat"></i> Reset</button>
+                </div>
+            </div>
+
+            <input type="hidden" id="avatar_url" name="avatar_url" value="/static/images/newpart.png" />
+            {% csrf_token %}
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js_end %}
+<script type="text/javascript">
+    function s3_upload() {
+        var status_elem = document.getElementById("val_status");
+        var url_elem = document.getElementById("avatar_url");
+        var preview_elem = document.getElementById("val_preview");
+        var s3upload = new S3Upload({
+            file_dom_selector: 'val_file',
+            s3_sign_put_url: "{% url 'catalog:sign_s3' %}",
+            onProgress: function(percent, message) {
+                var progress = percent + '%';
+                $('#progress_bar').show();
+                $('#progress_bar .progress-bar').css('width', progress).html(progress);
+                status_elem.innerHTML = 'Upload progress: ' + percent + '% ' + message;
+            },
+            onFinishS3Put: function(url) {
+                status_elem.innerHTML = 'Upload completed. Uploaded to: '+ url;
+                url_elem.value = url;
+                preview_elem.innerHTML = '<img src="'+url+'" style="width:300px;" />';
+            },
+            onError: function(status) {
+                status_elem.innerHTML = 'Upload error: ' + status;
+            }
+        });
+    }
+    (function() {
+        var input_element = document.getElementById("val_file");
+        input_element.onchange = s3_upload;
+    })();
+</script>
+{% endblock %}

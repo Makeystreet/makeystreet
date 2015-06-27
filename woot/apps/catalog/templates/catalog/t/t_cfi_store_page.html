@@ -1,0 +1,54 @@
+{% verbatim %}
+<script type="text/template" id="cfi_item_template">
+    <div class="col-sm-2 col-md-2">
+        <div class="thumbnail">
+            <a href="/product/{{item.id}}">
+                <img alt="Image for {{item.name}}" height="188px" src="{{ item.images.0.url }}">
+            </a>
+
+            <h5>
+                <a href="/product/{{item.id}}">{{item.name}}</a>
+            </h5>
+
+
+            <div id="like_{{ id }}" class="btn like_product {{#if cur_user_likes}}btn-success{{else}}{{/if}} btn-default btn-sm" data-toggle='tooltip' data-container='body' rel='tooltip'
+                data-title="{{#if cur_user_likes}}Unlike?{{else}}Like it?{{/if}}">
+                {{#if cur_user_likes}}
+                    Liked!
+                {{else}}
+                    Like!
+                {{/if}}
+            </div>
+            <div>
+                <small><small>{{likes_string}}</small></small>
+            </div>
+        </div>
+    </div>
+</script>
+
+<script type="text/template" id="pagination_template">
+<ul class="pagination">
+    <li class="{{#if first_disabled }}disabled{{/if}}">
+        <a href="{{#if first_disabled}}{{else}}?page=1{{/if}}"><i class="icon-backward"></i>First</a>
+    </li>
+
+    <li class="{{#if previous_disabled }}disabled{{/if}}">
+        <a href="{{#if previous_disabled }}{{else}}?page={{previous_page}}{{/if}}"><i class="icon-chevron-left"></i>Prev</a>
+    </li>
+
+    {{#each pages}}
+    <li class="{{page_class}}">
+        <a href="{{page_link}}">{{page}}</a>
+    </li>
+    {{/each}}
+
+    <li class="{{#if next_disabled}}disabled{{/if}}">
+        <a href="{{#if next_disabled}}{{else}}?page={{next_page}}{{/if}}">Next<i class="icon-chevron-right"></i></a>
+    </li>
+
+    <li class="{{#if last_disabled}}disabled{{/if}}">
+        <a href="{{#if last_disabled}}{{else}}?page={{last_page}}{{/if}}">Last<i class="icon-forward"></i></a>
+    </li>
+</ul>
+</script>
+{% endverbatim %}

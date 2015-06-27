@@ -1,0 +1,192 @@
+{% extends "catalog/base.html" %}
+
+{% load static from staticfiles %}
+
+{% block title %} {{space.name}}{% endblock %}
+{% block contentmeta%}
+    <meta name="description" content="All makeys made in {{space.name}}. Total {{space.no_makeys}} makeys.">
+    <!-- <meta name="author" content="Siddardha G, Alex VJ"> -->
+{% endblock%}
+
+{% block extra_js %}
+<script type="text/javascript">
+        var cur_user_details = {{user_details|safe}};
+        $(document).ready(function(){
+        });
+</script>
+<script src="{% static 'js/bootstrap-tagsinput2.js' %}"></script>
+<script src="{% static 'js/typeahead.js' %}"></script>
+<style type="text/css">
+    .bootstrap-tagsinput {
+        width: 100%;
+    }
+
+.twitter-typeahead .tt-query,
+.twitter-typeahead .tt-hint {
+  margin-bottom: 0;
+}
+
+.twitter-typeahead .tt-hint
+{
+    display: none;
+}
+
+.tt-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1000;
+  display: none;
+  float: left;
+  min-width: 400px;
+  padding: 5px 0;
+  margin: 2px 0 0;
+  list-style: none;
+  font-size: 14px;
+  background-color: #ffffff;
+  border: 1px solid #cccccc;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  -webkit-box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.175);
+  background-clip: padding-box;
+}
+
+.tt-suggestion > p {
+  display: block;
+  padding: 3px 20px;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion > p > small {
+  color: #777;
+}
+
+.tt-suggestion > p:hover,
+.tt-suggestion > p:focus,
+.tt-suggestion.tt-cursor p {
+  color: #ffffff;
+  text-decoration: none;
+  outline: 0;
+  background-color: #428bca;
+}
+
+.tt-suggestion > p:hover > small,
+.tt-suggestion > p:focus > small,
+.tt-suggestion.tt-cursor p > small {
+  color: #CCC;
+}
+
+.tt-suggestion-empty {
+    margin: 0;
+}
+
+.tt-suggestion-empty > span {
+  display: inline;
+  padding: 7px 20px;
+  padding-bottom: 0;
+  clear: both;
+  font-weight: normal;
+  line-height: 1.428571429;
+  color: #333333;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.tt-suggestion-empty > button {
+  margin-bottom: 5px;
+  margin-right: 20px;
+}
+
+</style>
+{% endblock %}
+
+{% block templates %}
+     {% include "catalog/t/t_space_makeys_page.html" %}
+{% endblock %}
+
+{% block backbone %}
+        {% include "catalog/bb/bb_space_makeys_page.html" %}
+{% endblock %}
+
+{% block content_top %}
+{% endblock %}
+
+{% block content_full %}
+<div class="col-sm-3 col-md-3">
+    {% include "catalog/components/space_mini_column.html" %}
+</div>
+
+<div class="col-sm-9 col-md-9">
+{% if is_space_admin %}
+    <div class="row">
+        <div class="block">
+            <div class="block-title">
+                <h2><strong>Add/Remove Makeys</strong></h2>
+            </div>
+            <div class="block-content">
+                <div class="form-group" id="edit_makeys">
+                    <div class="col-md-12">
+                        <input type="text" id="val_makeys" name="val_makeys" class="" data-role="tagsinput" placeholder="Enter name of Makey">
+                    </div>
+                        <span class="col-md-12">
+                            <button id="btn_refresh_list" type="button" class="btn btn-sm btn-warning">
+                            <i class="fa fa-undo"></i> Reset
+                        </button>
+                        <button id="btn_submit_makeys" type="button" class="btn btn-sm btn-primary" data-loading-text="Saving...">
+                            <i class="fa fa-save"></i> Save
+                        </button>
+                    </span>
+                </div>
+            </div>
+            <div class="clearfix">
+            </div>
+        </div>
+    </div>
+{% endif %}
+    <div id="makey-container">
+      <div class="row">
+        <div class="block" id="status-filter" style="padding: 5px;">
+          <div class="col-xs-4">
+          <strong class="pull-right" style="padding-top: 5px;">Status: </strong>
+          </div>
+          <div class="col-xs-8">
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-primary btn-sm btn-alt active">
+                <input type="radio" name="status-filter-radio" id="filter-all" value="All"> All
+              </label>
+              <label class="btn btn-primary btn-sm btn-alt">
+                <input type="radio" name="status-filter-radio" id="filter-idea" value="Idea"> Idea
+              </label>
+              <label class="btn btn-primary btn-sm btn-alt">
+                <input type="radio" name="status-filter-radio" id="filter-wip" value="Work In Progress"> Work In Progress
+              </label>
+              <label class="btn btn-primary btn-sm btn-alt">
+                <input type="radio" name="status-filter-radio" id="filter-done" value="Completed"> Completed
+              </label>
+            </div>
+  <!--           <div class="btn-group">
+              <button class="btn btn-alt btn-sm btn-primary" id="filter-all">All</button>
+              <button class="btn btn-alt btn-sm btn-primary" id="filter-idea">Idea</button>
+              <button class="btn btn-alt btn-sm btn-primary" id="filter-wip">Work in Progress</button>
+              <button class="btn btn-alt btn-sm btn-primary" id="filter-done">Completed</button>
+            </div> -->
+          </div>
+          <div class="clearfix"></div>
+        </div>
+      </div>
+      <div class="row">
+          <div class="col-xs-12">
+              <div id="makeys">
+                  <div class='row new_row'></div></br>
+              </div>
+          </div>
+      </div>
+    </div>
+</div>
+{% endblock %}

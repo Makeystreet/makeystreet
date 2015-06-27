@@ -1,0 +1,1271 @@
+<script>
+
+var app = {};
+app.maker_id = {{maker.id}};
+app.maker_profile_id={{maker.profile.id}};
+
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get('resource_uri' != undefined)) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get("id") != undefined) {
+            return this.urlRoot + this.get("id") + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        var options = {'userId' : this.get('id')};
+        
+        this.following = new app.FollowingList(options);
+        this.followers = new app.FollowersList(options);
+        
+        this.on('change', this.loadProfile);
+    },
+
+    loadProfile : function() {
+        this.profile = new app.UserProfile({'id' : this.get('profile_id')});
+    },
+});
+
+app.UserProfile = Backbone.Tastypie.Model.extend({
+    urlRoot : '/api/v1/profile/',
+    idAttribute : 'id',
+
+    url : function() {
+        if(this.get('resource_uri') != undefined) {
+            return this.get('resource_uri');
+        }
+
+        if(this.get('id') != undefined) {
+            return this.urlRoot + this.get('id') + "/";
+        }
+
+        return this.urlRoot;
+    },
+
+    initialize : function() {
+        if(this.get('id') != undefined) {
+            this.fetch();
+        }
+    },
+});
+
+app.FollowersList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/followers/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.FollowingList = Backbone.Tastypie.Collection.extend({
+    model : app.UserProfile,
+    urlRoot : '/api/v1/user/',
+
+    url : function() {
+        return this.urlRoot + this.userId + "/following/";
+    },
+
+    initialize : function(options) {
+        this.userId = options.userId;
+        this.fetch();
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            return;
+        }
+
+        app.cur_fb_user = new app.User({'id' : cur_user_details.id});
+        app.cur_fb_user.fetch();
+    }
+};
+
+app.initializeMaker = function() {
+    app.cur_maker = new app.User({'id' : app.maker_id});
+    app.cur_maker.fetch();
+    // console.log('\n\n');
+    // console.log(app.maker_profile_id);
+    app.cur_maker_profile = new app.UserProfile({'id' : app.maker_profile_id});
+    app.cur_maker_profile.fetch();
+
+};
+
+app.Makey = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/makey_m/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        } 
+    },
+});
+
+app.MakeyList = Backbone.Tastypie.Collection.extend({
+    model : app.Makey,
+    urlRoot : "/api/v1/makey_m/",
+
+    url : function() {
+        return this.urlRoot + "?collaborators__in=" + app.maker_id;
+    },
+});
+
+app.MakeyView = Backbone.View.extend({
+    el : "#my_makeys",
+    template : Handlebars.compile($("#makey_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.makeys, 'add', this.addAll);
+        this.listenTo(app.makeys, 'chage', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        $('#no_makeys').html(app.makeys.length);
+        this.options.cur_item_count = 0;
+        app.makeys.each(this.render, this);
+
+        $('#no_makeys').html(app.makeys.length);
+    },
+
+    render : function(model) {
+        if(this.options.cur_item_count%app.row_count == 0) {
+            this.$el.append(this.new_row);
+        }
+
+        var json = model.toJSON();
+        if(json.user == null) {
+            json.has_user = false;
+        } else {
+            json.has_user = true;
+        }
+
+        this.$el.find('.new_row').last().append(this.template(json));
+        this.options.cur_item_count++;
+        return this;
+    },
+});
+
+
+app.Space = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/space_m/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        } 
+    },
+});
+
+app.SpaceList = Backbone.Tastypie.Collection.extend({
+    model : app.Space,
+    urlRoot : "/api/v1/space_m/",
+
+    url : function() {
+        return this.urlRoot + "?members__in=" + app.maker_id;
+    },
+});
+
+app.SpaceView = Backbone.View.extend({
+    el : "#makerspace_membership",
+    template : Handlebars.compile($("#space_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.spaces, 'add', this.addAll);
+        this.listenTo(app.spaces, 'chage', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        // $('#no_makeys').html(app.makeys.length);
+        this.options.cur_item_count = 0;
+        app.spaces.each(this.render, this);
+
+        // $('#no_makeys').html(app.makeys.length);
+    },
+
+    render : function(model) {
+        if(this.options.cur_item_count%app.row_count == 0) {
+            this.$el.append(this.new_row);
+        }
+
+        var json = model.toJSON();
+        if(json.user == null) {
+            json.has_user = false;
+        } else {
+            json.has_user = true;
+        }
+
+        this.$el.find('.new_row').last().append(this.template(json));
+        this.options.cur_item_count++;
+        return this;
+    },
+});
+
+app.FollowingView = Backbone.View.extend({
+    el : '#tab_following',
+    maker_template : Handlebars.compile($('#maker_template').html()),
+
+    events : {
+        'click .follow_user' : 'followUser',
+        'click .unfollow_user' : 'unfollowUser',
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker.following, 'add', this.addAll);
+        this.listenTo(app.cur_maker.following, 'change', this.addAll);
+        this.listenTo(app.cur_maker.following, 'reset', this.addAll);
+        this.listenTo(app.cur_maker.following, 'remove', this.addAll);
+        if (app.cur_fb_user)
+        {
+            this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+        }
+        
+    },
+
+    addAll : function() {
+        this.$('#following_list').html('');
+        app.cur_maker.following.each(this.add, this);
+
+        $('#no_following').html(app.cur_maker.following.length);
+    },
+
+    add : function(model) {
+        if(model.get('user') == undefined) {
+            return;
+        }
+        var json = model.toJSON();
+        if (app.cur_fb_user)
+        {
+            if(app.cur_fb_user.following.get(model.get('id')) == undefined) {
+                json.cur_user_follows = false;
+            } else {
+                json.cur_user_follows = true;
+            }
+
+            if(model.get('user').id == app.cur_fb_user.get('id')) {
+                json.is_cur_user = true;
+            }
+        }
+
+        this.$('#following_list').append(this.maker_template(json));
+    },
+
+    followUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(7));
+        var userProfile = app.cur_maker.following.get(profileId);
+
+        app.cur_fb_user.profile.get('following').push(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.push(userProfile);
+            },
+        });
+    },
+
+    unfollowUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(9));
+        var userProfile = app.cur_maker.following.get(profileId);
+
+        var index = app.cur_fb_user.profile.get('following').indexOf(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.get('following').splice(index, 1);
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.remove(app.cur_fb_user.following.get(userProfile.get('id')))
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.remove(userProfile);
+        }
+    },
+});
+
+app.FollowersView = Backbone.View.extend({
+    el : '#tab_followers',
+    maker_template : Handlebars.compile($('#maker_template').html()),
+
+    events : {
+        'click .follow_user' : 'followUser',
+        'click .unfollow_user' : 'unfollowUser',
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker.followers, 'add', this.addAll);
+        this.listenTo(app.cur_maker.followers, 'change', this.addAll);
+        this.listenTo(app.cur_maker.followers, 'reset', this.addAll);
+        this.listenTo(app.cur_maker.followers, 'remove', this.addAll);
+        
+        if (app.cur_fb_user)
+        {
+
+            this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+        }
+    },
+
+    addAll : function() {
+        this.$('#followers_list').html('');
+        app.cur_maker.followers.each(this.add, this);
+
+        $('#no_followers').html(app.cur_maker.followers.length);
+    },
+
+    add : function(model) {
+        if(model.get('user') == undefined) {
+            return;
+        }
+
+        var json = model.toJSON();
+        if (app.cur_fb_user)
+        {
+            if(app.cur_fb_user.following.get(model.get('id')) == undefined) {
+                json.cur_user_follows = false;
+            } else {
+                json.cur_user_follows = true;
+            }
+
+            if(model.get('user').id == app.cur_fb_user.get('id')) {
+                json.is_cur_user = true;
+            }
+        }
+
+        this.$('#followers_list').append(this.maker_template(json));
+    },
+
+    followUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(7));
+        var userProfile = app.cur_maker.followers.get(profileId);
+
+        app.cur_fb_user.profile.get('following').push(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.push(userProfile);
+            },
+        });
+        
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.add({'id' : userProfile.get('id')});
+        }
+    },
+
+    unfollowUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(9));
+        var userProfile = app.cur_maker.following.get(profileId);
+
+        var index = app.cur_fb_user.profile.get('following').indexOf(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.get('following').splice(index, 1);
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.remove(app.cur_fb_user.following.get(userProfile.get('id')))
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.remove(userProfile);
+        }
+    },
+});
+
+app.MakerView = Backbone.View.extend({
+    el : '#cur_maker_follow',
+    template : Handlebars.compile($('#user_follow_template').html()),
+
+    events : {
+        'click .follow_user' : 'followUser',
+        'click .unfollow_user' : 'unfollowUser',
+    },
+
+    initialize : function() {
+        if (app.cur_fb_user)
+        {
+            this.listenTo(app.cur_fb_user.following, 'add', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'change', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'reset', this.addAll);
+            this.listenTo(app.cur_fb_user.following, 'remove', this.addAll);
+        }
+
+        this.listenTo(app.cur_maker, 'change', this.addAll);
+
+        this.addAll();
+    },
+
+    addAll : function() {
+        var json = {};
+
+        if(app.cur_fb_user)
+        {
+            if(app.cur_maker.get('id') == app.cur_fb_user.get('id')) {
+                json.is_cur_user = true;
+            } else if(app.cur_fb_user.following.get(app.cur_maker.get('profile_id')) == undefined) {
+                json.cur_user_follows = false
+                json.id = app.cur_maker.get('profile_id');
+            } else {
+                json.cur_user_follows = true;
+                json.id = app.cur_maker.get('profile_id');
+            }
+        }
+
+
+        this.$el.html(this.template(json));
+    },
+
+    followUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(7));
+        var userProfile = app.cur_maker.profile;
+
+        app.cur_fb_user.profile.get('following').push(userProfile.get('resource_uri'));
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.push(userProfile);
+                app.cur_maker.followers.push(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+        
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.add({'id' : userProfile.get('id')});
+        }
+    },
+
+    unfollowUser : function(event) {
+        var profileId = parseInt(event.target.id.substring(9));
+        var userProfile = app.cur_maker.profile;
+
+        var index = app.cur_fb_user.profile.get('following').indexOf(userProfile.get('resource_uri'));
+        app.cur_fb_user.profile.get('following').splice(index, 1);
+        var that = this;
+        app.cur_fb_user.profile.save(null, {
+            success : function(model, response) {
+                app.cur_fb_user.following.remove(app.cur_fb_user.following.get(userProfile.get('id')));
+                app.cur_maker.followers.remove(app.cur_fb_user.profile);
+                that.addAll();
+            },
+        });
+
+        if(app.cur_fb_user.get('id') == app.cur_maker.get('id')) {
+            app.cur_maker.following.remove(userProfile);
+        }
+    },
+});
+
+/* instructables view */
+app.InstructablesUrlView = Backbone.View.extend({
+    el : $('#maker_instructables'),
+   template : Handlebars.compile($('#weburl_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.instructables_url) {
+            $('.show_instructables').show();
+        }
+        this.$('#instructables_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'instructables_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* github view */
+app.GithubUrlView = Backbone.View.extend({
+    el : $('#maker_github'),
+   template : Handlebars.compile($('#github_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.github_url) {
+            $('.show_github').show();
+        }
+        this.$('#github_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'github_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* linkedin view */
+app.LinkedinUrlView = Backbone.View.extend({
+    el : $('#maker_linkedin'),
+   template : Handlebars.compile($('#linkedin_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.linkedin_url) {
+            $('.show_linkedin').show();
+        }
+        this.$('#linkedin_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'linkedin_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* facebook view */
+app.FacebookUrlView = Backbone.View.extend({
+    el : $('#maker_facebook'),
+   template : Handlebars.compile($('#facebook_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.facebook_url) {
+            $('.show_facebook').show();
+        }
+        this.$('#facebook_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'facebook_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* twitter view */
+app.TwitterUrlView = Backbone.View.extend({
+    el : $('#maker_twitter'),
+   template : Handlebars.compile($('#twitter_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.twitter_url) {
+            $('.show_twitter').show();
+        }
+        this.$('#twitter_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'twitter_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* yt_channel view */
+app.YTChannelUrlView = Backbone.View.extend({
+    el : $('#maker_yt_channel'),
+   template : Handlebars.compile($('#yt_channel_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.yt_channel_url) {
+            $('.show_yt_channel').show();
+        }
+        this.$('#yt_channel_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'yt_channel_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* stackoverflow view */
+app.StackoverflowUrlView = Backbone.View.extend({
+    el : $('#maker_stackoverflow'),
+   template : Handlebars.compile($('#stackoverflow_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.stackoverflow_url) {
+            $('.show_stackoverflow').show();
+        }
+        this.$('#stackoverflow_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'stackoverflow_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* blog view */
+app.BlogUrlView = Backbone.View.extend({
+    el : $('#maker_blog'),
+   template : Handlebars.compile($('#blog_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        // console.log("haha");
+        // console.log(app.cur_maker_profile);
+        var json = app.cur_maker_profile.toJSON();
+        if(json.blog_url) {
+            $('.show_blog').show();
+        }
+        this.$('#blog_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'blog_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide: true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* website view */
+app.WebsiteUrlView = Backbone.View.extend({
+    el : $('#maker_website'),
+   template : Handlebars.compile($('#website_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        if(json.website_url) {
+            $('.show_website').show();
+        }
+        this.$('#website_url').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'website_url' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* location view */
+app.LocationView = Backbone.View.extend({
+    el : $('#maker_location'),
+   template : Handlebars.compile($('#location_template').html()),
+
+    events : {
+        "click .edit" : "editUrl",
+        "click .save" : "saveUrl",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        if(json.location) {
+            $('.show_location').show();
+        }
+        this.$('#location').html(this.template(json));
+    },
+    editUrl : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveUrl : function() {
+        var url = this.$('.edit_url')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'location' : url});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        // console.log('saving');
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+                // console.log('saved');
+            },
+        });
+    },
+});
+
+/* About Me view */
+app.AboutMeView = Backbone.View.extend({
+    el : $('#maker_aboutme'),
+   template : Handlebars.compile($('#aboutme_template').html()),
+
+    events : {
+        "click .edit" : "editContent",
+        "click .save" : "saveContent",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        // console.log(json.aboutme);
+        if(json.aboutme!=undefined) {
+            json.aboutme_html = json.aboutme.replace(/\n/g, "<br/>");
+            json.aboutme_html = Autolinker.link(json.aboutme_html);
+        }
+        this.$('#aboutme_content').html(this.template(json));
+    },
+    editContent : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveContent : function() {
+        var content = this.$('.edit_content')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'aboutme' : content});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+            },
+        });
+    },
+});
+
+/* Membership view */
+app.MembershipView = Backbone.View.extend({
+    el : $('#maker_membership'),
+   template : Handlebars.compile($('#membership_template').html()),
+
+    events : {
+        "click .edit" : "editContent",
+        "click .save" : "saveContent",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        if(json.membership) {
+            $('.show_membership').show();
+        }
+        if(json.membership!=undefined) {
+            json.membership_html = json.membership.replace(/\n/g, "<br/>");
+            json.membership_html = Autolinker.link(json.membership_html);
+        }
+        this.$('#membership_content').html(this.template(json));
+    },
+    editContent : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveContent : function() {
+        var content = this.$('.edit_content')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'membership' : content});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+            },
+        });
+    },
+});
+
+/* College view */
+app.CollegeView = Backbone.View.extend({
+    el : $('#maker_college'),
+   template : Handlebars.compile($('#college_template').html()),
+
+    events : {
+        "click .edit" : "editContent",
+        "click .save" : "saveContent",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        if(json.college) {
+            $('.show_college').show();
+        }
+        if(json.college!=undefined) {
+            json.college_html = json.college.replace(/\n/g, "<br/>");
+            json.college_html = Autolinker.link(json.college_html);
+        }
+        this.$('#college_content').html(this.template(json));
+    },
+    editContent : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveContent : function() {
+        var content = this.$('.edit_content')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'college' : content});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+            },
+        });
+    },
+});
+
+
+/* Patent view */
+app.PatentView = Backbone.View.extend({
+    el : $('#maker_patent'),
+   template : Handlebars.compile($('#patent_template').html()),
+
+    events : {
+        "click .edit" : "editContent",
+        "click .save" : "saveContent",
+    },
+
+    initialize : function() {
+        this.listenTo(app.cur_maker_profile, 'change', this.add);
+    },
+
+    add : function() {
+        var json = app.cur_maker_profile.toJSON();
+        // console.log(json.patent);
+        if(json.patent) {
+            $('.show_patent').show();
+        }
+        if(json.patent!=undefined) {
+            json.patent_html = json.patent.replace(/\n/g, "<br/>");
+            json.patent_html = Autolinker.link(json.patent_html);
+        }
+        this.$('#patent_content').html(this.template(json));
+    },
+    editContent : function() {
+        this.$('.show_when_editing').show();
+        this.$('.hide_when_editing').hide();
+        
+        
+    },
+    saveContent : function() {
+        var content = this.$('.edit_content')[0].value;
+        this.$('.show_when_editing').hide();
+        this.$('.hide_when_editing').show();
+        app.cur_maker_profile.set({'patent' : content});
+
+        var that = this;
+        var notice = new PNotify({
+            title: 'Saving..',
+            hide:false,
+        });
+        app.cur_maker_profile.save(null, {
+            success : function(model, response) {
+                notice.update({
+                    title: 'Saved',
+                    type: 'success',
+                    hide:true,
+                });
+            },
+        });
+    },
+});
+
+/* INITIALIZE */
+app.initializeUser();
+console.log("user init");
+app.initializeMaker();
+
+app.makeys = new app.MakeyList();
+app.makeys.fetch();
+
+app.spaces = new app.SpaceList();
+app.spaces.fetch();
+
+app.makeyView = new app.MakeyView();
+app.spaceView = new app.SpaceView();
+app.followingView = new app.FollowingView();
+app.followersView = new app.FollowersView();
+app.makerView = new app.MakerView();
+app.instructablesUrlView = new app.InstructablesUrlView();
+app.githubUrlView = new app.GithubUrlView();
+app.linkedinUrlView = new app.LinkedinUrlView();
+app.facebookUrlView = new app.FacebookUrlView();
+app.twitterUrlView = new app.TwitterUrlView();
+app.ytChannelUrlView = new app.YTChannelUrlView();
+app.stackoverflowUrlView = new app.StackoverflowUrlView();
+app.blogUrlView = new app.BlogUrlView();
+app.websiteUrlView = new app.WebsiteUrlView();
+app.locationView = new app.LocationView();
+app.aboutMeView = new app.AboutMeView();
+// app.membershipView = new app.MembershipView();
+app.collegeView = new app.CollegeView();
+app.patentView = new app.PatentView();
+</script>

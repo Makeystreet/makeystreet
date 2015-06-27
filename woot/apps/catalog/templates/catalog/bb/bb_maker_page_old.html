@@ -1,0 +1,582 @@
+<script>
+
+var app = {};
+app.maker_id = {{maker.id}};
+app.current_page_number = -1;
+app.items_per_page = 20;
+app.items_count = 0;
+app.row_count = 3;
+
+app.User = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user/",
+    idAttribute : "id",
+    url : function() {
+        if(this.get("id") == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get("id") + "/";
+        }
+    },
+});
+
+app.initializeUser = function() {
+    var cur_fb_user = app.cur_fb_user;
+    if(cur_fb_user == undefined) {
+        if(!cur_user_details.id) {
+            // alert('Please Login!');
+            return;
+        }
+        cur_fb_user = new app.User({'id' : cur_user_details.id});
+        cur_fb_user = cur_fb_user.fetch({
+            success : function(model, response) {
+                app.cur_fb_user = response;
+            },
+        });
+    }
+};
+
+app.initializeMaker = function() {
+    var cur_maker = new app.User({'id' : app.maker_id});
+    cur_maker.fetch({
+        success : function(model, response) {
+            app.cur_maker = response;
+        },
+    });
+};
+
+app.UserActivity = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/user_interactions/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.UserActivityList = Backbone.Tastypie.Collection.extend({
+    model : app.UserActivity,
+    urlRoot : "/api/v1/user_interactions/",
+
+    url : function() {
+        return this.urlRoot + "?user=" + app.maker_id;
+    },
+
+    initialize : function() {
+        this.listenTo(this, 'sync', this.fetchAllDetails);
+    },
+
+    fetchAllDetails : function() {
+        this.each(this.fetchEventDetails, this);
+    },
+
+    fetchEventDetails : function(model) {
+        var event_id = parseInt(model.get('event_id'));
+        var curEvent = parseInt(model.get('event'));
+        switch(curEvent) {
+            // LIKE CFI STORE ITEM
+            case 1:
+                var cfiItemLike = new app.LikeCfiStoreItem({'id' : event_id});
+                cfiItemLike.fetch({
+                    success : function(like_model, response) {
+                        model.set({
+                            'event_string' : " likes the CFI Store Item - ",
+                            'event_url' : "/product/" + response.cfi_store_item.item.id,
+                            'event_name' : response.cfi_store_item.item.name,
+                        });
+                    },
+                });
+                break;
+
+            // LIKE MAKEY
+            case 2:
+                model.set({
+                    'event_string' : " likes a makey - ",
+                    'event_url' : "/makey/1",
+                    'event_name' : "new makey",
+                });
+                break;
+
+            // LIKE PRODUCT
+            case 3:
+                var productLike = new app.LikeProduct({'id' : event_id});
+                productLike.fetch({
+                    success : function(like_model, response) {
+                        model.set({
+                            'event_string' : " likes a product - ",
+                            'event_url' : "/product/" + response.product.id,
+                            'event_name' : response.product.name,
+                        });
+                    },
+                });
+                break;
+
+            // LIKE SHOP
+            case 4:
+                var shopLike = new app.LikeShop({'id' : event_id});
+                shopLike.fetch({
+                    success : function(like_model, response) {
+                        model.set({
+                            'event_string' : " likes a store - ",
+                            'event_url' : "/store/" + response.shop.name + "/",
+                            'event_name' : response.shop.name,
+                        });
+                    },
+                });
+                break;
+
+            // UPVOTES MAKEY
+            case 101:
+                var makeyVote = new app.VoteMakey({'id' : event_id});
+                makeyVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " upvoted a makey - ",
+                            'event_url' : "/makey/" + response.makey.id + "/",
+                            'event_name' : response.makey.name,
+                        });
+                    },
+                });
+                break;
+
+
+            // UPVOTES PRODUCT REVIEW
+            case 102:
+                var productReviewVote = new app.VoteProductReview({'id' : event_id});
+                productReviewVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " upvoted a review about product " + response.review.product.name + " - ",
+                            'event_url' : "/product_review/" + response.review.id + "/",
+                            'event_name' : response.review.title,
+                        });
+                    },
+                });
+                break;
+
+            // UPVOTES SHOP REVIEW
+            case 103:
+                var shopReviewVote = new app.VoteShopReview({'id' : event_id});
+                shopReviewVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " upvoted a review about store " + response.review.shop.name + " - ",
+                            'event_url' : "/store_review/" + response.review.id + "/",
+                            'event_name' : response.review.title,
+                        });
+                    },
+                });
+                break;
+
+            // UPVOTES TUTORIAL
+            case 104:
+                var tutorialVote = new app.VoteTutorial({'id' : event_id});
+                tutorialVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " upvoted a tutorial - ",
+                            'event_url' : "/tutorial/" + response.tutorial.id + "/",
+                            'event_name' : response.tutorial.url,
+                        });
+                    },
+                });
+                break;
+
+            // DOWNVOTES MAKEY
+            case 201:
+                var makeyVote = new app.VoteMakey({'id' : event_id});
+                makeyVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " downvoted a makey - ",
+                            'event_url' : "/makey/" + response.makey.id + "/",
+                            'event_name' : response.makey.name,
+                        });
+                    },
+                });
+                break;
+
+            // DOWNVOTES PRODUCT REVIEW
+            case 202:
+                var productReviewVote = new app.VoteProductReview({'id' : event_id});
+                productReviewVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " downvoted a review about product " + response.review.product.name + " - ",
+                            'event_url' : "/product_review/" + response.review.id + "/",
+                            'event_name' : response.review.title,
+                        });
+                    },
+                });
+                break;
+
+            // DOWNVOTES SHOP REVIEW
+            case 203:
+                var shopReviewVote = new app.VoteShopReview({'id' : event_id});
+                shopReviewVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " downvoted a review about store " + response.review.shop.name + " - ",
+                            'event_url' : "/store_review/" + response.review.id + "/",
+                            'event_name' : response.review.title,
+                        });
+                    },
+                });
+                break;
+
+            // DOWNVOTES TUTORIAL
+            case 204:
+                var tutorialVote = new app.VoteTutorial({'id' : event_id});
+                tutorialVote.fetch({
+                    success : function(vote_model, response) {
+                        model.set({
+                            'event_string' : " downvoted a tutorial - ",
+                            'event_url' : "/tutorial/" + response.tutorial.id + "/",
+                            'event_name' : response.tutorial.url,
+                        });
+                    },
+                });
+                break;
+
+            // REVIEW PRODUCT
+            case 301:
+                var productReview = new app.ProductReview({'id' : event_id});
+                productReview.fetch({
+                    success : function(review_model, response) {
+                        model.set({
+                            'event_string' : " gave a rating of " + response.rating + "/5 for product - " + response.product.name + ". ",
+                            'event_url' : "/product_review/" + response.id + "/",
+                            'event_name' : "Check it here!",
+                        });
+                    },
+                });
+                break;
+
+            // REVIEW SHOP
+            case 302:
+                var shopReview = new app.ShopReview({'id' : event_id});
+                shopReview.fetch({
+                    success : function(review_model, response) {
+                        model.set({
+                            'event_string' : " gave a rating of " + response.rating + "/5 for store - " + response.shop.name + ". ",
+                            'event_url' : "/store_review/" + response.id + "/",
+                            'event_name' : "Check it here!",
+                        });
+                    },
+                });
+                break;
+
+            default:
+                model.set({
+                    'event_string' : " has unknown event with id:" + event_id + " - ",
+                    'event_url' : "/",
+                    'event_name' : "home",
+                });
+        }
+    },
+});
+
+app.UserActivityView = Backbone.View.extend({
+    el : '#user_activity',
+    template : Handlebars.compile($('#user_activity_template').html()),
+
+    initialize : function() {
+        this.listenTo(app.makerActivity, 'add', this.addAll);
+        this.listenTo(app.makerActivity, 'change', this.addAll);
+    },
+
+    addOne : function() {
+        this.render(app.makerActivity.first());
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        app.makerActivity.each(this.render, this);
+    },
+
+    render : function(model) {
+        model.set({
+            'maker_name' : app.cur_maker.first_name,
+        });
+        this.$el.append(this.template(model.toJSON()));
+        return this;
+    },
+});
+
+app.Tutorial = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/tutorial_p/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        } 
+    },
+});
+
+app.TutorialList = Backbone.Tastypie.Collection.extend({
+    model : app.Tutorial,
+    urlRoot : "/api/v1/tutorial_p/",
+
+    url : function() {
+        return this.urlRoot + "?limit=10&user=" + app.maker_id;
+    },
+});
+
+app.TutorialView = Backbone.View.extend({
+    el : '#my_tutorials',
+    template_heading : Handlebars.compile($('#user_tutorial_heading').html()),
+    template_empty : Handlebars.compile($('#user_tutorial_empty').html()),
+    template_tutorial : Handlebars.compile($('#user_tutorial_template').html()),
+
+    initialize : function() {
+        this.listenTo(app.tutorials, 'add', this.addAll);
+        this.initializeHtml();
+    },
+
+    initializeHtml : function() {
+        this.$el.html('');
+        this.$el.append(this.template_heading());
+        this.$el.append(this.template_empty());
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        this.$el.append(this.template_heading());
+        app.tutorials.each(this.render, this);
+    },
+
+    render : function(model) {
+        this.$el.append(this.template_tutorial(model.toJSON()));
+    },
+});
+
+app.Makey = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/makey_m/",
+    idAttribute : "id",
+
+    url : function() {
+       if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        } 
+    },
+});
+
+app.MakeyList = Backbone.Tastypie.Collection.extend({
+    model : app.Makey,
+    urlRoot : "/api/v1/makey_m/",
+
+    url : function() {
+        return this.urlRoot + "?collaborators__in=" + app.maker_id;
+    },
+});
+
+// app.MakeyView = Backbone.View.extend({
+//     el : '#my_projects',
+//     template_heading : Handlebars.compile($('#makey_heading').html()),
+//     template_empty : Handlebars.compile($('#makey_empty').html()),
+//     template_makey : Handlebars.compile($('#makey_template').html()),
+
+//     initialize : function() {
+//         this.listenTo(app.makeys, 'add', this.addAll);
+//         this.initializeHtml();
+//     },
+
+//     initializeHtml : function() {
+//         this.$el.html('');
+//         this.$el.append(this.template_heading());
+//         this.$el.append(this.template_empty());
+//     },
+
+//     addAll : function() {
+//         this.$el.html('');
+//         this.$el.append(this.template_heading());
+//         app.makeys.each(this.render, this);
+//     },
+
+//     render : function(model) {
+//         this.$el.append(this.template_makey(model.toJSON()));
+//     },
+// });
+
+app.MakeyView = Backbone.View.extend({
+    el : "#my_makeys",
+    template : Handlebars.compile($("#makey_template").html()),
+    new_row : Handlebars.compile($("#new_row").html()),
+
+    options : {
+        cur_item_count : 0,
+    },
+
+    initialize : function() {
+        this.listenTo(app.makeys, 'add', this.addAll);
+        this.listenTo(app.makeys, 'chage', this.addAll);
+    },
+
+    addAll : function() {
+        this.$el.html('');
+        $('#no_makeys').html(app.makeys.length);
+        this.options.cur_item_count = 0;
+        app.makeys.each(this.render, this);
+    },
+
+    render : function(model) {
+        if(this.options.cur_item_count%app.row_count == 0) {
+            this.$el.append(this.new_row);
+        }
+
+        var json = model.toJSON();
+        if(json.user == null) {
+            json.has_user = false;
+        } else {
+            json.has_user = true;
+        }
+
+        this.$el.find('.new_row').last().append(this.template(json));
+        this.options.cur_item_count++;
+        return this;
+    },
+});
+
+app.LikeCfiStoreItem = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/likes/cfi_store_item_with_product/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.LikeProduct = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/likes/product_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.LikeShop = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/likes/shop_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.VoteMakey = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/votes/makey_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    }, 
+});
+
+
+app.VoteTutorial = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/votes/tutorial_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    }, 
+});
+
+app.VoteProductReview = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/votes/product_review_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    }, 
+});
+
+app.VoteShopReview = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/votes/shop_review_full/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.ProductReview = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/product_review/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+app.ShopReview = Backbone.Tastypie.Model.extend({
+    urlRoot : "/api/v1/shop_review_with_shop/",
+    idAttribute : "id",
+
+    url : function() {
+        if(this.get('id') == undefined) {
+            return this.urlRoot;
+        } else {
+            return this.urlRoot + this.get('id') + "/";
+        }
+    },
+});
+
+/* INITIALIZE */
+app.initializeUser();
+app.initializeMaker();
+
+// app.makerActivity = new app.UserActivityList();
+// app.makerActivity.fetch();
+
+// app.tutorials = new app.TutorialList();
+// app.tutorials.fetch();
+
+app.makeys = new app.MakeyList();
+app.makeys.fetch();
+
+// app.activityView = new app.UserActivityView();
+// app.tutorialView = new app.TutorialView();
+app.makeyView = new app.MakeyView();
+</script>
