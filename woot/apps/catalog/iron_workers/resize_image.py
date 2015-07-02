@@ -2,6 +2,7 @@
 # Get the payload into payload variable
 import json
 import sys
+from os import environ
 payload_file = None
 payload = None
 for i in range(len(sys.argv)):
@@ -13,8 +14,8 @@ for i in range(len(sys.argv)):
 
 # Open S3 connection
 from boto.s3.connection import S3Connection
-AWS_ACCESS_KEY_ID = "AKIAJIYSSDR3ONQIJYBA"
-AWS_SECRET_ACCESS_KEY = "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"
+AWS_ACCESS_KEY_ID = environ['AWS_ACCESS_KEY_ID']
+AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY', '')
 conn = S3Connection(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
 bucket = conn.get_bucket('makeymedia')
 
